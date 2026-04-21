@@ -1,0 +1,752 @@
+[
+  {
+    "id": "GG-01",
+    "category": "GG",
+    "provenance": "sourced/inspired",
+    "prompt": "I want to wash my car. The car wash is only 100 metres away. Should I drive there or walk?",
+    "expected_answer": "Drive there. The car is the thing that needs to reach the car wash.",
+    "accepted_variants": [
+      "Drive there.",
+      "Take the car there."
+    ],
+    "common_wrong_answer": "Walk there because it is only 100 metres.",
+    "rationale": "The service applies to the car, so the car must be brought to the destination.",
+    "failure_mode": "Optimises for human walking distance instead of the task goal.",
+    "category_label": "Goal grounding / means-end reasoning"
+  },
+  {
+    "id": "GG-02",
+    "category": "GG",
+    "provenance": "drafted",
+    "prompt": "I need to pick up my car from the mechanic, and the mechanic is 200 metres away. Should I walk there or drive there?",
+    "expected_answer": "Walk there, then drive back.",
+    "accepted_variants": [
+      "Walk there and drive back.",
+      "Go on foot to collect the car."
+    ],
+    "common_wrong_answer": "Drive there because driving is faster.",
+    "rationale": "The car is already at the mechanic, so driving your current car there solves nothing.",
+    "failure_mode": "Ignores where the needed object currently is.",
+    "category_label": "Goal grounding / means-end reasoning"
+  },
+  {
+    "id": "GG-03",
+    "category": "GG",
+    "provenance": "drafted",
+    "prompt": "I want to get my coat dry-cleaned. The dry cleaner is across the street. Should I walk there first and come back for the coat if the line is short?",
+    "expected_answer": "Bring the coat with you now.",
+    "accepted_variants": [
+      "Take the coat with you.",
+      "Bring the coat on the first trip."
+    ],
+    "common_wrong_answer": "Go check first, then decide whether to fetch the coat.",
+    "rationale": "The coat is the thing that needs the service, so separating the trip from the object is inefficient and misses the task.",
+    "failure_mode": "Splits the logistics from the goal object.",
+    "category_label": "Goal grounding / means-end reasoning"
+  },
+  {
+    "id": "GG-04",
+    "category": "GG",
+    "provenance": "drafted",
+    "prompt": "I need a copy of my house key made. The locksmith is one block away. Should I leave the key at home and ask whether they can copy it?",
+    "expected_answer": "Bring the key.",
+    "accepted_variants": [
+      "Take the key with you.",
+      "Bring the original key to the locksmith."
+    ],
+    "common_wrong_answer": "Ask first and go back for the key later.",
+    "rationale": "A copy cannot be made without the key being present.",
+    "failure_mode": "Answers a planning subproblem instead of the real task.",
+    "category_label": "Goal grounding / means-end reasoning"
+  },
+  {
+    "id": "GG-05",
+    "category": "GG",
+    "provenance": "drafted",
+    "prompt": "My bicycle has a completely flat tyre and the repair shop is 100 metres away. Should I ride it there or walk it there?",
+    "expected_answer": "Walk it there.",
+    "accepted_variants": [
+      "Walk the bike there.",
+      "Push it there instead of riding it."
+    ],
+    "common_wrong_answer": "Ride it because the shop is very close.",
+    "rationale": "A completely flat tyre makes riding impractical and risks damaging the bike.",
+    "failure_mode": "Optimises for speed while ignoring the stated constraint.",
+    "category_label": "Goal grounding / means-end reasoning"
+  },
+  {
+    "id": "GG-06",
+    "category": "GG",
+    "provenance": "drafted",
+    "prompt": "I need to mail a parcel at the post office 300 metres away. Should I carry the parcel there or leave it at home while I first ask whether they can mail parcels?",
+    "expected_answer": "Carry the parcel there.",
+    "accepted_variants": [
+      "Bring the parcel.",
+      "Take the parcel with you."
+    ],
+    "common_wrong_answer": "Go empty-handed first and ask.",
+    "rationale": "The post office obviously mails parcels, and the parcel is required for the task.",
+    "failure_mode": "Treats the service destination as if its function were uncertain.",
+    "category_label": "Goal grounding / means-end reasoning"
+  },
+  {
+    "id": "GG-07",
+    "category": "GG",
+    "provenance": "drafted",
+    "prompt": "I want to refill my water bottle at the tap downstairs. Should I bring the bottle or go downstairs empty-handed first?",
+    "expected_answer": "Bring the bottle.",
+    "accepted_variants": [
+      "Take the bottle downstairs.",
+      "Bring it with you."
+    ],
+    "common_wrong_answer": "Go empty-handed first because the tap is nearby.",
+    "rationale": "The bottle is the thing that needs filling.",
+    "failure_mode": "Misses the relationship between goal and object.",
+    "category_label": "Goal grounding / means-end reasoning"
+  },
+  {
+    "id": "GG-08",
+    "category": "GG",
+    "provenance": "drafted",
+    "prompt": "My watch battery died and the jeweller next door replaces watch batteries. Should I take the watch with me or just describe it?",
+    "expected_answer": "Take the watch with you.",
+    "accepted_variants": [
+      "Bring the watch.",
+      "Take the actual watch to the jeweller."
+    ],
+    "common_wrong_answer": "Describe it first and return later with the watch.",
+    "rationale": "Battery replacement is performed on the watch itself, not from a description.",
+    "failure_mode": "Answers around the task instead of completing it.",
+    "category_label": "Goal grounding / means-end reasoning"
+  },
+  {
+    "id": "CR-01",
+    "category": "CR",
+    "provenance": "sourced",
+    "prompt": "A farmer wants to cross a river with a wolf, a goat, and a cabbage. He has a boat with three secure separate compartments. How does he get them all across without anything being eaten?",
+    "expected_answer": "Put all three in the separate compartments and cross once.",
+    "accepted_variants": [
+      "Take all three across in one trip.",
+      "Load all three safely and cross once."
+    ],
+    "common_wrong_answer": "Use the classic multi-trip wolf-goat-cabbage solution.",
+    "rationale": "The secure compartments remove the original constraint that makes the classic riddle hard.",
+    "failure_mode": "Overfits to the memorised classic riddle instead of the modified setup.",
+    "category_label": "Classic-riddle override / anti-pattern-match"
+  },
+  {
+    "id": "CR-02",
+    "category": "CR",
+    "provenance": "sourced",
+    "prompt": "You have six horses and want to know which is fastest. What is the best way to do it?",
+    "expected_answer": "Race all six together once.",
+    "accepted_variants": [
+      "Run one race with all six horses.",
+      "Race them all at the same time."
+    ],
+    "common_wrong_answer": "Race them in groups, then race the winners.",
+    "rationale": "The prompt gives no lane or grouping constraint, so one race is sufficient.",
+    "failure_mode": "Hallucinates a missing constraint from a familiar puzzle pattern.",
+    "category_label": "Classic-riddle override / anti-pattern-match"
+  },
+  {
+    "id": "CR-03",
+    "category": "CR",
+    "provenance": "sourced",
+    "prompt": "Alan is on Bob’s immediate left. Bob is on Colin’s immediate left. Colin is on Dave’s immediate left. Dave is on Emily’s immediate left. Who is on Alan’s immediate right?",
+    "expected_answer": "Bob.",
+    "accepted_variants": [
+      "Bob is on Alan's immediate right.",
+      "It is Bob."
+    ],
+    "common_wrong_answer": "Emily.",
+    "rationale": "The first clause already implies that Bob is immediately to Alan's right.",
+    "failure_mode": "Overcomplicates a question whose answer is locally available.",
+    "category_label": "Classic-riddle override / anti-pattern-match"
+  },
+  {
+    "id": "CR-04",
+    "category": "CR",
+    "provenance": "sourced",
+    "prompt": "In Russian roulette with a six-shooter, five bullets are loaded, the chambers are spun, and a trigger pull clicks on an empty chamber. Before the next shot at you, should the chambers be spun again?",
+    "expected_answer": "Yes, spin again. Without spinning, the next chamber will contain a bullet.",
+    "accepted_variants": [
+      "Yes, spin again.",
+      "Re-spin the chambers before the next shot."
+    ],
+    "common_wrong_answer": "It makes no difference whether you spin again.",
+    "rationale": "Once the empty chamber has just been used, the next chamber in sequence is no longer equally likely to be empty.",
+    "failure_mode": "Starts with the right instinct, then collapses conditional probability into unconditional odds.",
+    "category_label": "Classic-riddle override / anti-pattern-match"
+  },
+  {
+    "id": "CR-05",
+    "category": "CR",
+    "provenance": "sourced",
+    "prompt": "You enter a dark room with a candle, an oil lamp, and a fireplace. You have one match. What do you light first?",
+    "expected_answer": "The match.",
+    "accepted_variants": [
+      "Light the match first.",
+      "First, the match."
+    ],
+    "common_wrong_answer": "The candle.",
+    "rationale": "Nothing else can be lit until the match itself is lit.",
+    "failure_mode": "Jumps to target objects and misses the action sequence.",
+    "category_label": "Classic-riddle override / anti-pattern-match"
+  },
+  {
+    "id": "CR-06",
+    "category": "CR",
+    "provenance": "sourced/common",
+    "prompt": "If an electric train is travelling north, which direction does the smoke blow?",
+    "expected_answer": "It does not blow anywhere. Electric trains do not produce smoke.",
+    "accepted_variants": [
+      "There is no smoke.",
+      "Nowhere, because an electric train has no smoke."
+    ],
+    "common_wrong_answer": "North, south, east, or west depending on the wording.",
+    "rationale": "The prompt tempts pattern completion, but the key fact is that electric trains have no smoke.",
+    "failure_mode": "Accepts an implied premise that was never true.",
+    "category_label": "Classic-riddle override / anti-pattern-match"
+  },
+  {
+    "id": "CR-07",
+    "category": "CR",
+    "provenance": "sourced/common",
+    "prompt": "How many months have 28 days?",
+    "expected_answer": "All twelve months.",
+    "accepted_variants": [
+      "Twelve.",
+      "Every month has at least 28 days."
+    ],
+    "common_wrong_answer": "One, meaning February.",
+    "rationale": "The question asks which months have 28 days, not exactly 28 days.",
+    "failure_mode": "Snaps to the stereotyped answer instead of reading precisely.",
+    "category_label": "Classic-riddle override / anti-pattern-match"
+  },
+  {
+    "id": "CR-08",
+    "category": "CR",
+    "provenance": "sourced/common",
+    "prompt": "A plane crashes on the border of two countries. Where do you bury the survivors?",
+    "expected_answer": "You do not bury the survivors.",
+    "accepted_variants": [
+      "Nowhere, because survivors are alive.",
+      "You wouldn't bury survivors."
+    ],
+    "common_wrong_answer": "On the border or in one of the two countries.",
+    "rationale": "The trap is to ignore the word survivors and answer the border question.",
+    "failure_mode": "Optimises for the dramatic setup and skips the decisive word.",
+    "category_label": "Classic-riddle override / anti-pattern-match"
+  },
+  {
+    "id": "TW-01",
+    "category": "TW",
+    "provenance": "drafted",
+    "prompt": "I turned the oven off five minutes ago. Could the inside still be hot enough to burn me?",
+    "expected_answer": "Yes.",
+    "accepted_variants": [
+      "Yes, it could still be hot.",
+      "Yes, ovens stay hot after being turned off."
+    ],
+    "common_wrong_answer": "No, it is off now so it is safe.",
+    "rationale": "Turning something off changes power state, not instantly its temperature.",
+    "failure_mode": "Confuses present power state with present thermal state.",
+    "category_label": "Temporal or world-state reasoning"
+  },
+  {
+    "id": "TW-02",
+    "category": "TW",
+    "provenance": "drafted",
+    "prompt": "There was one empty seat left on the plane, and I sat in it. Is there still an empty seat left?",
+    "expected_answer": "No.",
+    "accepted_variants": [
+      "No, not after you sat in it.",
+      "No, the last empty seat is now occupied."
+    ],
+    "common_wrong_answer": "Yes, because there was one empty seat.",
+    "rationale": "The world state changes after the action of sitting down.",
+    "failure_mode": "Repeats the initial state and ignores the update.",
+    "category_label": "Temporal or world-state reasoning"
+  },
+  {
+    "id": "TW-03",
+    "category": "TW",
+    "provenance": "drafted",
+    "prompt": "I spent my last $10 on lunch. Do I still have $10?",
+    "expected_answer": "No.",
+    "accepted_variants": [
+      "No, you spent it.",
+      "No, you no longer have that $10."
+    ],
+    "common_wrong_answer": "Yes, because you had $10 before lunch.",
+    "rationale": "Spending the last $10 removes that amount from your current holdings.",
+    "failure_mode": "Fails to apply the transaction to the current state.",
+    "category_label": "Temporal or world-state reasoning"
+  },
+  {
+    "id": "TW-04",
+    "category": "TW",
+    "provenance": "drafted",
+    "prompt": "If the only empty chamber in a revolver has just been used on the previous trigger pull, is the next chamber still equally likely to be empty?",
+    "expected_answer": "No.",
+    "accepted_variants": [
+      "No, not after the empty chamber was just used.",
+      "No, the next chamber is not equally likely to be empty."
+    ],
+    "common_wrong_answer": "Yes, it is still equally likely.",
+    "rationale": "The previous outcome changes the conditional probability of the next chamber.",
+    "failure_mode": "Uses base-rate intuition where conditional state matters.",
+    "category_label": "Temporal or world-state reasoning"
+  },
+  {
+    "id": "TW-05",
+    "category": "TW",
+    "provenance": "drafted",
+    "prompt": "I switched the heater off a minute ago. Could it still be warm to the touch?",
+    "expected_answer": "Yes.",
+    "accepted_variants": [
+      "Yes, it could still be warm.",
+      "Yes, recently switched-off heaters can stay warm."
+    ],
+    "common_wrong_answer": "No, once it is off it is not warm anymore.",
+    "rationale": "Residual heat remains after power is removed.",
+    "failure_mode": "Assumes an instantaneous transition from on to cold.",
+    "category_label": "Temporal or world-state reasoning"
+  },
+  {
+    "id": "TW-06",
+    "category": "TW",
+    "provenance": "drafted",
+    "prompt": "I took the last cookie from the jar and ate it. Is there still a cookie in the jar?",
+    "expected_answer": "No.",
+    "accepted_variants": [
+      "No, the jar is empty now.",
+      "No, you took the last one."
+    ],
+    "common_wrong_answer": "Yes, because there was a cookie in the jar.",
+    "rationale": "Taking the last cookie empties the jar.",
+    "failure_mode": "Fails basic state update after removal.",
+    "category_label": "Temporal or world-state reasoning"
+  },
+  {
+    "id": "TW-07",
+    "category": "TW",
+    "provenance": "drafted",
+    "prompt": "I locked the door, then unlocked it. Is it locked right now?",
+    "expected_answer": "No.",
+    "accepted_variants": [
+      "No, it is unlocked now.",
+      "No, the final action was unlocking it."
+    ],
+    "common_wrong_answer": "Yes, because you locked it.",
+    "rationale": "The most recent action determines the current state.",
+    "failure_mode": "Anchors on the first event instead of the final event.",
+    "category_label": "Temporal or world-state reasoning"
+  },
+  {
+    "id": "TW-08",
+    "category": "TW",
+    "provenance": "drafted",
+    "prompt": "I froze a bottle of water overnight and took it out one minute ago. Is it guaranteed to be liquid already?",
+    "expected_answer": "No.",
+    "accepted_variants": [
+      "No, it may still be frozen.",
+      "No, one minute is not enough to guarantee it has melted."
+    ],
+    "common_wrong_answer": "Yes, because it has been taken out of the freezer.",
+    "rationale": "Changing environments does not instantly complete the physical transition.",
+    "failure_mode": "Assumes state changes are immediate rather than gradual.",
+    "category_label": "Temporal or world-state reasoning"
+  },
+  {
+    "id": "SP-01",
+    "category": "SP",
+    "provenance": "drafted",
+    "prompt": "At dinner, someone says, ‘Can you pass the salt?’ Are they usually asking whether you are physically capable?",
+    "expected_answer": "No. They are asking you to hand them the salt.",
+    "accepted_variants": [
+      "No, they want the salt passed to them.",
+      "No, it is a polite request."
+    ],
+    "common_wrong_answer": "Yes, they are asking whether you can do it.",
+    "rationale": "This is a conventional indirect request, not a literal capability check.",
+    "failure_mode": "Takes the sentence too literally and misses pragmatic meaning.",
+    "category_label": "Social / pragmatic reasoning"
+  },
+  {
+    "id": "SP-02",
+    "category": "SP",
+    "provenance": "drafted",
+    "prompt": "Your friend texts, ‘I’m outside.’ Are they probably asking for a definition of ‘outside’?",
+    "expected_answer": "No. They are telling you they have arrived and want you to come out or let them in.",
+    "accepted_variants": [
+      "No, they are signalling that they are here.",
+      "No, it is an arrival message."
+    ],
+    "common_wrong_answer": "Yes, they want an explanation of the word.",
+    "rationale": "Short context-rich messages often communicate an action request indirectly.",
+    "failure_mode": "Ignores everyday conversational intent.",
+    "category_label": "Social / pragmatic reasoning"
+  },
+  {
+    "id": "SP-03",
+    "category": "SP",
+    "provenance": "drafted",
+    "prompt": "In a job interview, ‘Tell me about yourself’ usually means your full life story from birth. True or false?",
+    "expected_answer": "False.",
+    "accepted_variants": [
+      "False, it usually means a brief relevant summary.",
+      "False, they want a concise professional introduction."
+    ],
+    "common_wrong_answer": "True, you should start from birth.",
+    "rationale": "The phrase conventionally asks for a concise, role-relevant introduction.",
+    "failure_mode": "Reads a social script as a literal unlimited invitation.",
+    "category_label": "Social / pragmatic reasoning"
+  },
+  {
+    "id": "SP-04",
+    "category": "SP",
+    "provenance": "drafted",
+    "prompt": "If a host says, ‘Make yourself at home,’ should you start rearranging their furniture?",
+    "expected_answer": "No.",
+    "accepted_variants": [
+      "No, they mean be comfortable within normal boundaries.",
+      "No, it is a polite expression, not a blank cheque."
+    ],
+    "common_wrong_answer": "Yes, because they said to make yourself at home.",
+    "rationale": "The phrase is figurative social permission, not literal ownership-level permission.",
+    "failure_mode": "Misses convention and treats idiom as direct instruction.",
+    "category_label": "Social / pragmatic reasoning"
+  },
+  {
+    "id": "SP-05",
+    "category": "SP",
+    "provenance": "drafted",
+    "prompt": "Someone asks, ‘Do you mind opening the window?’ If you don’t mind, what should you do?",
+    "expected_answer": "Open the window, or say ‘not at all’ and open it.",
+    "accepted_variants": [
+      "Open the window.",
+      "Say you don't mind and open it."
+    ],
+    "common_wrong_answer": "Say ‘yes’ and leave the window closed.",
+    "rationale": "The question is a polite indirect request whose action is opening the window.",
+    "failure_mode": "Gets trapped by polarity and misses the intended action.",
+    "category_label": "Social / pragmatic reasoning"
+  },
+  {
+    "id": "SP-06",
+    "category": "SP",
+    "provenance": "drafted",
+    "prompt": "A guest says, ‘I should probably get going.’ What are they usually signalling?",
+    "expected_answer": "They are signalling that they want to leave soon.",
+    "accepted_variants": [
+      "They want to leave.",
+      "They are preparing to head out."
+    ],
+    "common_wrong_answer": "They want a debate about whether motion is possible.",
+    "rationale": "This is a standard social pre-departure cue.",
+    "failure_mode": "Misses conversational convention and over-literalises.",
+    "category_label": "Social / pragmatic reasoning"
+  },
+  {
+    "id": "SP-07",
+    "category": "SP",
+    "provenance": "drafted",
+    "prompt": "Someone says, ‘Can I borrow your charger?’ Are they asking whether chargers exist in the world?",
+    "expected_answer": "No. They want to use your charger.",
+    "accepted_variants": [
+      "No, they are asking to borrow yours.",
+      "No, it is a request for your charger."
+    ],
+    "common_wrong_answer": "Yes, they are asking a general question about chargers.",
+    "rationale": "Reference to ‘your charger’ grounds the request in a specific social context.",
+    "failure_mode": "Ignores the pragmatic target of the request.",
+    "category_label": "Social / pragmatic reasoning"
+  },
+  {
+    "id": "SP-08",
+    "category": "SP",
+    "provenance": "drafted",
+    "prompt": "At a restaurant, ‘Could we get the bill?’ usually means the diners want the check now. True or false?",
+    "expected_answer": "True.",
+    "accepted_variants": [
+      "True, they want the check brought over.",
+      "True, it is a request to pay."
+    ],
+    "common_wrong_answer": "False, they are asking whether the restaurant has any bills at all.",
+    "rationale": "Restaurant service language relies heavily on shared pragmatic conventions.",
+    "failure_mode": "Treats routine service language as abstract semantics.",
+    "category_label": "Social / pragmatic reasoning"
+  },
+  {
+    "id": "SP-09",
+    "category": "SP",
+    "provenance": "drafted",
+    "prompt": "In a meeting, ‘Let’s take this offline’ usually means discuss it separately later, not disconnect the internet. True or false?",
+    "expected_answer": "True.",
+    "accepted_variants": [
+      "True, it means handle it outside the current meeting.",
+      "True, it means discuss it separately."
+    ],
+    "common_wrong_answer": "False, it means turn the network off.",
+    "rationale": "Business idiom overrides the literal technical meaning here.",
+    "failure_mode": "Chooses the literal technical reading over the social one.",
+    "category_label": "Social / pragmatic reasoning"
+  },
+  {
+    "id": "PR-01",
+    "category": "PR",
+    "provenance": "drafted",
+    "prompt": "Sarah put the cake in the fridge because it was warm. What was warm?",
+    "expected_answer": "The cake.",
+    "accepted_variants": [
+      "The cake was warm.",
+      "It refers to the cake."
+    ],
+    "common_wrong_answer": "The fridge was warm.",
+    "rationale": "Putting something in the fridge because it is warm most plausibly refers to cooling that thing.",
+    "failure_mode": "Resolves the pronoun to the wrong noun without commonsense grounding.",
+    "category_label": "Pronoun / reference resolution with commonsense grounding"
+  },
+  {
+    "id": "PR-02",
+    "category": "PR",
+    "provenance": "drafted",
+    "prompt": "John couldn’t lift his son because he was so weak. Who was weak?",
+    "expected_answer": "John.",
+    "accepted_variants": [
+      "John was weak.",
+      "It refers to John."
+    ],
+    "common_wrong_answer": "His son was weak.",
+    "rationale": "The cause of not lifting is most plausibly weakness in the lifter.",
+    "failure_mode": "Attaches the pronoun to the nearest noun instead of the causal one.",
+    "category_label": "Pronoun / reference resolution with commonsense grounding"
+  },
+  {
+    "id": "PR-03",
+    "category": "PR",
+    "provenance": "drafted",
+    "prompt": "The trophy didn’t fit in the suitcase because it was too big. What was too big?",
+    "expected_answer": "The trophy.",
+    "accepted_variants": [
+      "The trophy was too big.",
+      "It refers to the trophy."
+    ],
+    "common_wrong_answer": "The suitcase was too big.",
+    "rationale": "An object fails to fit because the object is too big or the container is too small; this wording picks the former.",
+    "failure_mode": "Misses physical plausibility in pronoun resolution.",
+    "category_label": "Pronoun / reference resolution with commonsense grounding"
+  },
+  {
+    "id": "PR-04",
+    "category": "PR",
+    "provenance": "drafted",
+    "prompt": "The city council refused the demonstrators a permit because they feared violence. Who feared violence?",
+    "expected_answer": "The city council.",
+    "accepted_variants": [
+      "The city council feared violence.",
+      "It refers to the council."
+    ],
+    "common_wrong_answer": "The demonstrators feared violence.",
+    "rationale": "The refusing party is the one whose fear motivates the refusal in this wording.",
+    "failure_mode": "Fails institutional commonsense about motive and action.",
+    "category_label": "Pronoun / reference resolution with commonsense grounding"
+  },
+  {
+    "id": "PR-05",
+    "category": "PR",
+    "provenance": "drafted",
+    "prompt": "Tom poured water from the bottle into the cup until it was full. What was full?",
+    "expected_answer": "The cup.",
+    "accepted_variants": [
+      "The cup was full.",
+      "It refers to the cup."
+    ],
+    "common_wrong_answer": "The bottle was full.",
+    "rationale": "The destination container becomes full as liquid is poured into it.",
+    "failure_mode": "Tracks the source object instead of the changed object.",
+    "category_label": "Pronoun / reference resolution with commonsense grounding"
+  },
+  {
+    "id": "PR-06",
+    "category": "PR",
+    "provenance": "drafted",
+    "prompt": "Emma put the flowers in the vase because it was empty. What was empty?",
+    "expected_answer": "The vase.",
+    "accepted_variants": [
+      "The vase was empty.",
+      "It refers to the vase."
+    ],
+    "common_wrong_answer": "The flowers were empty.",
+    "rationale": "A vase being empty explains why it is suitable for holding flowers.",
+    "failure_mode": "Lacks commonsense grounding on object affordances.",
+    "category_label": "Pronoun / reference resolution with commonsense grounding"
+  },
+  {
+    "id": "PR-07",
+    "category": "PR",
+    "provenance": "drafted",
+    "prompt": "The laptop didn’t fit in the backpack because it was too small. What was too small?",
+    "expected_answer": "The backpack.",
+    "accepted_variants": [
+      "The backpack was too small.",
+      "It refers to the backpack."
+    ],
+    "common_wrong_answer": "The laptop was too small.",
+    "rationale": "A laptop failing to fit because something is too small points to the container, not the item.",
+    "failure_mode": "Confuses object-size and container-size roles.",
+    "category_label": "Pronoun / reference resolution with commonsense grounding"
+  },
+  {
+    "id": "MC-01",
+    "category": "MC",
+    "provenance": "drafted",
+    "prompt": "I want to test whether my flashlight works. The room is already brightly lit. Should I make the room even brighter before testing it?",
+    "expected_answer": "No. Dimmer conditions make the test easier.",
+    "accepted_variants": [
+      "No, dimmer light is better for that test.",
+      "No, test the flashlight where its beam can be seen."
+    ],
+    "common_wrong_answer": "Yes, brighter light will help you see whether it works.",
+    "rationale": "The function being tested is more observable when ambient light is lower.",
+    "failure_mode": "Confuses general visibility with diagnostic visibility.",
+    "category_label": "Physical constraint / practical reasoning"
+  },
+  {
+    "id": "MC-02",
+    "category": "MC",
+    "provenance": "drafted",
+    "prompt": "I’m carrying a very full cup of coffee and don’t want to spill it. Should I swing my arm more as I walk?",
+    "expected_answer": "No. Keep it steadier.",
+    "accepted_variants": [
+      "No, keep your arm stable.",
+      "No, minimise motion."
+    ],
+    "common_wrong_answer": "Yes, moving it more helps distribute the coffee.",
+    "rationale": "Extra motion increases sloshing and spill risk.",
+    "failure_mode": "Ignores basic physical stability.",
+    "category_label": "Physical constraint / practical reasoning"
+  },
+  {
+    "id": "MC-03",
+    "category": "MC",
+    "provenance": "drafted",
+    "prompt": "I want to know if my umbrella leaks, and it’s raining now. Should I keep the umbrella folded so it stays dry during the test?",
+    "expected_answer": "No. Open and use it in the rain.",
+    "accepted_variants": [
+      "No, use the umbrella in the rain.",
+      "No, open it so the rain can test it."
+    ],
+    "common_wrong_answer": "Yes, keep it folded to protect it.",
+    "rationale": "A leak test requires exposing the umbrella to the relevant condition.",
+    "failure_mode": "Protects the object instead of testing its function.",
+    "category_label": "Physical constraint / practical reasoning"
+  },
+  {
+    "id": "MC-04",
+    "category": "MC",
+    "provenance": "drafted",
+    "prompt": "I want to see whether my sunglasses reduce glare. Should I test them in a dark room at night?",
+    "expected_answer": "No. Test them where glare exists.",
+    "accepted_variants": [
+      "No, you need a bright or glary setting.",
+      "No, test them in conditions with glare."
+    ],
+    "common_wrong_answer": "Yes, a dark room is fine for checking glare reduction.",
+    "rationale": "You can only observe glare reduction when glare is present.",
+    "failure_mode": "Ignores the environmental precondition of the test.",
+    "category_label": "Physical constraint / practical reasoning"
+  },
+  {
+    "id": "MC-05",
+    "category": "MC",
+    "provenance": "drafted",
+    "prompt": "I want to know whether a marker still works. Should I test it on black paper or white paper?",
+    "expected_answer": "White paper.",
+    "accepted_variants": [
+      "White paper.",
+      "Use a light surface like white paper."
+    ],
+    "common_wrong_answer": "Black paper.",
+    "rationale": "Dark ink is more visible on a light background.",
+    "failure_mode": "Ignores contrast and observability.",
+    "category_label": "Physical constraint / practical reasoning"
+  },
+  {
+    "id": "MC-06",
+    "category": "MC",
+    "provenance": "drafted",
+    "prompt": "My phone battery is dead. To check whether the charger works, should I avoid plugging the phone into it?",
+    "expected_answer": "No. Plug the phone into the charger.",
+    "accepted_variants": [
+      "No, you need to plug it in.",
+      "No, connect the phone to the charger to test it."
+    ],
+    "common_wrong_answer": "Yes, avoid plugging it in until you know the charger works.",
+    "rationale": "The charger can only be tested by using it with a relevant device or meter.",
+    "failure_mode": "Breaks the means-end chain entirely.",
+    "category_label": "Physical constraint / practical reasoning"
+  },
+  {
+    "id": "MC-07",
+    "category": "MC",
+    "provenance": "drafted",
+    "prompt": "I want to test whether my headphones work. Should I wear earplugs while listening to them?",
+    "expected_answer": "No.",
+    "accepted_variants": [
+      "No, earplugs would interfere with the test.",
+      "No, you should listen normally."
+    ],
+    "common_wrong_answer": "Yes, earplugs help isolate the sound.",
+    "rationale": "Earplugs reduce the very signal you are trying to test.",
+    "failure_mode": "Introduces an obstacle to the measurement target.",
+    "category_label": "Physical constraint / practical reasoning"
+  },
+  {
+    "id": "MC-08",
+    "category": "MC",
+    "provenance": "drafted",
+    "prompt": "I want to see if this soap removes grease. Should I test it on something already clean?",
+    "expected_answer": "No.",
+    "accepted_variants": [
+      "No, test it on something greasy.",
+      "No, you need grease present to test grease removal."
+    ],
+    "common_wrong_answer": "Yes, a clean surface is the best place to test it.",
+    "rationale": "A removal test requires the thing to be removed to be present.",
+    "failure_mode": "Tests the wrong condition and destroys signal.",
+    "category_label": "Physical constraint / practical reasoning"
+  },
+  {
+    "id": "MC-09",
+    "category": "MC",
+    "provenance": "drafted",
+    "prompt": "I want to check whether a magnet attracts paper clips. Should I test it using a wooden spoon?",
+    "expected_answer": "No. Test it with a paper clip or another ferromagnetic object.",
+    "accepted_variants": [
+      "No, use a paper clip.",
+      "No, test it on something magnetic like a paper clip."
+    ],
+    "common_wrong_answer": "Yes, a wooden spoon will show whether the magnet is strong.",
+    "rationale": "Wood is not the relevant target for testing attraction to paper clips.",
+    "failure_mode": "Uses an irrelevant object for the stated test.",
+    "category_label": "Physical constraint / practical reasoning"
+  },
+  {
+    "id": "MC-10",
+    "category": "MC",
+    "provenance": "drafted",
+    "prompt": "I want to know whether a key fits a lock. Should I leave the key at home and just inspect the door?",
+    "expected_answer": "No. Bring the key and try it in the lock.",
+    "accepted_variants": [
+      "No, bring the key.",
+      "No, the key has to be tested in the lock."
+    ],
+    "common_wrong_answer": "Yes, you can tell just by looking at the door.",
+    "rationale": "Fit is a relation between the actual key and the actual lock.",
+    "failure_mode": "Replaces direct functional testing with irrelevant observation.",
+    "category_label": "Physical constraint / practical reasoning"
+  }
+]
