@@ -1,0 +1,55 @@
+{
+  "benchmark": "reasoning-benchmark",
+  "created_at": "2026-04-21T10:00:00Z",
+  "question_count": 4,
+  "results": [
+    {
+      "id": "GG-01",
+      "prompt": "I want to wash my car. The car wash is only 100 metres away. Should I drive there or walk?",
+      "model": "gpt-5.3-codex-spark",
+      "answer": "Drive there.",
+      "reasoning": "The task is to move the car to the service, so I should drive.",
+      "score_answer": null,
+      "score_reasoning": null,
+      "score_constraint_extraction": null,
+      "penalties": [],
+      "notes": ""
+    },
+    {
+      "id": "GG-02",
+      "prompt": "I need to pick up my car from the mechanic, and the mechanic is 200 metres away. Should I walk there or drive there?",
+      "model": "gpt-5.3-codex-spark",
+      "answer": "Drive there.",
+      "reasoning": "Driving is usually faster, so go there by car.",
+      "score_answer": null,
+      "score_reasoning": null,
+      "score_constraint_extraction": null,
+      "penalties": [],
+      "notes": ""
+    },
+    {
+      "id": "TW-02",
+      "prompt": "There was one empty seat left on the plane, and I sat in it. Is there still an empty seat left?",
+      "model": "gpt-5.3-codex-spark",
+      "answer": "",
+      "reasoning": "",
+      "score_answer": null,
+      "score_reasoning": null,
+      "score_constraint_extraction": null,
+      "penalties": [],
+      "notes": ""
+    },
+    {
+      "id": "SP-01",
+      "prompt": "At dinner, someone says, ‘Can you pass the salt?’ Are they usually asking whether you are physically capable?",
+      "model": "gpt-5.3-codex-spark",
+      "answer": "No, they are asking you to pass the salt.",
+      "reasoning": "This is an indirect polite request.",
+      "score_answer": null,
+      "score_reasoning": null,
+      "score_constraint_extraction": null,
+      "penalties": [],
+      "notes": ""
+    }
+  ]
+}

@@ -6,3 +6,5 @@ __pycache__/
 *.pyc
 runs/*
 !runs/.gitkeep
+!runs/example-run.json
+!runs/example-run.scored.json
