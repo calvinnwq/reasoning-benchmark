@@ -187,7 +187,15 @@ Most of the set is currently **drafted benchmark material** in the same style, w
 
 ## Next sensible step
 
-Run 5 to 10 models on the same JSON file, capture raw answers, then score:
+Use the new baseline runner to run deterministic smoke/full sweeps and score each run:
+
+```bash
+python3 scripts/run_baselines.py --mode smoke
+python3 scripts/run_baselines.py --mode full
+```
+
+Then compare:
+
 1. answer accuracy
 2. reasoning quality
 3. failure mode distribution

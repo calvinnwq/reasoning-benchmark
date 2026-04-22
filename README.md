@@ -20,6 +20,7 @@ These are deliberately short prompts. The whole point is to catch models that so
 - `data/questions.csv` — spreadsheet-friendly export
 - `docs/benchmark.md` — human-readable benchmark overview
 - `scripts/run_benchmark.py` — minimal local runner scaffold
+- `scripts/run_baselines.py` — baseline runner for first-class baseline models
 - `runs/` — saved benchmark runs
 
 ## Dataset schema
@@ -61,6 +62,40 @@ Create a JSONL prompt pack for another tool or model runner:
 ```bash
 python3 scripts/run_benchmark.py --emit-prompts runs/prompts.jsonl
 ```
+
+## Baselines
+
+Run baseline runs for three starter models:
+
+- `gpt-5.4`
+- `sonnet-4.6`
+- `qwen3.5-9b`
+
+Smoke run (first 5 dataset rows) with dry-run payloads:
+
+```bash
+python3 scripts/run_baselines.py --mode smoke
+```
+
+Full run (all 50 questions) with dry-run payloads:
+
+```bash
+python3 scripts/run_baselines.py --mode full
+```
+
+Raw artifacts are written under `runs/baseline/` as one JSON per model, plus scored files with `.scored.json`.
+
+If you have a local model adapter, you can execute live by providing a command that accepts
+`MODEL` and `PROMPT` as positional args and returns JSON with `answer` and `reasoning` fields:
+
+```bash
+python3 scripts/run_baselines.py \
+  --mode smoke \
+  --provider-command ./scripts/your_model_adapter.py
+```
+
+Scoring uses `scripts/score_run.py` automatically and writes a second artifact with the same model/mode
+suffix for each raw run.
 
 ## Scoring
 
