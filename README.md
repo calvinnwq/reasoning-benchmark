@@ -21,6 +21,10 @@ These are deliberately short prompts. The whole point is to catch models that so
 - `docs/benchmark.md` — human-readable benchmark overview
 - `scripts/run_benchmark.py` — minimal local runner scaffold
 - `scripts/run_baselines.py` — baseline runner for first-class baseline models
+- `scripts/benchmark_contract.py` — shared prompt/JSON contract for adapters
+- `scripts/benchmark_adapters.py` — shared adapter library
+- `scripts/api_adapter.py` — direct/provider adapter entrypoint
+- `scripts/cli_adapter.py` — CLI/harness adapter entrypoint
 - `runs/` — saved benchmark runs
 
 ## Dataset schema
@@ -86,13 +90,42 @@ python3 scripts/run_baselines.py --mode full
 Raw artifacts are written under `runs/baseline/` as one JSON per model, plus scored files with `.scored.json`.
 
 If you have a local model adapter, you can execute live by providing a command that accepts
-`MODEL` and `PROMPT` as positional args and returns JSON with `answer` and `reasoning` fields:
+`MODEL` and `PROMPT` as positional args and returns JSON with `answer` and `reasoning` fields.
+
+This repo now ships two entrypoints:
+
+**CLI / subscription-backed harness path**
 
 ```bash
 python3 scripts/run_baselines.py \
   --mode smoke \
-  --provider-command ./scripts/your_model_adapter.py
+  --provider-command python3 scripts/cli_adapter.py
 ```
+
+Optional OpenCode preference for subscription-backed models:
+
+```bash
+python3 scripts/run_baselines.py \
+  --mode smoke \
+  --provider-command python3 scripts/cli_adapter.py --prefer opencode
+```
+
+**Direct/provider path**
+
+```bash
+python3 scripts/run_baselines.py \
+  --mode smoke \
+  --provider-command python3 scripts/api_adapter.py
+```
+
+Current behavior:
+- `cli_adapter.py`
+  - `gpt-5.4` → Codex CLI by default
+  - `sonnet-4.6` → Claude CLI by default
+  - `qwen3.5-9b` → local Ollama through the shared adapter layer
+- `api_adapter.py`
+  - `qwen3.5-9b` → local Ollama now
+  - `gpt-5.4` / `sonnet-4.6` are intentionally stubbed until direct API transport is wired
 
 Scoring uses `scripts/score_run.py` automatically and writes a second artifact with the same model/mode
 suffix for each raw run.
