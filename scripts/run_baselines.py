@@ -9,7 +9,13 @@ import sys
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Dict, Iterable, List
+from typing import Any, Dict, Iterable
+
+SCRIPT_DIR = Path(__file__).resolve().parent
+if str(SCRIPT_DIR) not in sys.path:
+    sys.path.insert(0, str(SCRIPT_DIR))
+
+from benchmark_contract import build_prompt_contract
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 DEFAULT_DATASET_PATH = REPO_ROOT / "data" / "questions.json"
@@ -19,17 +25,6 @@ SUPPORTED_MODELS: tuple[str, ...] = ("gpt-5.4", "sonnet-4.6", "qwen3.5-9b")
 SUPPORTED_MODES: tuple[str, ...] = ("smoke", "full")
 SMOKE_COUNT = 5
 RUNNER_VERSION = "1.0.0"
-
-PROMPT_CONTRACT = {
-    "version": "1.0.0",
-    "instruction": (
-        "Answer the question with a concise final answer.\n"
-        "Use this exact JSON shape in the model-facing response:\n"
-        '{"answer": "<short final answer>", "reasoning": "<brief reason>"}\n'
-        "If unsure, provide your best short answer and reasoning."
-    ),
-}
-
 
 @dataclass(frozen=True)
 class ProviderResult:
@@ -97,10 +92,6 @@ def build_empty_record(row: dict[str, Any], model: str, notes: str | None = None
         "notes": notes or "",
     }
     return record
-
-
-def build_prompt_contract() -> Dict[str, Any]:
-    return dict(PROMPT_CONTRACT)
 
 
 def parse_provider_output(raw_stdout: str) -> tuple[str, str, str | None]:
