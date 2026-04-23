@@ -53,6 +53,30 @@ def normalize_text(value: Any) -> str:
     for old, new in replacements.items():
         value = value.replace(old, new)
 
+    contraction_patterns = (
+        (r"\b(can)not\b", r"\1 not"),
+        (r"\b(won)'t\b", r"will not"),
+        (r"\b(can)'t\b", r"can not"),
+        (r"\b([a-z]+)n't\b", r"\1 not"),
+        (r"\b([a-z]+)'re\b", r"\1 are"),
+        (r"\b([a-z]+)'ve\b", r"\1 have"),
+        (r"\b([a-z]+)'ll\b", r"\1 will"),
+        (r"\b([a-z]+)'d\b", r"\1 would"),
+        (r"\b(i)'m\b", r"\1 am"),
+        (r"\b([a-z]+)'s\b", r"\1 s"),
+    )
+    for pattern, replacement in contraction_patterns:
+        value = re.sub(pattern, replacement, value)
+
+    spelling_variants = {
+        "signalling": "signaling",
+        "signalled": "signaled",
+        "metres": "meters",
+        "metre": "meter",
+    }
+    for old, new in spelling_variants.items():
+        value = value.replace(old, new)
+
     # Keep words and spaces only; turn punctuation into spaces so suffixes do not block short matches.
     value = re.sub(r"[^a-z0-9\s]", " ", value.lower())
     value = re.sub(r"\s+", " ", value).strip()
@@ -120,13 +144,50 @@ def contains_expected_as_contiguous_span(answer_tokens: Sequence[str], expected_
     return False
 
 
+def starts_with_token_sequence(candidate_tokens: Sequence[str], prefix_tokens: Sequence[str]) -> bool:
+    if not candidate_tokens or not prefix_tokens:
+        return False
+    if len(prefix_tokens) > len(candidate_tokens):
+        return False
+    return tuple(candidate_tokens[: len(prefix_tokens)]) == tuple(prefix_tokens)
+
+
+def strip_soft_determiners(tokens: Sequence[str]) -> List[str]:
+    soft_words = {"a", "an", "the", "my", "your", "our", "his", "her", "their", "you", "now"}
+    return [token for token in tokens if token not in soft_words]
+
+
+def build_candidate_norms(expected_text: str, accepted_variants: Iterable[Any]) -> List[str]:
+    candidates: List[str] = []
+    for raw in [expected_text, *accepted_variants]:
+        if not isinstance(raw, str):
+            continue
+        normalized = normalize_text(raw)
+        if normalized and normalized not in candidates:
+            candidates.append(normalized)
+    return candidates
+
+
+def build_answer_norms(answer_text: str) -> List[str]:
+    primary = trim_prefillers(answer_text)
+    candidates: List[str] = []
+    if primary:
+        candidates.append(primary)
+
+    tokens = primary.split()
+    if len(tokens) > 1 and tokens[0] in {"yes", "no"}:
+        stripped = " ".join(tokens[1:]).strip()
+        if stripped and stripped not in candidates:
+            candidates.append(stripped)
+    return candidates
+
+
 def score_single_answer(answer: Any, expected_text: str, accepted_variants: Iterable[Any]) -> MatchResult:
     raw_answer = "" if answer is None else str(answer).strip()
-    answer_norm = trim_prefillers(raw_answer)
+    answer_norms = build_answer_norms(raw_answer)
+    answer_norm = answer_norms[0] if answer_norms else ""
     expected_norm = normalize_text(expected_text)
-    expected_tokens = token_sequence(expected_norm)
-    accepted_norms = {normalize_text(v) for v in accepted_variants if isinstance(v, str) and normalize_text(v)}
-    accepted_norms.add(expected_norm)
+    candidate_norms = build_candidate_norms(expected_text, accepted_variants)
 
     expected_binary = extract_binary_token(expected_text)
     if not answer_norm:
@@ -180,32 +241,70 @@ def score_single_answer(answer: Any, expected_text: str, accepted_variants: Iter
             answer_normalized=answer_norm,
         )
 
-    if answer_norm in accepted_norms:
-        return MatchResult(
-            score=1,
-            matched=True,
-            reason="exact_normalized_match",
-            matched_by="exact",
-            heuristic=False,
-            expected=expected_text,
-            expected_normalized=expected_norm,
-            answer=raw_answer,
-            answer_normalized=answer_norm,
-        )
+    for normalized_answer in answer_norms:
+        if normalized_answer in candidate_norms:
+            return MatchResult(
+                score=1,
+                matched=True,
+                reason="exact_normalized_match",
+                matched_by="exact",
+                heuristic=False,
+                expected=expected_text,
+                expected_normalized=expected_norm,
+                answer=raw_answer,
+                answer_normalized=normalized_answer,
+            )
 
-    answer_tokens = token_sequence(answer_norm)
-    if len(answer_tokens) <= 10 and contains_expected_as_contiguous_span(answer_tokens, expected_tokens):
-        return MatchResult(
-            score=1,
-            matched=True,
-            reason="expected_phrase_as_contiguous_span",
-            matched_by="heuristic_subsequence",
-            heuristic=True,
-            expected=expected_text,
-            expected_normalized=expected_norm,
-            answer=raw_answer,
-            answer_normalized=answer_norm,
-        )
+    for normalized_answer in answer_norms:
+        answer_tokens = token_sequence(normalized_answer)
+        if len(answer_tokens) <= 10:
+            for candidate_norm in candidate_norms:
+                candidate_tokens = token_sequence(candidate_norm)
+                if contains_expected_as_contiguous_span(answer_tokens, candidate_tokens):
+                    return MatchResult(
+                        score=1,
+                        matched=True,
+                        reason="candidate_phrase_as_contiguous_span",
+                        matched_by="heuristic_subsequence",
+                        heuristic=True,
+                        expected=expected_text,
+                        expected_normalized=expected_norm,
+                        answer=raw_answer,
+                        answer_normalized=normalized_answer,
+                    )
+
+                stripped_answer_tokens = strip_soft_determiners(answer_tokens)
+                stripped_candidate_tokens = strip_soft_determiners(candidate_tokens)
+                if contains_expected_as_contiguous_span(stripped_answer_tokens, stripped_candidate_tokens):
+                    return MatchResult(
+                        score=1,
+                        matched=True,
+                        reason="candidate_match_after_soft_determiner_stripping",
+                        matched_by="heuristic_subsequence",
+                        heuristic=True,
+                        expected=expected_text,
+                        expected_normalized=expected_norm,
+                        answer=raw_answer,
+                        answer_normalized=normalized_answer,
+                    )
+
+    for normalized_answer in answer_norms:
+        answer_tokens = token_sequence(normalized_answer)
+        if 0 < len(answer_tokens) <= 3 and answer_tokens[0] not in {"yes", "no"}:
+            for candidate_norm in candidate_norms:
+                candidate_tokens = token_sequence(candidate_norm)
+                if starts_with_token_sequence(candidate_tokens, answer_tokens):
+                    return MatchResult(
+                        score=1,
+                        matched=True,
+                        reason="concise_prefix_of_accepted_answer",
+                        matched_by="heuristic_prefix",
+                        heuristic=True,
+                        expected=expected_text,
+                        expected_normalized=expected_norm,
+                        answer=raw_answer,
+                        answer_normalized=normalized_answer,
+                    )
 
     return MatchResult(
         score=0,

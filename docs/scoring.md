@@ -60,14 +60,19 @@ The automatic answer matcher applies deterministic normalisation before comparis
   - normalise `NFKC`
   - lowercase
   - map common quote/dash variants to ASCII
+- Normalize a small conservative set of common contractions/spelling variants before matching:
+  - e.g. `they're` → `they are`, `won't` → `will not`, `don't` → `do not`
+  - e.g. `signalling` → `signaling`, `metres` → `meters`
 - Remove non alphanumeric characters (except whitespace), then normalize whitespace.
 - Apply short prefill stripping (at most once per phrase block):
   - `the answer is`, `i think`, `i believe`, `i guess`, `it is`, `probably`, ...
 - Compare against expected and `accepted_variants` as normalized exact matches.
-- If exact match fails, allow a conservative short-answer heuristic only when:
-  - normalized answer token length `<= 10`, and
-  - the full expected token sequence is a contiguous span inside the answer tokens.
-- This heuristic is marked as `is_heuristic: true`.
+- Also strip a leading `yes`/`no` wrapper from otherwise non-binary answers before retrying exact/heuristic matching (for answers like `No, bring the key with you.`).
+- If exact match fails, allow conservative heuristics only when one of these holds:
+  - normalized answer token length `<= 10`, and a full expected/accepted token sequence appears as a contiguous span inside the answer, or
+  - after stripping a small set of soft determiners/pronouns (`the`, `your`, `you`, `now`, etc.), the answer and candidate still contain the same short contiguous phrase, or
+  - the answer is a very short non-binary prefix (`<= 3` tokens) of an accepted answer such as `Drive` for `Drive there.`
+- Heuristic matches are explicitly marked with `is_heuristic: true`.
 
 ## Yes/No handling
 
