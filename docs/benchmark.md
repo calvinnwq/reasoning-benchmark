@@ -187,7 +187,31 @@ Most of the set is currently **drafted benchmark material** in the same style, w
 
 ## Next sensible step
 
-Run 5 to 10 models on the same JSON file, capture raw answers, then score:
+Use the baseline runner with either the CLI adapter layer or the direct/provider adapter layer.
+
+Dry-run payloads only:
+
+```bash
+python3 scripts/run_baselines.py --mode smoke
+python3 scripts/run_baselines.py --mode full
+```
+
+Subscription-backed CLI harnesses:
+
+```bash
+python3 scripts/run_baselines.py --mode smoke \
+  --provider-command python3 scripts/cli_adapter.py
+```
+
+Direct/provider path (currently useful for local Qwen via Ollama):
+
+```bash
+python3 scripts/run_baselines.py --mode smoke \
+  --provider-command python3 scripts/api_adapter.py
+```
+
+Then compare:
+
 1. answer accuracy
 2. reasoning quality
 3. failure mode distribution

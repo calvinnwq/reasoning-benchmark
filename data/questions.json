@@ -37,7 +37,9 @@
     "expected_answer": "Bring the coat with you now.",
     "accepted_variants": [
       "Take the coat with you.",
-      "Bring the coat on the first trip."
+      "Bring the coat on the first trip.",
+      "Bring the coat with you.",
+      "Bring the coat with you on the first trip."
     ],
     "common_wrong_answer": "Go check first, then decide whether to fetch the coat.",
     "rationale": "The coat is the thing that needs the service, so separating the trip from the object is inefficient and misses the task.",
@@ -82,7 +84,8 @@
     "expected_answer": "Carry the parcel there.",
     "accepted_variants": [
       "Bring the parcel.",
-      "Take the parcel with you."
+      "Take the parcel with you.",
+      "Carry the parcel with you."
     ],
     "common_wrong_answer": "Go empty-handed first and ask.",
     "rationale": "The post office obviously mails parcels, and the parcel is required for the task.",
@@ -127,7 +130,9 @@
     "expected_answer": "Put all three in the separate compartments and cross once.",
     "accepted_variants": [
       "Take all three across in one trip.",
-      "Load all three safely and cross once."
+      "Load all three safely and cross once.",
+      "Put all three in separate compartments and cross once.",
+      "Put the wolf, goat, and cabbage in separate compartments and cross once."
     ],
     "common_wrong_answer": "Use the classic multi-trip wolf-goat-cabbage solution.",
     "rationale": "The secure compartments remove the original constraint that makes the classic riddle hard.",
@@ -142,7 +147,9 @@
     "expected_answer": "Race all six together once.",
     "accepted_variants": [
       "Run one race with all six horses.",
-      "Race them all at the same time."
+      "Race them all at the same time.",
+      "Race all six horses together.",
+      "Race all six horses together once."
     ],
     "common_wrong_answer": "Race them in groups, then race the winners.",
     "rationale": "The prompt gives no lane or grouping constraint, so one race is sufficient.",
@@ -202,7 +209,9 @@
     "expected_answer": "It does not blow anywhere. Electric trains do not produce smoke.",
     "accepted_variants": [
       "There is no smoke.",
-      "Nowhere, because an electric train has no smoke."
+      "Nowhere, because an electric train has no smoke.",
+      "No smoke.",
+      "It doesn't blow anywhere."
     ],
     "common_wrong_answer": "North, south, east, or west depending on the wording.",
     "rationale": "The prompt tempts pattern completion, but the key fact is that electric trains have no smoke.",
@@ -217,7 +226,8 @@
     "expected_answer": "All twelve months.",
     "accepted_variants": [
       "Twelve.",
-      "Every month has at least 28 days."
+      "Every month has at least 28 days.",
+      "All 12 months have at least 28 days."
     ],
     "common_wrong_answer": "One, meaning February.",
     "rationale": "The question asks which months have 28 days, not exactly 28 days.",
@@ -232,7 +242,9 @@
     "expected_answer": "You do not bury the survivors.",
     "accepted_variants": [
       "Nowhere, because survivors are alive.",
-      "You wouldn't bury survivors."
+      "You wouldn't bury survivors.",
+      "You don't bury survivors.",
+      "Survivors are alive."
     ],
     "common_wrong_answer": "On the border or in one of the two countries.",
     "rationale": "The trap is to ignore the word survivors and answer the border question.",
@@ -442,7 +454,9 @@
     "expected_answer": "They are signalling that they want to leave soon.",
     "accepted_variants": [
       "They want to leave.",
-      "They are preparing to head out."
+      "They are preparing to head out.",
+      "They are signaling that they want to leave soon.",
+      "They are getting ready to leave."
     ],
     "common_wrong_answer": "They want a debate about whether motion is possible.",
     "rationale": "This is a standard social pre-departure cue.",

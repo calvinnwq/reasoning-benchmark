@@ -19,6 +19,12 @@ class ScoringNormalizationTests(unittest.TestCase):
             "no the cat s at the door",
         )
 
+    def test_normalize_text_handles_common_contractions_and_spelling(self) -> None:
+        self.assertEqual(
+            score_run.normalize_text("They're signalling they won't leave in 100 metres."),
+            "they are signaling they will not leave in 100 meters",
+        )
+
     def test_missing_answer_scores_zero(self) -> None:
         result = score_run.score_single_answer("", "Yes. Carry the object.", [])
         self.assertEqual(result.score, 0)
@@ -42,6 +48,43 @@ class ScoringNormalizationTests(unittest.TestCase):
         )
         self.assertEqual(result.score, 0)
         self.assertEqual(result.matched_by, "binary_mismatch")
+
+    def test_accepted_variant_match_counts(self) -> None:
+        result = score_run.score_single_answer(
+            "Take the coat with you.",
+            "Bring the coat with you now.",
+            ["Take the coat with you.", "Bring the coat on the first trip."],
+        )
+        self.assertEqual(result.score, 1)
+        self.assertEqual(result.matched_by, "exact")
+
+    def test_short_prefix_match_counts_as_heuristic(self) -> None:
+        result = score_run.score_single_answer(
+            "Drive",
+            "Drive there. The car is the thing that needs to reach the car wash.",
+            ["Drive there.", "Take the car there."],
+        )
+        self.assertEqual(result.score, 1)
+        self.assertEqual(result.matched_by, "heuristic_prefix")
+        self.assertTrue(result.heuristic)
+
+    def test_leading_no_does_not_block_variant_match(self) -> None:
+        result = score_run.score_single_answer(
+            "No, bring the coat on your first trip.",
+            "Bring the coat with you now.",
+            ["Take the coat with you.", "Bring the coat on the first trip."],
+        )
+        self.assertEqual(result.score, 1)
+        self.assertIn(result.matched_by, {"exact", "heuristic_subsequence"})
+
+    def test_contraction_variant_counts_for_survivor_riddle(self) -> None:
+        result = score_run.score_single_answer(
+            "You don't bury survivors — they're alive.",
+            "You do not bury the survivors.",
+            ["Nowhere, because survivors are alive.", "You wouldn't bury survivors."],
+        )
+        self.assertEqual(result.score, 1)
+        self.assertIn(result.matched_by, {"exact", "heuristic_subsequence"})
 
 
 class ScoringFixtureTests(unittest.TestCase):
