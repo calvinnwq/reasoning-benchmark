@@ -123,7 +123,7 @@ The fields below are optional by case type, but required when their concept appl
 
 ### `task_family_id`
 
-Stable reporting group such as `goal-grounding`, `social-pragmatics`, `temporal-state`, `reference-resolution`, `physical-commonsense`, or `classic-riddle-override`.
+Stable reporting group such as `goal-grounding`, `social-pragmatics`, `instruction-ambiguity`, `temporal-state`, `reference-resolution`, `physical-commonsense`, or `classic-riddle-override`.
 
 The legacy `category` field remains for compatibility, but v2 reporting should group by `task_family_id`.
 
@@ -200,6 +200,7 @@ Holdout and calibration slices should be represented here first, then collected 
 | `CR` | `classic-riddle-override` | `exact` | `classic-template` |
 | `TW` | `temporal-state` | `exact` | `none` |
 | `SP` | `social-pragmatics` | `hybrid` | `pragmatic` |
+| `IA` | `instruction-ambiguity` | `hybrid` | `underspecified` |
 | `PR` | `reference-resolution` | `exact` | `referential` |
 | `MC` | `physical-commonsense` | `exact` | `test-condition` |
 
