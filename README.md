@@ -47,6 +47,10 @@ Each question currently includes:
 - good enough for pruning and early model evals
 - not yet a polished public benchmark release
 
+## Framework spec
+
+The v2 framework direction is captured in [`docs/framework-v2.md`](docs/framework-v2.md). It defines the intended scope, non-goals, core contract boundaries, and extension points for runner, scorer, artifact, and reporting work.
+
 ## Usage
 
 Preview the dataset:
