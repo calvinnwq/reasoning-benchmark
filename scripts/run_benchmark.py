@@ -26,12 +26,16 @@ def cmd_list() -> int:
 def cmd_sample_run() -> int:
     questions = load_questions()
     payload = {
+        "schema_version": "2.0.0",
         "benchmark": "reasoning-benchmark",
         "created_at": datetime.now(timezone.utc).isoformat(),
+        "suite_id": "full",
+        "case_count": len(questions),
         "question_count": len(questions),
         "results": [
             {
                 "id": q["id"],
+                "case_id": q["id"],
                 "prompt": q["prompt"],
                 "model": "",
                 "answer": "",
