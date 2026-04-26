@@ -362,7 +362,7 @@ def load_dataset(dataset_path: Path) -> Dict[str, Dict[str, Any]]:
 
 def score_record(result: Dict[str, Any], dataset: Dict[str, Dict[str, Any]]) -> Dict[str, Any]:
     coerced = coerce_scoring_fields(result)
-    record_id = str(coerced.get("id", "")).strip()
+    record_id = str(coerced.get("id") or coerced.get("case_id", "")).strip()
 
     if not record_id or record_id not in dataset:
         status = {

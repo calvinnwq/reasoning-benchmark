@@ -22,8 +22,8 @@ This benchmark is intentionally **short, natural-language, and deceptively simpl
 
 ## Canonical dataset files
 
-- `Product/Notes/2026-04-21-llm-reasoning-benchmark-dataset.json`
-- `Product/Notes/2026-04-21-llm-reasoning-benchmark-dataset.csv`
+- `data/questions.json`
+- `data/questions.csv`
 
 This markdown note is the human-readable overview. The JSON and CSV are the machine-readable source for runs and scoring.
 
@@ -152,6 +152,8 @@ Each row in the JSON/CSV exports includes:
 - `common_wrong_answer`
 - `rationale`
 - `failure_mode`
+
+The v2 dataset schema extension is documented in [`dataset-schema-v2.md`](dataset-schema-v2.md). It adds optional fields for task family IDs, evaluator mode, accepted interpretations, ambiguity metadata, cooperative-intent expectations, and calibration splits while preserving the current row shape during migration.
 
 ---
 

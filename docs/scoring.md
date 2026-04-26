@@ -33,7 +33,7 @@ The scorer accepts JSON that is close to `scripts/run_benchmark.py --sample-run`
 }
 ```
 
-The scorer also accepts payloads where records are in `runs`, `items`, or `answers`, and also accepts a list of records directly.
+The scorer also accepts payloads where records are in `runs`, `items`, or `answers`, and also accepts a list of records directly. Records may use `case_id` instead of `id`; if both are present, `id` is used.
 
 ## Automatic scoring (V1)
 
