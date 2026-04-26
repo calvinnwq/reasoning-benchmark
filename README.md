@@ -51,6 +51,8 @@ Each question currently includes:
 
 The v2 framework direction is captured in [`docs/framework-v2.md`](docs/framework-v2.md). It defines the intended scope, non-goals, core contract boundaries, and extension points for runner, scorer, artifact, and reporting work.
 
+The canonical v2 entity and artifact shapes are captured in [`docs/contracts-v2.md`](docs/contracts-v2.md). They define suites, task families, benchmark cases, run configs, artifact bundles, score records, and report summaries.
+
 ## Usage
 
 Preview the dataset:

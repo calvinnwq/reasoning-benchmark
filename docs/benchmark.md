@@ -22,8 +22,8 @@ This benchmark is intentionally **short, natural-language, and deceptively simpl
 
 ## Canonical dataset files
 
-- `Product/Notes/2026-04-21-llm-reasoning-benchmark-dataset.json`
-- `Product/Notes/2026-04-21-llm-reasoning-benchmark-dataset.csv`
+- `data/questions.json`
+- `data/questions.csv`
 
 This markdown note is the human-readable overview. The JSON and CSV are the machine-readable source for runs and scoring.
 
