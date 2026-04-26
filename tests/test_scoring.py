@@ -116,6 +116,11 @@ class ScoringFixtureTests(unittest.TestCase):
         self.assertEqual(status["reason"], "unknown_question_id")
         self.assertTrue(status["heuristic_flags"][0]["is_heuristic"])
 
+    def test_case_id_alias_is_scored(self) -> None:
+        scored = score_run.score_record({"case_id": "GG-01", "answer": "Drive there."}, self.dataset)
+        self.assertEqual(scored["score_answer"], 1)
+        self.assertEqual(scored["scoring_status"]["reason"], "exact_normalized_match")
+
     def test_scored_payload_building(self) -> None:
         _, records = score_run.normalize_run_payload(self.input_payload)
         scored = [score_run.score_record(item, self.dataset) for item in records]
