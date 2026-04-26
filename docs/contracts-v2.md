@@ -58,6 +58,9 @@ Required fields:
 - `name`
 - `case_ids`
 
+`case_ids` entries are exact case identifiers. Config-driven runner validation rejects blank,
+non-string, or whitespace-padded entries before dataset selection.
+
 Optional fields:
 
 - `description`
@@ -204,6 +207,39 @@ Required fields:
 - `execution`
 - `output`
 
+Current runner validation supports the exact, unpadded `prompt_contract.response_format: "json_object"` value,
+matching the shared adapter contract used by CLI and direct/provider runners.
+It requires `schema_version` to be the exact, unpadded `2.0.0` string so configs do not preserve
+ambiguous contract-version identifiers.
+It requires `benchmark` to be the exact, unpadded `reasoning-benchmark` value so configs do not
+preserve ambiguous benchmark identifiers.
+It requires `suite_id` to be an exact, unpadded, non-empty string so run configs reference a stable
+suite identifier without preserving ambiguous whitespace.
+It also requires `id` to be an exact, unpadded, non-empty string so artifacts preserve a stable
+execution request identifier.
+It requires `dataset.path` to be an exact, unpadded, non-empty string so configs do not preserve
+ambiguous dataset references.
+When supplied, `dataset.fingerprint.algorithm` and `dataset.fingerprint.value` must also be exact,
+unpadded strings before the value is compared with the dataset's SHA-256 hash.
+It requires `output.bundle_dir` to be an exact, unpadded, non-empty string so configs do not write
+artifacts into ambiguous output locations.
+It requires model ids, whether listed directly or inside model objects, to be exact, unpadded,
+non-empty strings so configs do not preserve ambiguous model selections.
+It requires `execution.mode` to be an exact, unpadded, non-empty string when present so configs do
+not preserve ambiguous suite mode selections.
+It requires model adapter names to be exact, unpadded strings so configs do not preserve ambiguous
+adapter selections.
+It requires string `execution.seed` values to be exact, unpadded, and non-empty so reproducible case
+selection does not depend on ambiguous invisible whitespace.
+It requires `prompt_contract.version` to be an exact, unpadded, non-empty string so artifacts do not
+preserve ambiguous contract identifiers.
+It also requires `prompt_contract.required_fields` to include both `answer` and `reasoning`, matching
+the built-in prompt contract and adapter result shape. Field names must be exact, unpadded strings so
+artifacts do not preserve ambiguous response keys.
+String-form `adapter_command` and `execution.provider_command` values and list-form entries must
+also be exact, unpadded, non-empty strings so configured commands fail validation before subprocess
+execution when they preserve ambiguous whitespace.
+
 ## ModelResult
 
 `ModelResult` is the raw model answer for one case before scoring. Current `results[]` records in run files already cover the minimum shape.
@@ -268,6 +304,9 @@ Optional fields:
     "score": 1,
     "reason": "exact_normalized_match",
     "matched_by": "exact",
+    "answer_field": "answer",
+    "reasoning_field": "reasoning",
+    "accepted_variant_policy": "normalized_exact_or_configured_heuristic",
     "heuristic_flags": [
       {
         "name": "exact_match",
@@ -329,6 +368,10 @@ Required fields:
     "scored_results": {
       "algorithm": "sha256",
       "value": "..."
+    },
+    "report_summary": {
+      "algorithm": "sha256",
+      "value": "..."
     }
   },
   "models": ["gpt-5.4"],
@@ -352,6 +395,87 @@ Required fields:
 - `created_at`
 
 The initial implementation may store the bundle as a single JSON file beside existing raw and scored files. Later work can move to a directory layout without changing the manifest contract.
+Baseline runs write the `ReportSummary` as a sibling `*.summary.json` artifact copied from the scored output's embedded `summary` object.
+Report-summary regeneration requires bundle manifests to use exact, unpadded, non-empty `id`
+values so bundle identity is not silently normalized from malformed manifest metadata.
+Report-summary regeneration requires bundle manifests to use exact, unpadded, non-empty `suite_id`
+values so summary identity is not silently normalized from malformed bundle metadata.
+Report-summary regeneration requires bundle manifests to include the `run_config` field; legacy
+CLI-produced bundles may set it to `null`, while config-driven bundles must set it to a
+exact, unpadded, non-empty string.
+Report-summary regeneration requires bundle manifests to include a non-empty `models` list whose
+entries are exact, unpadded, non-empty strings.
+Report-summary regeneration requires bundle manifests to include `case_count` as a non-negative
+integer.
+Report-summary regeneration requires the referenced raw artifact to be a JSON object before
+checking any embedded raw metadata.
+Report-summary regeneration requires the referenced raw artifact to include a `results` list so
+bundle manifests cannot point at metadata-only raw files.
+Report-summary regeneration requires every raw artifact `results` entry to be a JSON object so
+malformed raw records are not accepted as valid bundle contents.
+Report-summary regeneration requires the referenced scored artifact to be a JSON object with a
+`results` list before checking scored summary metadata or rebuilding the report summary.
+Report-summary regeneration requires every scored artifact `results` entry to be a JSON object so
+malformed scored records are not silently dropped while rebuilding summaries.
+When the raw artifact embeds top-level `case_count`, report-summary regeneration requires
+manifest `case_count` to match it so bundle case metadata stays consistent with the raw output
+artifact it references.
+Report-summary regeneration also requires manifest `case_count` to match the actual raw record
+count from the raw artifact `results` list.
+When the raw artifact embeds `dataset.case_count`, report-summary regeneration also requires
+manifest `case_count` to match that dataset-level count alias.
+When the scored artifact embeds `summary.overall.case_count`, report-summary regeneration requires
+manifest `case_count` to match it so bundle case metadata stays consistent with the scored output
+artifact it references.
+When the scored artifact embeds legacy `summary.overall.question_count`, report-summary
+regeneration also requires manifest `case_count` to match it.
+When the scored artifact embeds a `results` list, report-summary regeneration also requires
+manifest `case_count` to match the actual scored record count.
+Report-summary regeneration requires every raw and scored result record in a consumed bundle to
+expose an exact, unpadded string `id` or `case_id`, requires records with both aliases to use the
+same value, and requires paired raw/scored case identifiers to match in order so a bundle cannot
+combine raw and scored artifacts from different case selections.
+When raw or scored result records include a `model` value, report-summary regeneration requires it
+to be listed in manifest `models` so bundle metadata cannot claim a different model set than the
+artifacts being summarized.
+Report-summary regeneration requires bundle manifests to include `created_at` as an exact,
+unpadded, non-empty string.
+When present, `completed_at` must be `null` or an exact, unpadded, non-empty string so regenerated
+summaries do not preserve ambiguous completion timestamp metadata.
+Report-summary regeneration requires bundle manifests to include `fingerprints` as a JSON object
+so bundle integrity metadata is not silently omitted.
+Report-summary regeneration requires bundle manifests to include `fingerprints.dataset` as a JSON object
+so consumed bundle manifests preserve dataset identity metadata.
+Report-summary regeneration requires bundle manifests to include `fingerprints.scored_results` as a JSON object
+so the scored artifact being consumed has explicit integrity metadata.
+Report-summary regeneration requires bundle manifests to include `fingerprints.raw_results` as a JSON object
+so consumed bundle manifests preserve raw-output integrity metadata.
+Report-summary regeneration requires `fingerprints.dataset.algorithm` to be the exact, unpadded
+`sha256` string so dataset identity metadata uses the supported digest algorithm.
+Report-summary regeneration requires `fingerprints.dataset.value` to be an exact, unpadded,
+non-empty string so
+dataset identity metadata is not silently omitted from consumed manifests.
+When the raw artifact embeds `dataset.path_hash`, report-summary regeneration requires
+`fingerprints.dataset.value` to match it so the bundle's dataset identity stays consistent with
+the raw output artifact it references.
+Report-summary regeneration requires `fingerprints.scored_results.algorithm` to be the exact,
+unpadded `sha256` string.
+Report-summary regeneration requires `fingerprints.raw_results.algorithm` to be the exact,
+unpadded `sha256` string so raw-output integrity metadata uses the supported digest algorithm.
+Report-summary regeneration requires `fingerprints.scored_results.value` to be an exact,
+unpadded, non-empty string that matches the scored artifact bytes.
+Report-summary regeneration requires `fingerprints.raw_results.value` to be an exact,
+unpadded, non-empty string that matches the raw artifact bytes.
+When `artifacts.report_summary` is present, report-summary regeneration validates it as an exact,
+unpadded, non-empty path and requires `fingerprints.report_summary.algorithm` to be the exact
+`sha256` string with a non-empty, exact value matching the report-summary artifact bytes.
+Report-summary regeneration requires bundle manifests to include `artifacts` as a JSON object
+before reading `artifacts.scored_results`.
+Report-summary regeneration requires `artifacts.scored_results` to be a non-empty string
+before resolving the scored artifact path.
+Report-summary regeneration requires `artifacts.raw_results` to be a non-empty string
+so consumed bundle manifests preserve the required raw-output artifact reference.
+Report-summary generation validates `artifacts.raw_results` and `artifacts.scored_results` as exact, unpadded paths before resolving the scored artifact relative to the manifest, rejects missing, unsupported, or whitespace-padded manifest `schema_version` values, and requires manifest `benchmark` to be the exact `reasoning-benchmark` identity.
 
 ## ReportSummary
 
@@ -388,6 +512,18 @@ The initial implementation may store the bundle as a single JSON file beside exi
       "accuracy": 1.0
     }
   },
+  "by_ambiguity_type": {
+    "none": {
+      "case_count": 5,
+      "accuracy": 0.8
+    }
+  },
+  "by_calibration_split": {
+    "smoke": {
+      "case_count": 5,
+      "accuracy": 0.8
+    }
+  },
   "manual_review": {
     "reasoning_scores_present": 0,
     "constraint_scores_present": 0,
@@ -412,6 +548,8 @@ Optional but expected for M3 reporting:
 - `by_task_family`
 - `by_evaluation_mode`
 - `by_failure_mode`
+- `by_ambiguity_type`
+- `by_calibration_split`
 - `manual_review`
 
 ## Current-To-V2 Mapping
