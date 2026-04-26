@@ -1,8 +1,8 @@
 # Reasoning Benchmark v2 Contracts
 
-**Status:** M1 draft  
-**Scope owner:** NGX-132  
-**Depends on:** `docs/framework-v2.md`  
+**Status:** M1 draft
+**Scope owner:** NGX-132
+**Depends on:** `docs/framework-v2.md`
 **Purpose:** Define the canonical entities and JSON artifact shapes that runner, scorer, and reporting work should preserve as the framework evolves.
 
 These contracts are data-first. They describe stable JSON objects the current stdlib scripts can read and write without introducing a package dependency, database, or class hierarchy.

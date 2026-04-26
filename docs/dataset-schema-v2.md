@@ -1,8 +1,8 @@
 # Reasoning Benchmark v2 Dataset Schema
 
-**Status:** M1 draft  
-**Scope owner:** NGX-133  
-**Depends on:** `docs/framework-v2.md`, `docs/contracts-v2.md`  
+**Status:** M1 draft
+**Scope owner:** NGX-133
+**Depends on:** `docs/framework-v2.md`, `docs/contracts-v2.md`
 **Purpose:** Extend the current question row contract so ambiguity and pragmatic reasoning cases can be evaluated without forcing every case into exact-answer scoring.
 
 This document defines the richer `BenchmarkCase` fields that M2 can migrate into code. The current `data/questions.json` rows remain valid during migration; new fields are additive until all cases are backfilled.
@@ -225,4 +225,3 @@ Before a migrated case is marked `reviewed`:
 - Ambiguity metadata explains any non-literal or multiple-reading behavior.
 - Evaluation dimensions match what the scorer or manual reviewer can actually assess.
 - Calibration metadata says whether the case belongs in smoke, starter, full, holdout, or calibration usage.
-

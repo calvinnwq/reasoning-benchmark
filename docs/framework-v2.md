@@ -1,7 +1,7 @@
 # Reasoning Benchmark Framework v2 Spec
 
-**Status:** M1 draft  
-**Scope owner:** NGX-131  
+**Status:** M1 draft
+**Scope owner:** NGX-131
 **Primary goal:** Turn the current short-reasoning benchmark into a small, durable framework without changing its character or pretending it is a general evaluation platform.
 
 ## Why v2 Exists
