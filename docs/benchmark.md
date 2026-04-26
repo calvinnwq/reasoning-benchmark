@@ -153,6 +153,8 @@ Each row in the JSON/CSV exports includes:
 - `rationale`
 - `failure_mode`
 
+The v2 dataset schema extension is documented in [`dataset-schema-v2.md`](dataset-schema-v2.md). It adds optional fields for task family IDs, evaluator mode, accepted interpretations, ambiguity metadata, cooperative-intent expectations, and calibration splits while preserving the current row shape during migration.
+
 ---
 
 ## Curation notes

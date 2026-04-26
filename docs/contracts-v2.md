@@ -97,7 +97,7 @@ Optional fields:
 
 ## BenchmarkCase
 
-`BenchmarkCase` is the v2 name for one row in `data/questions.json`. Current rows can be read as v2-compatible cases by mapping `category` to `legacy_category` and deriving `task_family_id` later.
+`BenchmarkCase` is the v2 name for one row in `data/questions.json`. Current rows can be read as v2-compatible cases by mapping `category` to `legacy_category` and deriving `task_family_id` later. The extended ambiguity, cooperative-intent, accepted-interpretation, and calibration fields are defined in [`docs/dataset-schema-v2.md`](dataset-schema-v2.md).
 
 ```json
 {
@@ -438,4 +438,4 @@ M2 should implement these contracts incrementally:
 4. Introduce manifest writing next to existing raw and scored outputs before changing directory layout.
 5. Let reports consume scored artifacts and bundle manifests instead of raw runner internals.
 
-NGX-133 owns the richer dataset fields for ambiguity and pragmatic reasoning. This document reserves `evaluation` and `metadata` containers for that work but does not define their full contents.
+NGX-133 owns the richer dataset fields for ambiguity and pragmatic reasoning in [`docs/dataset-schema-v2.md`](dataset-schema-v2.md). This document reserves the top-level object boundary; the dataset schema document defines the detailed `evaluation`, `accepted_interpretations`, `ambiguity`, `cooperative_intent`, and `calibration` contents.

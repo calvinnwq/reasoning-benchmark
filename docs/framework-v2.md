@@ -75,7 +75,7 @@ Concepts that should not be pulled into the core yet:
 
 ## Framework Objects
 
-The detailed JSON shapes are defined in [`docs/contracts-v2.md`](contracts-v2.md). V2 reserves these object boundaries:
+The detailed JSON shapes are defined in [`docs/contracts-v2.md`](contracts-v2.md), with the richer dataset-case fields defined in [`docs/dataset-schema-v2.md`](dataset-schema-v2.md). V2 reserves these object boundaries:
 
 - **BenchmarkCase:** one prompt plus expected-answer and evaluation metadata.
 - **TaskFamily:** a logical family used for curation and reporting.
@@ -126,7 +126,7 @@ M1 should produce contracts, not a full rewrite:
 
 - NGX-131: this framework spec.
 - NGX-132: canonical entities and artifact bundle schema in `docs/contracts-v2.md`.
-- NGX-133: extended dataset schema for ambiguity and pragmatic reasoning cases.
+- NGX-133: extended dataset schema for ambiguity and pragmatic reasoning cases in `docs/dataset-schema-v2.md`.
 
 After M1, M2 can refactor the runner and evaluator code against these contracts with less ambiguity.
 
