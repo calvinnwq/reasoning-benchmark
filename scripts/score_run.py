@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import argparse
+import copy
 import json
 import re
 from collections import Counter
@@ -14,6 +15,27 @@ import unicodedata
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 DEFAULT_DATASET_PATH = REPO_ROOT / "data" / "questions.json"
+SUPPORTED_EVALUATION_MODES = {"exact", "rubric", "hybrid"}
+ANSWER_CORRECTNESS_DIMENSION_IDS = {"answer_correctness", "score_answer", "final_answer_correctness"}
+DEFAULT_ACCEPTED_VARIANT_POLICY = "normalized_exact_or_configured_heuristic"
+CATEGORY_TASK_FAMILY_IDS = {
+    "GG": "goal-grounding",
+    "CR": "classic-riddle-override",
+    "TW": "temporal-state",
+    "SP": "social-pragmatics",
+    "IA": "instruction-ambiguity",
+    "PR": "reference-resolution",
+    "MC": "physical-commonsense",
+}
+CATEGORY_AMBIGUITY_TYPES = {
+    "GG": "none",
+    "CR": "classic-template",
+    "TW": "none",
+    "SP": "pragmatic",
+    "IA": "underspecified",
+    "PR": "referential",
+    "MC": "test-condition",
+}
 
 
 @dataclass(frozen=True)
@@ -329,11 +351,227 @@ def coerce_penalties(value: Any) -> List[dict]:
 
 def coerce_scoring_fields(record: Dict[str, Any]) -> Dict[str, Any]:
     coerced = dict(record)
+    model = coerced.get("model")
+    if not isinstance(model, str) or not model.strip():
+        coerced["model"] = "unknown"
     coerced.setdefault("score_reasoning", None)
     coerced.setdefault("score_constraint_extraction", None)
     coerced["penalties"] = coerce_penalties(coerced.get("penalties"))
     coerced.setdefault("notes", "")
     return coerced
+
+
+def evaluation_mode_for(question: Dict[str, Any]) -> str:
+    evaluation = question.get("evaluation")
+    if not isinstance(evaluation, dict):
+        return "exact"
+
+    mode = evaluation.get("mode")
+    if not isinstance(mode, str) or not mode.strip():
+        return "exact"
+    return mode.strip().lower()
+
+
+def answer_field_for(question: Dict[str, Any]) -> str:
+    evaluation = question.get("evaluation")
+    if not isinstance(evaluation, dict):
+        return "answer"
+
+    answer_field = evaluation.get("answer_field")
+    if not isinstance(answer_field, str) or not answer_field.strip():
+        return "answer"
+    return answer_field.strip()
+
+
+def reasoning_field_for(question: Dict[str, Any]) -> str:
+    evaluation = question.get("evaluation")
+    if not isinstance(evaluation, dict):
+        return "reasoning"
+
+    reasoning_field = evaluation.get("reasoning_field")
+    if not isinstance(reasoning_field, str) or not reasoning_field.strip():
+        return "reasoning"
+    return reasoning_field.strip()
+
+
+def accepted_variant_policy_for(question: Dict[str, Any]) -> str:
+    evaluation = question.get("evaluation")
+    if not isinstance(evaluation, dict):
+        return DEFAULT_ACCEPTED_VARIANT_POLICY
+
+    policy = evaluation.get("accepted_variant_policy")
+    if not isinstance(policy, str) or not policy.strip():
+        return DEFAULT_ACCEPTED_VARIANT_POLICY
+    return policy.strip()
+
+
+def task_family_id_for(question: Dict[str, Any]) -> str:
+    task_family_id = question.get("task_family_id")
+    if isinstance(task_family_id, str) and task_family_id.strip():
+        return task_family_id.strip()
+
+    category = question.get("category")
+    if isinstance(category, str):
+        return CATEGORY_TASK_FAMILY_IDS.get(category.strip().upper(), "unknown")
+    return "unknown"
+
+
+def ambiguity_type_for(question: Dict[str, Any]) -> str:
+    ambiguity = question.get("ambiguity")
+    if isinstance(ambiguity, dict):
+        ambiguity_type = ambiguity.get("ambiguity_type")
+        if isinstance(ambiguity_type, str) and ambiguity_type.strip():
+            return ambiguity_type.strip()
+
+    category = question.get("category")
+    if isinstance(category, str):
+        return CATEGORY_AMBIGUITY_TYPES.get(category.strip().upper(), "unknown")
+    return "unknown"
+
+
+def clarification_expected_for(question: Dict[str, Any]) -> bool:
+    ambiguity = question.get("ambiguity")
+    if not isinstance(ambiguity, dict):
+        return False
+    return ambiguity.get("clarification_expected") is True
+
+
+def ambiguity_review_context_for(question: Dict[str, Any]) -> Dict[str, Any]:
+    context: Dict[str, Any] = {}
+    ambiguity = question.get("ambiguity")
+    if isinstance(ambiguity, dict):
+        tags = ambiguity.get("tags")
+        if isinstance(tags, list):
+            context["ambiguity_tags"] = copy.deepcopy(tags)
+
+        literal_reading_defensible = ambiguity.get("literal_reading_defensible")
+        if isinstance(literal_reading_defensible, bool):
+            context["literal_reading_defensible"] = literal_reading_defensible
+
+        preferred_resolution = ambiguity.get("preferred_resolution")
+        if isinstance(preferred_resolution, str) and preferred_resolution.strip():
+            context["preferred_resolution"] = preferred_resolution.strip()
+
+        notes = ambiguity.get("notes")
+        if isinstance(notes, str) and notes.strip():
+            context["ambiguity_notes"] = notes.strip()
+
+    accepted_interpretations = question.get("accepted_interpretations")
+    if isinstance(accepted_interpretations, list):
+        context["accepted_interpretations"] = copy.deepcopy(accepted_interpretations)
+
+    cooperative_intent = question.get("cooperative_intent")
+    if isinstance(cooperative_intent, dict):
+        context["cooperative_intent"] = copy.deepcopy(cooperative_intent)
+    return context
+
+
+def calibration_metadata_for(question: Dict[str, Any]) -> Dict[str, str]:
+    calibration = question.get("calibration")
+    if not isinstance(calibration, dict):
+        calibration = {}
+
+    def field(name: str, default: str) -> str:
+        value = calibration.get(name)
+        if isinstance(value, str) and value.strip():
+            return value.strip()
+        return default
+
+    return {
+        "calibration_difficulty": field("difficulty", "unknown"),
+        "calibration_split": field("split", "full"),
+        "gold_confidence": field("gold_confidence", "unknown"),
+        "human_disagreement_risk": field("human_disagreement_risk", "unknown"),
+        "review_status": field("review_status", "unknown"),
+    }
+
+
+def coerce_dimension_weight(value: Any) -> float:
+    if isinstance(value, bool):
+        return 1.0
+    if isinstance(value, (int, float)):
+        return float(value)
+    return 1.0
+
+
+def normalize_dimension(raw_dimension: Any) -> Optional[Dict[str, Any]]:
+    if isinstance(raw_dimension, str):
+        dimension_id = raw_dimension.strip()
+        if not dimension_id:
+            return None
+        dimension_type = "binary" if dimension_id in ANSWER_CORRECTNESS_DIMENSION_IDS else "rubric"
+        return {
+            "id": dimension_id,
+            "label": dimension_id.replace("_", " "),
+            "type": dimension_type,
+            "weight": 1.0,
+            "auto_scored": dimension_id in ANSWER_CORRECTNESS_DIMENSION_IDS,
+        }
+
+    if not isinstance(raw_dimension, dict):
+        return None
+
+    dimension_id = raw_dimension.get("id")
+    if not isinstance(dimension_id, str) or not dimension_id.strip():
+        return None
+
+    dimension_id = dimension_id.strip()
+    raw_type = raw_dimension.get("type")
+    dimension_type = raw_type.strip().lower() if isinstance(raw_type, str) and raw_type.strip() else "rubric"
+    raw_label = raw_dimension.get("label")
+    label = raw_label if isinstance(raw_label, str) and raw_label.strip() else dimension_id.replace("_", " ")
+    auto_scored = raw_dimension.get("auto_scored")
+    if not isinstance(auto_scored, bool):
+        auto_scored = dimension_id in ANSWER_CORRECTNESS_DIMENSION_IDS
+
+    return {
+        "id": dimension_id,
+        "label": label,
+        "type": dimension_type,
+        "weight": coerce_dimension_weight(raw_dimension.get("weight")),
+        "auto_scored": auto_scored,
+    }
+
+
+def evaluation_dimensions_for(question: Dict[str, Any]) -> List[Dict[str, Any]]:
+    evaluation = question.get("evaluation")
+    if not isinstance(evaluation, dict):
+        return []
+
+    raw_dimensions = evaluation.get("dimensions")
+    if not isinstance(raw_dimensions, list):
+        return []
+
+    dimensions = []
+    for raw_dimension in raw_dimensions:
+        dimension = normalize_dimension(raw_dimension)
+        if dimension is not None:
+            dimensions.append(dimension)
+    return dimensions
+
+
+def score_dimensions(
+    dimensions: Sequence[Dict[str, Any]],
+    evaluation_mode: str,
+    answer_score: Optional[int],
+) -> List[Dict[str, Any]]:
+    scored_dimensions = []
+    for dimension in dimensions:
+        scored = dict(dimension)
+        can_auto_score_answer = (
+            evaluation_mode in {"exact", "hybrid"}
+            and dimension["id"] in ANSWER_CORRECTNESS_DIMENSION_IDS
+            and dimension["auto_scored"] is True
+            and answer_score in {0, 1}
+        )
+        if can_auto_score_answer:
+            scored["score"] = answer_score
+            scored["status"] = "auto_scored"
+        else:
+            scored["score"] = None
+            scored["status"] = "manual_review_required"
+        scored_dimensions.append(scored)
+    return scored_dimensions
 
 
 def normalize_run_payload(payload: Any) -> Tuple[Dict[str, Any], List[Dict[str, Any]]]:
@@ -363,16 +601,34 @@ def load_dataset(dataset_path: Path) -> Dict[str, Dict[str, Any]]:
 def score_record(result: Dict[str, Any], dataset: Dict[str, Dict[str, Any]]) -> Dict[str, Any]:
     coerced = coerce_scoring_fields(result)
     record_id = str(coerced.get("id") or coerced.get("case_id", "")).strip()
+    coerced.setdefault("schema_version", "2.0.0")
+    coerced["scored_at"] = datetime.now(timezone.utc).isoformat()
+    if record_id:
+        coerced.setdefault("id", record_id)
+        coerced.setdefault("case_id", record_id)
 
     if not record_id or record_id not in dataset:
+        coerced.setdefault("evaluation_mode", "exact")
+        coerced.setdefault("task_family_id", "unknown")
+        coerced.setdefault("failure_mode", "unknown")
+        coerced.setdefault("ambiguity_type", "unknown")
+        coerced.setdefault("calibration_difficulty", "unknown")
+        coerced.setdefault("calibration_split", "unknown")
+        coerced.setdefault("gold_confidence", "unknown")
+        coerced.setdefault("human_disagreement_risk", "unknown")
+        coerced.setdefault("review_status", "unknown")
         status = {
             "matched": False,
             "score": None,
             "reason": "unknown_question_id",
             "matched_by": "metadata_missing",
+            "answer_field": "answer",
+            "reasoning_field": "reasoning",
+            "accepted_variant_policy": DEFAULT_ACCEPTED_VARIANT_POLICY,
             "heuristic_flags": [
                 {"name": "missing_or_unknown_id", "value": True, "is_heuristic": True},
             ],
+            "dimensions": [],
         }
         coerced.update(
             {
@@ -389,8 +645,78 @@ def score_record(result: Dict[str, Any], dataset: Dict[str, Dict[str, Any]]) -> 
         return coerced
 
     question = dataset[record_id]
+    evaluation_mode = evaluation_mode_for(question)
+    answer_field = answer_field_for(question)
+    reasoning_field = reasoning_field_for(question)
+    accepted_variant_policy = accepted_variant_policy_for(question)
+    answer = coerced.get(answer_field, "")
+    dimensions = evaluation_dimensions_for(question)
+    coerced["evaluation_mode"] = evaluation_mode
+    coerced["task_family_id"] = task_family_id_for(question)
+    coerced["failure_mode"] = str(question.get("failure_mode") or "unknown").strip() or "unknown"
+    coerced["ambiguity_type"] = ambiguity_type_for(question)
+    coerced["clarification_expected"] = clarification_expected_for(question)
+    coerced.update(ambiguity_review_context_for(question))
+    coerced.update(calibration_metadata_for(question))
+
+    if evaluation_mode == "rubric":
+        expected_text = str(question.get("expected_answer", ""))
+        status = {
+            "matched": False,
+            "score": None,
+            "reason": "rubric_manual_review_required",
+            "matched_by": "manual_rubric",
+            "answer_field": answer_field,
+            "reasoning_field": reasoning_field,
+            "accepted_variant_policy": accepted_variant_policy,
+            "heuristic_flags": [],
+            "dimensions": score_dimensions(dimensions, evaluation_mode, None),
+        }
+        coerced.update(
+            {
+                "score_answer": None,
+                "scoring_status": status,
+                "score_answer_normalized": {
+                    "expected": expected_text,
+                    "expected_normalized": normalize_text(expected_text),
+                    "answer": answer,
+                    "answer_normalized": normalize_text(answer),
+                },
+                "score_reason": status["reason"],
+            }
+        )
+        return coerced
+
+    if evaluation_mode not in SUPPORTED_EVALUATION_MODES:
+        expected_text = str(question.get("expected_answer", ""))
+        status = {
+            "matched": False,
+            "score": None,
+            "reason": "unsupported_evaluation_mode",
+            "matched_by": "unsupported_evaluator",
+            "answer_field": answer_field,
+            "reasoning_field": reasoning_field,
+            "accepted_variant_policy": accepted_variant_policy,
+            "heuristic_flags": [],
+            "dimensions": score_dimensions(dimensions, evaluation_mode, None),
+        }
+        coerced.update(
+            {
+                "score_answer": None,
+                "scoring_status": status,
+                "score_answer_normalized": {
+                    "expected": expected_text,
+                    "expected_normalized": normalize_text(expected_text),
+                    "answer": answer,
+                    "answer_normalized": normalize_text(answer),
+                },
+                "score_reason": status["reason"],
+            }
+        )
+        return coerced
+
     match = score_single_answer(
-        answer=coerced.get("answer", ""),
+        answer=answer,
         expected_text=str(question.get("expected_answer", "")),
         accepted_variants=question.get("accepted_variants", []),
     )
@@ -399,7 +725,11 @@ def score_record(result: Dict[str, Any], dataset: Dict[str, Dict[str, Any]]) -> 
         "score": match.score,
         "reason": match.reason,
         "matched_by": match.matched_by,
+        "answer_field": answer_field,
+        "reasoning_field": reasoning_field,
+        "accepted_variant_policy": accepted_variant_policy,
         "heuristic_flags": [{"name": "answer_match", "value": match.heuristic, "is_heuristic": match.heuristic}],
+        "dimensions": score_dimensions(dimensions, evaluation_mode, match.score),
     }
     if match.heuristic is False:
         # Keep a consistent flag schema: even non-heuristic matching records are explicit.
@@ -423,7 +753,38 @@ def score_record(result: Dict[str, Any], dataset: Dict[str, Dict[str, Any]]) -> 
     return coerced
 
 
-def build_summary(scored: List[Dict[str, Any]]) -> Dict[str, Any]:
+def suite_id_from_meta(input_meta: Dict[str, Any]) -> str:
+    suite_id = input_meta.get("suite_id")
+    if isinstance(suite_id, str) and suite_id.strip():
+        return suite_id.strip()
+
+    run_mode = input_meta.get("run_mode")
+    if isinstance(run_mode, str) and run_mode.strip():
+        return run_mode.strip()
+
+    execution = input_meta.get("execution")
+    if isinstance(execution, dict):
+        mode = execution.get("mode")
+        if isinstance(mode, str) and mode.strip():
+            return mode.strip()
+
+    return "unknown"
+
+
+def answered_text_for_summary(item: Dict[str, Any]) -> Any:
+    normalized = item.get("score_answer_normalized")
+    if isinstance(normalized, dict) and "answer" in normalized:
+        return normalized.get("answer")
+    return item.get("answer", "")
+
+
+def build_summary(
+    scored: List[Dict[str, Any]],
+    *,
+    benchmark: str = "reasoning-benchmark",
+    suite_id: str = "unknown",
+    source_bundles: Optional[Sequence[str]] = None,
+) -> Dict[str, Any]:
     auto_scored = [item for item in scored if item.get("scoring_status", {}).get("score") in {0, 1}]
     auto_total = len(auto_scored)
     auto_correct = sum(1 for item in auto_scored if item["scoring_status"]["score"] == 1)
@@ -445,9 +806,165 @@ def build_summary(scored: List[Dict[str, Any]]) -> Dict[str, Any]:
             if isinstance(flag, dict) and flag.get("is_heuristic"):
                 heuristics.update([flag.get("name", "unknown")])
 
-    answered = sum(1 for item in scored if normalize_text(item.get("answer", "")) != "")
+    answered = sum(1 for item in scored if normalize_text(answered_text_for_summary(item)) != "")
+    by_model: Dict[str, Dict[str, Any]] = {}
+    by_evaluation_mode: Dict[str, Dict[str, Any]] = {}
+    by_task_family: Dict[str, Dict[str, Any]] = {}
+    by_failure_mode: Dict[str, Dict[str, Any]] = {}
+    by_ambiguity_type: Dict[str, Dict[str, Any]] = {}
+    by_calibration_split: Dict[str, Dict[str, Any]] = {}
+    for item in scored:
+        model = str(item.get("model") or "unknown").strip() or "unknown"
+        model_bucket = by_model.setdefault(
+            model,
+            {
+                "total": 0,
+                "auto_scored": 0,
+                "correct": 0,
+                "incorrect": 0,
+                "accuracy": 0.0,
+                "manual_review_required": 0,
+            },
+        )
+        model_bucket["total"] += 1
+
+        mode = str(item.get("evaluation_mode") or "exact").strip() or "exact"
+        bucket = by_evaluation_mode.setdefault(
+            mode,
+            {
+                "total": 0,
+                "auto_scored": 0,
+                "correct": 0,
+                "incorrect": 0,
+                "accuracy": 0.0,
+                "manual_review_required": 0,
+            },
+        )
+        bucket["total"] += 1
+
+        task_family_id = str(item.get("task_family_id") or "unknown").strip() or "unknown"
+        task_family_bucket = by_task_family.setdefault(
+            task_family_id,
+            {
+                "total": 0,
+                "auto_scored": 0,
+                "correct": 0,
+                "incorrect": 0,
+                "accuracy": 0.0,
+                "manual_review_required": 0,
+            },
+        )
+        task_family_bucket["total"] += 1
+
+        failure_mode = str(item.get("failure_mode") or "unknown").strip() or "unknown"
+        failure_mode_bucket = by_failure_mode.setdefault(
+            failure_mode,
+            {
+                "total": 0,
+                "auto_scored": 0,
+                "correct": 0,
+                "incorrect": 0,
+                "accuracy": 0.0,
+                "manual_review_required": 0,
+            },
+        )
+        failure_mode_bucket["total"] += 1
+
+        ambiguity_type = str(item.get("ambiguity_type") or "unknown").strip() or "unknown"
+        ambiguity_type_bucket = by_ambiguity_type.setdefault(
+            ambiguity_type,
+            {
+                "total": 0,
+                "auto_scored": 0,
+                "correct": 0,
+                "incorrect": 0,
+                "accuracy": 0.0,
+                "manual_review_required": 0,
+            },
+        )
+        ambiguity_type_bucket["total"] += 1
+
+        calibration_split = str(item.get("calibration_split") or "full").strip() or "full"
+        calibration_split_bucket = by_calibration_split.setdefault(
+            calibration_split,
+            {
+                "total": 0,
+                "auto_scored": 0,
+                "correct": 0,
+                "incorrect": 0,
+                "accuracy": 0.0,
+                "manual_review_required": 0,
+            },
+        )
+        calibration_split_bucket["total"] += 1
+
+        status = item.get("scoring_status", {})
+        score = status.get("score") if isinstance(status, dict) else None
+        if score in {0, 1}:
+            model_bucket["auto_scored"] += 1
+            bucket["auto_scored"] += 1
+            task_family_bucket["auto_scored"] += 1
+            failure_mode_bucket["auto_scored"] += 1
+            ambiguity_type_bucket["auto_scored"] += 1
+            calibration_split_bucket["auto_scored"] += 1
+            if score == 1:
+                model_bucket["correct"] += 1
+                bucket["correct"] += 1
+                task_family_bucket["correct"] += 1
+                failure_mode_bucket["correct"] += 1
+                ambiguity_type_bucket["correct"] += 1
+                calibration_split_bucket["correct"] += 1
+            else:
+                model_bucket["incorrect"] += 1
+                bucket["incorrect"] += 1
+                task_family_bucket["incorrect"] += 1
+                failure_mode_bucket["incorrect"] += 1
+                ambiguity_type_bucket["incorrect"] += 1
+                calibration_split_bucket["incorrect"] += 1
+
+        dimensions = status.get("dimensions", []) if isinstance(status, dict) else []
+        has_manual_dimension = any(
+            isinstance(dimension, dict) and dimension.get("status") == "manual_review_required"
+            for dimension in dimensions
+        )
+        if score is None or has_manual_dimension:
+            model_bucket["manual_review_required"] += 1
+            bucket["manual_review_required"] += 1
+            task_family_bucket["manual_review_required"] += 1
+            failure_mode_bucket["manual_review_required"] += 1
+            ambiguity_type_bucket["manual_review_required"] += 1
+            calibration_split_bucket["manual_review_required"] += 1
+
+    for bucket in [
+        *by_model.values(),
+        *by_evaluation_mode.values(),
+        *by_task_family.values(),
+        *by_failure_mode.values(),
+        *by_ambiguity_type.values(),
+        *by_calibration_split.values(),
+    ]:
+        bucket["case_count"] = bucket["total"]
+        bucket["accuracy"] = (
+            round(bucket["correct"] / bucket["auto_scored"], 4)
+            if bucket["auto_scored"]
+            else 0.0
+        )
+
+    manual_review = {
+        "reasoning_scores_present": manual_reasoning_scores,
+        "constraint_scores_present": manual_constraint_scores,
+        "notes_present": manual_notes,
+        "heuristic_flags_total": heuristic_flags_total,
+    }
+
     return {
+        "schema_version": "2.0.0",
+        "benchmark": benchmark,
+        "suite_id": suite_id,
+        "source_bundles": list(source_bundles or []),
+        "generated_at": datetime.now(timezone.utc).isoformat(),
         "overall": {
+            "case_count": len(scored),
             "question_count": len(scored),
             "answered_count": answered,
             "missing_count": len(scored) - answered,
@@ -458,12 +975,14 @@ def build_summary(scored: List[Dict[str, Any]]) -> Dict[str, Any]:
             "incorrect": auto_total - auto_correct,
             "accuracy": auto_accuracy,
         },
-        "manual_only": {
-            "reasoning_scores_present": manual_reasoning_scores,
-            "constraint_scores_present": manual_constraint_scores,
-            "notes_present": manual_notes,
-            "heuristic_flags_total": heuristic_flags_total,
-        },
+        "manual_only": manual_review,
+        "manual_review": manual_review,
+        "by_model": by_model,
+        "by_evaluation_mode": by_evaluation_mode,
+        "by_task_family": by_task_family,
+        "by_failure_mode": by_failure_mode,
+        "by_ambiguity_type": by_ambiguity_type,
+        "by_calibration_split": by_calibration_split,
         "heuristic_flags": dict(heuristics),
     }
 
@@ -473,15 +992,21 @@ def build_output_payload(
     scored: List[Dict[str, Any]],
     dataset_path: str,
     source_input: Optional[str],
+    source_bundles: Optional[Sequence[str]] = None,
 ) -> Dict[str, Any]:
     return {
-        "schema_version": "1.0.0",
+        "schema_version": "2.0.0",
         "scoring_contract": "conservative_answer_correctness_only",
         "scored_at": datetime.now(timezone.utc).isoformat(),
         "source_input": source_input,
         "dataset_path": dataset_path,
         "input_meta": input_meta,
-        "summary": build_summary(scored),
+        "summary": build_summary(
+            scored,
+            benchmark=str(input_meta.get("benchmark") or "reasoning-benchmark"),
+            suite_id=suite_id_from_meta(input_meta),
+            source_bundles=source_bundles,
+        ),
         "results": scored,
     }
 
@@ -506,6 +1031,7 @@ def cmd_score(args: argparse.Namespace) -> int:
         scored=scored,
         dataset_path=str(dataset_path),
         source_input=str(input_path),
+        source_bundles=getattr(args, "source_bundle", None),
     )
 
     output_path.parent.mkdir(parents=True, exist_ok=True)
@@ -539,6 +1065,11 @@ def build_parser() -> argparse.ArgumentParser:
         "--dataset",
         default=str(DEFAULT_DATASET_PATH),
         help="Path to dataset questions JSON",
+    )
+    parser.add_argument(
+        "--source-bundle",
+        action="append",
+        help="Optional source RunArtifactBundle manifest path to record in summary.source_bundles",
     )
     return parser
 
