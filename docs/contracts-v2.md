@@ -19,7 +19,7 @@ These contracts are data-first. They describe stable JSON objects the current st
 
 ## Canonical Entities
 
-V2 has seven core entities:
+V2 has eight core entities:
 
 1. `Suite`: an ordered selection of cases.
 2. `TaskFamily`: a reporting and curation grouping.
@@ -28,6 +28,7 @@ V2 has seven core entities:
 5. `RunArtifactBundle`: the manifest tying a run's durable files together.
 6. `ScoreRecord`: one evaluated model result for one case.
 7. `ReportSummary`: aggregate metrics derived from scored records.
+8. `MatrixIndex`: the top-level index for matrix baseline run artifacts.
 
 `PromptContract` and `ModelResult` remain support objects. They are embedded in `RunConfig`, raw result files, and artifact bundles rather than owned as standalone persisted entities.
 
