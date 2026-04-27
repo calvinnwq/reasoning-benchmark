@@ -172,6 +172,10 @@ def matrix_manifest_path(
     return manifest_path(run_dir / suite_id, model, mode)
 
 
+def matrix_index_path(run_dir: Path) -> Path:
+    return run_dir / "matrix.index.json"
+
+
 def dataset_fingerprint(dataset_path: Path) -> str:
     digest = hashlib.sha256()
     with dataset_path.open("rb") as stream:
@@ -443,6 +447,74 @@ def build_run_artifact_bundle(
         },
         "models": [model],
         "case_count": case_count,
+        "created_at": created_at,
+        "completed_at": datetime.now(timezone.utc).isoformat(),
+    }
+
+
+def build_matrix_index(
+    *,
+    request: RunRequest,
+    created_at: str,
+) -> Dict[str, Any]:
+    suites = request.matrix_suites or ()
+    run_dir = request.run_dir
+    cells: list[Dict[str, Any]] = []
+    for suite in suites:
+        for model in request.models:
+            raw_path, scored_path = matrix_run_paths(
+                run_dir, suite.suite_id, model, suite.mode
+            )
+            summary = matrix_summary_path(
+                run_dir, suite.suite_id, model, suite.mode
+            )
+            manifest = matrix_manifest_path(
+                run_dir, suite.suite_id, model, suite.mode
+            )
+            cells.append(
+                {
+                    "suite_id": suite.suite_id,
+                    "model": model,
+                    "mode": suite.mode,
+                    "raw_results": raw_path.relative_to(run_dir).as_posix(),
+                    "scored_results": (
+                        None
+                        if request.skip_scoring
+                        else scored_path.relative_to(run_dir).as_posix()
+                    ),
+                    "report_summary": (
+                        None
+                        if request.skip_scoring
+                        else summary.relative_to(run_dir).as_posix()
+                    ),
+                    "manifest": (
+                        None
+                        if request.skip_scoring
+                        else manifest.relative_to(run_dir).as_posix()
+                    ),
+                }
+            )
+    return {
+        "schema_version": "1.0.0",
+        "benchmark": BENCHMARK_ID,
+        "run_config": str(request.config_path) if request.config_path else None,
+        "models": list(request.models),
+        "suites": [
+            {
+                "suite_id": suite.suite_id,
+                "mode": suite.mode,
+                "case_ids": list(suite.case_ids) if suite.case_ids else None,
+            }
+            for suite in suites
+        ],
+        "cells": cells,
+        "dataset": {
+            "path": str(request.dataset_path),
+            "fingerprint": {
+                "algorithm": "sha256",
+                "value": dataset_fingerprint(request.dataset_path),
+            },
+        },
         "created_at": created_at,
         "completed_at": datetime.now(timezone.utc).isoformat(),
     }
@@ -1076,6 +1148,7 @@ def cmd_run(args: argparse.Namespace) -> int:
     questions = load_questions(request.dataset_path)
 
     if request.matrix_suites:
+        matrix_started_at = datetime.now(timezone.utc).isoformat()
         for suite in request.matrix_suites:
             for model in request.models:
                 raw_path, scored_path = matrix_run_paths(
@@ -1098,6 +1171,12 @@ def cmd_run(args: argparse.Namespace) -> int:
                     report_summary_path=report_summary_path,
                     bundle_path=bundle_path,
                 )
+        index_path = matrix_index_path(request.run_dir)
+        index_payload = build_matrix_index(
+            request=request, created_at=matrix_started_at
+        )
+        write_json(index_path, index_payload)
+        print(f"wrote matrix index: {index_path}")
         return 0
 
     for model in request.models:
