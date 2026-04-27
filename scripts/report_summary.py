@@ -26,6 +26,17 @@ def file_sha256(path: Path) -> str:
     return digest.hexdigest()
 
 
+def bundle_artifact_path(bundle_path: Path, artifact_path: str, field_name: str) -> Path:
+    path = Path(artifact_path)
+    if path.is_absolute() or ".." in path.parts:
+        raise ValueError(f"Bundle manifest artifacts.{field_name} must stay within bundle directory: {bundle_path}")
+    resolved = (bundle_path.parent / path).resolve()
+    bundle_dir = bundle_path.parent.resolve()
+    if bundle_dir != resolved and bundle_dir not in resolved.parents:
+        raise ValueError(f"Bundle manifest artifacts.{field_name} must stay within bundle directory: {bundle_path}")
+    return resolved
+
+
 def result_case_id(record: Dict[str, Any]) -> str:
     for field in ("id", "case_id"):
         raw_id = record.get(field)
@@ -185,9 +196,7 @@ def scored_path_from_bundle(bundle_path: Path) -> Tuple[Path, Dict[str, Any]]:
     if scored_results != scored_results.strip():
         raise ValueError(f"Bundle manifest artifacts.scored_results must be an exact path: {bundle_path}")
 
-    scored_path = Path(scored_results)
-    if not scored_path.is_absolute():
-        scored_path = bundle_path.parent / scored_path
+    scored_path = bundle_artifact_path(bundle_path, scored_results, "scored_results")
     actual_scored_results_value = file_sha256(scored_path)
     if actual_scored_results_value != scored_results_value:
         raise ValueError(
@@ -231,9 +240,7 @@ def scored_path_from_bundle(bundle_path: Path) -> Tuple[Path, Dict[str, Any]]:
                 f"Bundle manifest fingerprints.report_summary.value must be an exact string: {bundle_path}"
             )
 
-        report_summary_path = Path(report_summary)
-        if not report_summary_path.is_absolute():
-            report_summary_path = bundle_path.parent / report_summary_path
+        report_summary_path = bundle_artifact_path(bundle_path, report_summary, "report_summary")
         actual_report_summary_value = file_sha256(report_summary_path)
         if actual_report_summary_value != report_summary_value:
             raise ValueError(
@@ -283,9 +290,7 @@ def scored_path_from_bundle(bundle_path: Path) -> Tuple[Path, Dict[str, Any]]:
         raise ValueError(
             f"Bundle manifest fingerprints.raw_results.value must be an exact string: {bundle_path}"
         )
-    raw_path = Path(raw_results)
-    if not raw_path.is_absolute():
-        raw_path = bundle_path.parent / raw_path
+    raw_path = bundle_artifact_path(bundle_path, raw_results, "raw_results")
     actual_raw_results_value = file_sha256(raw_path)
     if actual_raw_results_value != raw_results_value:
         raise ValueError(
@@ -494,12 +499,23 @@ def build_report_summary(
     input_paths: Optional[Sequence[Path]] = None,
     bundle_paths: Optional[Sequence[Path]] = None,
 ) -> Dict[str, Any]:
-    scored_paths = list(input_paths or [])
+    scored_paths: List[Path] = []
+    seen_scored_paths = set()
+
+    def add_scored_path(path: Path) -> None:
+        resolved = path.resolve()
+        if resolved in seen_scored_paths:
+            return
+        seen_scored_paths.add(resolved)
+        scored_paths.append(path)
+
+    for input_path in input_paths or []:
+        add_scored_path(input_path)
     explicit_source_bundles = [str(path) for path in bundle_paths or []]
     manifest_metas: List[Dict[str, Any]] = []
     for bundle_path in bundle_paths or []:
         scored_path, manifest_meta = scored_path_from_bundle(bundle_path)
-        scored_paths.append(scored_path)
+        add_scored_path(scored_path)
         manifest_metas.append(manifest_meta)
 
     if not scored_paths:

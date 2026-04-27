@@ -2858,6 +2858,51 @@ class BaselineRunnerTests(unittest.TestCase):
 
         self.assertFalse(run_dir.exists())
 
+    def test_config_file_rejects_duplicate_suite_case_ids(self) -> None:
+        dataset_path = self._dataset()
+        run_dir = self.tmp_dir / "duplicate-suite-case-runs"
+
+        config_path = self.tmp_dir / "duplicate-suite-case-config.json"
+        config_path.write_text(
+            json.dumps(
+                {
+                    "schema_version": "2.0.0",
+                    "id": "unit-duplicate-suite-case",
+                    "benchmark": "reasoning-benchmark",
+                    "suite_id": "custom",
+                    "suite": {
+                        "id": "custom",
+                        "name": "Custom",
+                        "case_ids": ["GG-01", "GG-02", "GG-01"],
+                    },
+                    "dataset": {"path": str(dataset_path)},
+                    "models": ["gpt-5.4"],
+                    "prompt_contract": run_baselines.build_prompt_contract(),
+                    "execution": {
+                        "skip_scoring": True,
+                    },
+                    "output": {"bundle_dir": str(run_dir)},
+                }
+            ),
+            encoding="utf-8",
+        )
+
+        args = argparse.Namespace(
+            config=str(config_path),
+            mode="smoke",
+            dataset=str(self.tmp_dir / "ignored.json"),
+            run_dir=str(self.tmp_dir / "ignored-runs"),
+            models=["sonnet-4.6"],
+            provider_command=None,
+            prompt_timeout=1.0,
+            skip_scoring=False,
+        )
+
+        with self.assertRaisesRegex(ValueError, "RunConfig suite.case_ids entries must be unique"):
+            run_baselines.cmd_run(args)
+
+        self.assertFalse(run_dir.exists())
+
     def test_run_writes_v2_manifest_next_to_artifacts(self) -> None:
         dataset_path = self._dataset()
         run_dir = self.tmp_dir / "manifest-runs"

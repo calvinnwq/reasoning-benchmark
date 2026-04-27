@@ -90,6 +90,91 @@ class ReportSummaryTests(unittest.TestCase):
         self.assertEqual(summary["overall"]["case_count"], 1)
         self.assertEqual(summary["by_model"]["gpt-5.4"]["accuracy"], 1.0)
 
+    def test_bundle_manifest_rejects_traversing_scored_results_path(self) -> None:
+        bundle_path = self.tmp_dir / "gpt-5-4.smoke.manifest.json"
+        bundle_path.write_text(
+            json.dumps(
+                {
+                    "schema_version": "2.0.0",
+                    "id": "baseline-smoke-gpt-5-4",
+                    "benchmark": "reasoning-benchmark",
+                    "suite_id": "smoke",
+                    "run_config": None,
+                    "models": ["gpt-5.4"],
+                    "case_count": 0,
+                    "created_at": "2026-04-26T00:00:00Z",
+                    "fingerprints": {
+                        "scored_results": {
+                            "algorithm": "sha256",
+                            "value": "0" * 64,
+                        }
+                    },
+                    "artifacts": {"scored_results": "../outside.scored.json"},
+                }
+            ),
+            encoding="utf-8",
+        )
+
+        with self.assertRaisesRegex(
+            ValueError,
+            "Bundle manifest artifacts.scored_results must stay within bundle directory",
+        ):
+            report_summary.build_report_summary(bundle_paths=[bundle_path])
+
+    def test_report_deduplicates_scored_input_also_referenced_by_bundle(self) -> None:
+        raw_path = self.tmp_dir / "gpt-5-4.smoke.raw.json"
+        raw_path.write_text(json.dumps({"results": [{"id": "q001"}]}), encoding="utf-8")
+        raw_fingerprint = hashlib.sha256(raw_path.read_bytes()).hexdigest()
+        scored_path = self.tmp_dir / "gpt-5-4.smoke.scored.json"
+        scored_path.write_text(
+            json.dumps(
+                {
+                    "results": [
+                        {
+                            "case_id": "q001",
+                            "model": "gpt-5.4",
+                            "evaluation_mode": "exact",
+                            "scoring_status": {"score": 1, "dimensions": []},
+                        }
+                    ],
+                }
+            ),
+            encoding="utf-8",
+        )
+        scored_fingerprint = hashlib.sha256(scored_path.read_bytes()).hexdigest()
+        bundle_path = self.tmp_dir / "gpt-5-4.smoke.manifest.json"
+        bundle_path.write_text(
+            json.dumps(
+                {
+                    "schema_version": "2.0.0",
+                    "id": "baseline-smoke-gpt-5-4",
+                    "benchmark": "reasoning-benchmark",
+                    "suite_id": "smoke",
+                    "run_config": None,
+                    "models": ["gpt-5.4"],
+                    "case_count": 1,
+                    "created_at": "2026-04-26T00:00:00Z",
+                    "fingerprints": {
+                        "dataset": {"algorithm": "sha256", "value": "dataset-fingerprint"},
+                        "raw_results": {"algorithm": "sha256", "value": raw_fingerprint},
+                        "scored_results": {"algorithm": "sha256", "value": scored_fingerprint},
+                    },
+                    "artifacts": {
+                        "raw_results": raw_path.name,
+                        "scored_results": scored_path.name,
+                    },
+                }
+            ),
+            encoding="utf-8",
+        )
+
+        summary = report_summary.build_report_summary(
+            input_paths=[scored_path],
+            bundle_paths=[bundle_path],
+        )
+
+        self.assertEqual(summary["overall"]["case_count"], 1)
+
     def test_bundle_manifest_rejects_mismatched_scored_results_fingerprint(self) -> None:
         scored_path = self.tmp_dir / "gpt-5-4.smoke.scored.json"
         scored_path.write_text(json.dumps({"results": []}), encoding="utf-8")

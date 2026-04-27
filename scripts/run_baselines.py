@@ -724,11 +724,15 @@ def config_suite_case_ids(config_payload: dict[str, Any]) -> tuple[str, ...] | N
         raise ValueError("RunConfig suite.case_ids must be a non-empty list")
 
     case_ids: list[str] = []
+    seen_case_ids = set()
     for case_id in raw_case_ids:
         if not isinstance(case_id, str) or not case_id.strip():
             raise ValueError("RunConfig suite.case_ids entries must be non-empty strings")
         if case_id != case_id.strip():
             raise ValueError("RunConfig suite.case_ids entries must be exact case ids")
+        if case_id in seen_case_ids:
+            raise ValueError("RunConfig suite.case_ids entries must be unique")
+        seen_case_ids.add(case_id)
         case_ids.append(case_id)
     return tuple(case_ids)
 
