@@ -73,6 +73,7 @@ class RunRequest:
     prompt_contract: dict[str, Any] | None = None
     config_payload: dict[str, Any] | None = None
     config_path: Path | None = None
+    matrix_suites: tuple[MatrixSuite, ...] | None = None
 
 
 def load_questions(dataset_path: Path) -> list[dict[str, Any]]:
@@ -938,7 +939,8 @@ def request_from_config(config_path: Path) -> RunRequest:
 
     suite_case_ids = config_suite_case_ids(config_payload)
     mode = config_execution_mode(config_payload, execution)
-    if mode not in SUPPORTED_MODES and suite_case_ids is None:
+    matrix_suites = config_matrix_suites(config_payload)
+    if mode not in SUPPORTED_MODES and suite_case_ids is None and matrix_suites is None:
         raise ValueError(f"Unsupported suite or mode in RunConfig: {mode}")
 
     models = config_models(config_payload)
@@ -957,6 +959,7 @@ def request_from_config(config_path: Path) -> RunRequest:
         prompt_contract=prompt_contract,
         config_payload=config_payload,
         config_path=config_path,
+        matrix_suites=matrix_suites,
     )
 
 
@@ -997,73 +1000,121 @@ def resolve_models(models: Iterable[str]) -> tuple[str, ...]:
     return requested
 
 
+def _execute_run_pass(
+    request: RunRequest,
+    questions: list[dict[str, Any]],
+    model: str,
+    mode: str,
+    suite_case_ids: tuple[str, ...] | None,
+    raw_path: Path,
+    scored_path: Path,
+    report_summary_path: Path,
+    bundle_path: Path,
+) -> None:
+    selected = select_questions(
+        questions,
+        mode,
+        request.max_cases,
+        request.seed,
+        suite_case_ids,
+    )
+    provider_command = request.provider_commands.get(model)
+    payload = build_payload(
+        model=model,
+        mode=mode,
+        questions=selected,
+        dataset_path=request.dataset_path,
+        max_cases=request.max_cases,
+        seed=request.seed,
+        prompt_contract=request.prompt_contract,
+    )
+    if request.config_payload:
+        payload["run_config"] = sanitize_run_config_for_artifact(request.config_payload)
+
+    if provider_command:
+        for index, row in enumerate(selected):
+            response = run_provider(provider_command, model, row["prompt"], request.prompt_timeout)
+            payload["results"][index] = build_result_record(
+                row=row,
+                model=model,
+                answer=response.answer,
+                reasoning=response.reasoning,
+                notes=response.notes,
+                provider=response,
+            )
+    write_json(raw_path, payload)
+    print(f"wrote raw artifact: {raw_path}")
+
+    if request.skip_scoring:
+        if bundle_path.exists():
+            bundle_path.unlink()
+        print("skipping scoring")
+        return
+
+    score_payload(raw_path, scored_path, request.dataset_path, bundle_path)
+    print(f"wrote scored artifact: {scored_path}")
+    write_report_summary(scored_path, report_summary_path)
+    print(f"wrote report summary: {report_summary_path}")
+
+    manifest = build_run_artifact_bundle(
+        model=model,
+        mode=mode,
+        raw_path=raw_path,
+        scored_path=scored_path,
+        report_summary_path=report_summary_path,
+        dataset_path=request.dataset_path,
+        case_count=len(selected),
+        created_at=str(payload["created_at"]),
+        config_path=request.config_path,
+    )
+    write_json(bundle_path, manifest)
+    print(f"wrote manifest: {bundle_path}")
+
+
 def cmd_run(args: argparse.Namespace) -> int:
     request = build_run_request(args)
     questions = load_questions(request.dataset_path)
-    selected = select_questions(
-        questions,
-        request.mode,
-        request.max_cases,
-        request.seed,
-        request.suite_case_ids,
-    )
+
+    if request.matrix_suites:
+        for suite in request.matrix_suites:
+            for model in request.models:
+                raw_path, scored_path = matrix_run_paths(
+                    request.run_dir, suite.suite_id, model, suite.mode
+                )
+                report_summary_path = matrix_summary_path(
+                    request.run_dir, suite.suite_id, model, suite.mode
+                )
+                bundle_path = matrix_manifest_path(
+                    request.run_dir, suite.suite_id, model, suite.mode
+                )
+                _execute_run_pass(
+                    request=request,
+                    questions=questions,
+                    model=model,
+                    mode=suite.mode,
+                    suite_case_ids=suite.case_ids,
+                    raw_path=raw_path,
+                    scored_path=scored_path,
+                    report_summary_path=report_summary_path,
+                    bundle_path=bundle_path,
+                )
+        return 0
 
     for model in request.models:
-        provider_command = request.provider_commands.get(model)
         raw_path, scored_path = run_paths(request.run_dir, model, request.mode)
         report_summary_path = summary_path(request.run_dir, model, request.mode)
-        payload = build_payload(
-            model=model,
-            mode=request.mode,
-            questions=selected,
-            dataset_path=request.dataset_path,
-            max_cases=request.max_cases,
-            seed=request.seed,
-            prompt_contract=request.prompt_contract,
-        )
-        if request.config_payload:
-            payload["run_config"] = sanitize_run_config_for_artifact(request.config_payload)
-
-        if provider_command:
-            for index, row in enumerate(selected):
-                response = run_provider(provider_command, model, row["prompt"], request.prompt_timeout)
-                payload["results"][index] = build_result_record(
-                    row=row,
-                    model=model,
-                    answer=response.answer,
-                    reasoning=response.reasoning,
-                    notes=response.notes,
-                    provider=response,
-                )
-        write_json(raw_path, payload)
-        print(f"wrote raw artifact: {raw_path}")
-
-        if request.skip_scoring:
-            bundle_path = manifest_path(request.run_dir, model, request.mode)
-            if bundle_path.exists():
-                bundle_path.unlink()
-            print("skipping scoring")
-            continue
-
         bundle_path = manifest_path(request.run_dir, model, request.mode)
-        score_payload(raw_path, scored_path, request.dataset_path, bundle_path)
-        print(f"wrote scored artifact: {scored_path}")
-        write_report_summary(scored_path, report_summary_path)
-        print(f"wrote report summary: {report_summary_path}")
-
-        manifest = build_run_artifact_bundle(
+        _execute_run_pass(
+            request=request,
+            questions=questions,
             model=model,
             mode=request.mode,
+            suite_case_ids=request.suite_case_ids,
             raw_path=raw_path,
             scored_path=scored_path,
             report_summary_path=report_summary_path,
-            dataset_path=request.dataset_path,
-            case_count=len(selected),
-            created_at=str(payload["created_at"]),
-            config_path=request.config_path,
+            bundle_path=bundle_path,
         )
-        write_json(bundle_path, manifest)
-        print(f"wrote manifest: {bundle_path}")
 
     return 0
 

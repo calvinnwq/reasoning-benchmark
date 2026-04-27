@@ -3123,5 +3123,203 @@ class MatrixSuiteParsingTests(unittest.TestCase):
             run_baselines.config_matrix_suites(payload)
 
 
+class MatrixRunnerTests(unittest.TestCase):
+    def setUp(self) -> None:
+        self.tmp_dir = Path(__file__).resolve().parent / "tmp"
+        self.tmp_dir.mkdir(parents=True, exist_ok=True)
+
+    def tearDown(self) -> None:
+        for item in self.tmp_dir.glob("*.json"):
+            item.unlink()
+
+    def _dataset(self) -> Path:
+        dataset_path = self.tmp_dir / "matrix-questions.json"
+        rows = [
+            {"id": "GG-01", "prompt": "Prompt one"},
+            {"id": "GG-02", "prompt": "Prompt two"},
+            {"id": "GG-03", "prompt": "Prompt three"},
+            {"id": "GG-04", "prompt": "Prompt four"},
+            {"id": "GG-05", "prompt": "Prompt five"},
+            {"id": "GG-06", "prompt": "Prompt six"},
+        ]
+        dataset_path.write_text(json.dumps(rows), encoding="utf-8")
+        return dataset_path
+
+    def test_request_from_config_carries_matrix_suites(self) -> None:
+        dataset_path = self._dataset()
+        run_dir = self.tmp_dir / "matrix-req-runs"
+        config_path = self.tmp_dir / "matrix-req-config.json"
+        config_path.write_text(
+            json.dumps(
+                {
+                    "schema_version": "2.0.0",
+                    "id": "unit-matrix-req",
+                    "benchmark": "reasoning-benchmark",
+                    "suite_id": "matrix-baseline",
+                    "dataset": {"path": str(dataset_path)},
+                    "models": ["gpt-5.4"],
+                    "prompt_contract": run_baselines.build_prompt_contract(),
+                    "execution": {
+                        "mode": "matrix-baseline",
+                        "skip_scoring": True,
+                    },
+                    "matrix": {
+                        "suites": [
+                            {"suite_id": "smoke", "mode": "smoke"},
+                            {"suite_id": "starter", "case_ids": ["GG-01", "GG-03"]},
+                        ],
+                    },
+                    "output": {"bundle_dir": str(run_dir)},
+                }
+            ),
+            encoding="utf-8",
+        )
+
+        request = run_baselines.request_from_config(config_path)
+        self.assertIsNotNone(request.matrix_suites)
+        self.assertEqual(len(request.matrix_suites), 2)
+        self.assertEqual(request.matrix_suites[0].suite_id, "smoke")
+        self.assertEqual(request.matrix_suites[0].mode, "smoke")
+        self.assertIsNone(request.matrix_suites[0].case_ids)
+        self.assertEqual(request.matrix_suites[1].suite_id, "starter")
+        self.assertEqual(request.matrix_suites[1].case_ids, ("GG-01", "GG-03"))
+        shutil.rmtree(run_dir, ignore_errors=True)
+
+    def test_matrix_config_writes_per_suite_raw_artifacts(self) -> None:
+        dataset_path = self._dataset()
+        run_dir = self.tmp_dir / "matrix-runs"
+
+        config_path = self.tmp_dir / "matrix-config.json"
+        config_path.write_text(
+            json.dumps(
+                {
+                    "schema_version": "2.0.0",
+                    "id": "unit-matrix-runner",
+                    "benchmark": "reasoning-benchmark",
+                    "suite_id": "matrix-baseline",
+                    "dataset": {"path": str(dataset_path)},
+                    "models": ["gpt-5.4"],
+                    "prompt_contract": run_baselines.build_prompt_contract(),
+                    "execution": {
+                        "mode": "matrix-baseline",
+                        "skip_scoring": True,
+                    },
+                    "matrix": {
+                        "suites": [
+                            {"suite_id": "smoke", "mode": "smoke"},
+                            {"suite_id": "starter", "case_ids": ["GG-01", "GG-03"]},
+                        ],
+                    },
+                    "output": {"bundle_dir": str(run_dir)},
+                }
+            ),
+            encoding="utf-8",
+        )
+
+        args = argparse.Namespace(
+            config=str(config_path),
+            mode="full",
+            dataset=str(self.tmp_dir / "ignored.json"),
+            run_dir=str(self.tmp_dir / "ignored-runs"),
+            models=["sonnet-4.6"],
+            provider_command=None,
+            prompt_timeout=1.0,
+            skip_scoring=False,
+        )
+        run_baselines.cmd_run(args)
+
+        smoke_raw = run_dir / "smoke" / "gpt-5-4.smoke.raw.json"
+        starter_raw = run_dir / "starter" / "gpt-5-4.starter.raw.json"
+        self.assertTrue(smoke_raw.is_file(), f"Expected {smoke_raw}")
+        self.assertTrue(starter_raw.is_file(), f"Expected {starter_raw}")
+
+        smoke_payload = json.loads(smoke_raw.read_text(encoding="utf-8"))
+        self.assertEqual(smoke_payload["run_mode"], "smoke")
+        self.assertEqual(len(smoke_payload["results"]), 5)
+        self.assertEqual(
+            [r["id"] for r in smoke_payload["results"]],
+            ["GG-01", "GG-02", "GG-03", "GG-04", "GG-05"],
+        )
+
+        starter_payload = json.loads(starter_raw.read_text(encoding="utf-8"))
+        self.assertEqual(starter_payload["run_mode"], "starter")
+        self.assertEqual(
+            [r["id"] for r in starter_payload["results"]],
+            ["GG-01", "GG-03"],
+        )
+        shutil.rmtree(run_dir, ignore_errors=True)
+
+    def test_matrix_config_writes_scored_and_manifest_per_suite(self) -> None:
+        dataset_path = self._dataset()
+        run_dir = self.tmp_dir / "matrix-scored-runs"
+
+        config_path = self.tmp_dir / "matrix-scored-config.json"
+        config_path.write_text(
+            json.dumps(
+                {
+                    "schema_version": "2.0.0",
+                    "id": "unit-matrix-scored",
+                    "benchmark": "reasoning-benchmark",
+                    "suite_id": "matrix-baseline",
+                    "dataset": {"path": str(dataset_path)},
+                    "models": ["gpt-5.4"],
+                    "prompt_contract": run_baselines.build_prompt_contract(),
+                    "execution": {
+                        "mode": "matrix-baseline",
+                    },
+                    "matrix": {
+                        "suites": [
+                            {"suite_id": "smoke", "mode": "smoke"},
+                        ],
+                    },
+                    "output": {"bundle_dir": str(run_dir)},
+                }
+            ),
+            encoding="utf-8",
+        )
+
+        with patch.object(run_baselines, "score_payload") as score_mock:
+            def _score_input(input_path, scored_path, _dataset_path, source_bundle):
+                scored_path.write_text(
+                    json.dumps(
+                        {
+                            "summary": {
+                                "schema_version": "2.0.0",
+                                "benchmark": "reasoning-benchmark",
+                                "suite_id": "smoke",
+                                "overall": {"case_count": 5},
+                            },
+                            "results": [],
+                        }
+                    ),
+                    encoding="utf-8",
+                )
+
+            score_mock.side_effect = _score_input
+            args = argparse.Namespace(
+                config=str(config_path),
+                mode="full",
+                dataset=str(self.tmp_dir / "ignored.json"),
+                run_dir=str(self.tmp_dir / "ignored-runs"),
+                models=["sonnet-4.6"],
+                provider_command=None,
+                prompt_timeout=1.0,
+                skip_scoring=False,
+            )
+            run_baselines.cmd_run(args)
+
+        scored_path = run_dir / "smoke" / "gpt-5-4.smoke.scored.json"
+        summary_path = run_dir / "smoke" / "gpt-5-4.smoke.summary.json"
+        manifest_path = run_dir / "smoke" / "gpt-5-4.smoke.manifest.json"
+        self.assertTrue(scored_path.is_file())
+        self.assertTrue(summary_path.is_file())
+        self.assertTrue(manifest_path.is_file())
+
+        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+        self.assertEqual(manifest["artifacts"]["raw_results"], "gpt-5-4.smoke.raw.json")
+        self.assertEqual(manifest["artifacts"]["scored_results"], "gpt-5-4.smoke.scored.json")
+        shutil.rmtree(run_dir, ignore_errors=True)
+
+
 if __name__ == "__main__":
     unittest.main()
