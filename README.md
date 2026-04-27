@@ -101,6 +101,12 @@ Full run (all questions) with dry-run payloads:
 python3 scripts/run_baselines.py --mode full
 ```
 
+Run from a v2 RunConfig:
+
+```bash
+python3 scripts/run_baselines.py --config runs/baseline/run-config.json
+```
+
 Raw artifacts are written under `runs/baseline/` as one JSON per model, plus scored files with `.scored.json`
 and report summary sidecars with `.summary.json`.
 Bundle manifests used for report-summary regeneration must include `artifacts` as a JSON object,
@@ -232,7 +238,7 @@ See [`docs/scoring.md`](docs/scoring.md) for the full contract and normalization
 2. define a scoring rubric for answer correctness and reasoning quality
 3. add adapters for model providers
 4. publish baseline results across a small model set
-5. use the scored artifact format from `scripts/score_run.py` as the long-term run manifest
+5. use v2 `RunArtifactBundle` manifests as durable run manifests
 
 ## License
 

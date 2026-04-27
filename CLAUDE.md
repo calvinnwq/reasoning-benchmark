@@ -32,7 +32,7 @@ This is a pure-Python reasoning benchmark with no framework, package manager, or
 
 ### Data flow
 
-1. **Dataset** lives in `data/questions.json` — 50 questions, each with `id`, `category`, `prompt`, `expected_answer`, `accepted_variants`, `common_wrong_answer`, `rationale`, and `failure_mode`.
+1. **Dataset** lives in `data/questions.json` — 100 questions, each with `id`, `category`, `prompt`, `expected_answer`, `accepted_variants`, `common_wrong_answer`, `rationale`, and `failure_mode`.
 2. **Run files** (`runs/*.json`) contain model answers against the dataset. The canonical input shape has a top-level `results` list (also accepted: `runs`, `items`, `answers`, or a bare list).
 3. **Scorer** (`scripts/score_run.py`) reads a run file + the dataset and writes a scored artifact.
 
