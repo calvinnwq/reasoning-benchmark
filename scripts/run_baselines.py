@@ -462,7 +462,7 @@ def build_parser() -> argparse.ArgumentParser:
         "--mode",
         choices=SUPPORTED_MODES,
         default="smoke",
-        help="Smoke runs first 5 questions; full runs all 50",
+        help="Smoke runs first 5 questions; full runs the full dataset",
     )
     parser.add_argument(
         "--dataset",

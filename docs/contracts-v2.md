@@ -475,7 +475,7 @@ Report-summary regeneration requires `artifacts.scored_results` to be a non-empt
 before resolving the scored artifact path.
 Report-summary regeneration requires `artifacts.raw_results` to be a non-empty string
 so consumed bundle manifests preserve the required raw-output artifact reference.
-Report-summary generation validates `artifacts.raw_results` and `artifacts.scored_results` as exact, unpadded paths before resolving the scored artifact relative to the manifest, rejects missing, unsupported, or whitespace-padded manifest `schema_version` values, and requires manifest `benchmark` to be the exact `reasoning-benchmark` identity.
+Report-summary generation validates `artifacts.raw_results` and `artifacts.scored_results` as exact, unpadded paths before resolving them relative to the manifest, rejects absolute paths and `..` traversal for `artifacts.raw_results`, `artifacts.scored_results`, and `artifacts.report_summary`, rejects missing, unsupported, or whitespace-padded manifest `schema_version` values, and requires manifest `benchmark` to be the exact `reasoning-benchmark` identity.
 
 ## ReportSummary
 

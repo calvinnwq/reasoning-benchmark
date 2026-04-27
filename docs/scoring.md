@@ -150,6 +150,7 @@ Baseline runs also copy the embedded scored-artifact `summary` object into a sib
 Build or refresh a report summary from saved scored artifacts or v2 bundle manifests without reopening raw runner outputs with:
 
 ```bash
+python3 scripts/report_summary.py --input runs/example-run.scored.json --output runs/report.summary.json
 python3 scripts/report_summary.py --bundle runs/gpt-5-4.smoke.manifest.json --output runs/report.summary.json
 ```
 
