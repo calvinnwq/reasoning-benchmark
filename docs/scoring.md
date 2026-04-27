@@ -135,6 +135,9 @@ V1 summary separates automatic and manual-only metrics:
 - `summary.by_failure_mode`: per-failure-mode `total` and v2 `case_count` totals, automatic correctness counts, accuracy over auto-scored records, and records requiring manual review.
 - `summary.by_ambiguity_type`: per-ambiguity-type `total` and v2 `case_count` totals, automatic correctness counts, accuracy over auto-scored records, and records requiring manual review.
 - `summary.by_calibration_split`: per-calibration-split `total` and v2 `case_count` totals, automatic correctness counts, accuracy over auto-scored records, and records requiring manual review.
+- `summary.by_model_task_family`: model-by-task-family cross-tab with the same bucket fields.
+- `summary.by_model_failure_mode`: model-by-failure-mode cross-tab with the same bucket fields.
+- `summary.by_model_ambiguity_type`: model-by-ambiguity-type cross-tab with the same bucket fields.
 
 `manual` and `automatic` are never conflated in the aggregate report.
 

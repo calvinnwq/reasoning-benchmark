@@ -93,7 +93,7 @@ These boundaries should be simple enough to represent as plain JSON and Python d
 
 ## Data Flow
 
-1. Load a suite from `data/questions.json` or a future suite manifest.
+1. Load the full dataset from `data/questions.json` or a named suite manifest from `data/suites/` through `scripts/suites.py`.
 2. Build prompts using `scripts/benchmark_contract.py`.
 3. Execute each selected model through the adapter layer or emit blank/dry-run records.
 4. Write raw run records under `runs/`.

@@ -19,8 +19,10 @@ These are deliberately short prompts. The whole point is to catch models that so
 
 - `data/questions.json` — canonical machine-readable dataset
 - `data/questions.csv` — spreadsheet-friendly export
+- `data/suites/` — named suite manifests such as `starter` and `holdout`
 - `docs/benchmark.md` — human-readable benchmark overview
 - `scripts/run_benchmark.py` — minimal local runner scaffold
+- `scripts/suites.py` — suite manifest loader
 - `scripts/run_baselines.py` — baseline runner for first-class baseline models
 - `scripts/benchmark_contract.py` — shared prompt/JSON contract for adapters
 - `scripts/benchmark_adapters.py` — shared adapter library
@@ -65,6 +67,12 @@ Preview the dataset:
 python3 scripts/run_benchmark.py --list
 ```
 
+List available named suites:
+
+```bash
+python3 scripts/run_benchmark.py --list-suites
+```
+
 Export a light run template:
 
 ```bash
@@ -80,6 +88,8 @@ Create a JSONL prompt pack for another tool or model runner:
 ```bash
 python3 scripts/run_benchmark.py --emit-prompts runs/prompts.jsonl
 ```
+
+Add `--suite starter` or `--suite holdout` to `--list`, `--sample-run`, or `--emit-prompts` to restrict output to a calibrated manifest from `data/suites/`.
 
 ## Baselines
 
