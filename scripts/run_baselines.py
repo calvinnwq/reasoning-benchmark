@@ -89,6 +89,17 @@ def normalize_model_id(model: str) -> str:
     return normalized
 
 
+def validate_artifact_label(value: str, field_name: str) -> None:
+    if value in {".", ".."} or "/" in value or "\\" in value:
+        raise ValueError(f"{field_name} cannot contain path separators or traversal segments")
+
+
+def format_adapter_command(command: list[str]) -> str:
+    if len(command) <= 1:
+        return shlex.join(command)
+    return shlex.join([command[0], "[arguments omitted]"])
+
+
 def run_paths(run_dir: Path, model: str, mode: str) -> tuple[Path, Path]:
     model_slug = normalize_model_id(model)
     raw = run_dir / f"{model_slug}.{mode}.raw.json"
@@ -220,7 +231,7 @@ def build_result_record(
         }
         base["adapter"] = {
             "name": provider.adapter_name or "provider-command",
-            "command": shlex.join(provider.adapter_command),
+            "command": format_adapter_command(provider.adapter_command),
             "exit_code": provider.adapter_exit_code,
             "stderr": provider.adapter_stderr,
         }
@@ -518,6 +529,7 @@ def validate_config_suite_id(config_payload: dict[str, Any]) -> None:
         raise ValueError("RunConfig suite_id must be a non-empty string")
     if value != value.strip():
         raise ValueError("RunConfig suite_id must be an exact string")
+    validate_artifact_label(value, "RunConfig suite_id")
 
 
 def config_execution(config_payload: dict[str, Any]) -> dict[str, Any]:
@@ -679,6 +691,7 @@ def config_execution_mode(config_payload: dict[str, Any], execution: dict[str, A
         raise ValueError("RunConfig execution.mode must be a non-empty string")
     if mode != mode.strip():
         raise ValueError("RunConfig execution.mode must be an exact string")
+    validate_artifact_label(mode, "RunConfig execution.mode")
     return mode
 
 

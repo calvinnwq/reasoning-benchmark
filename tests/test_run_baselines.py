@@ -50,6 +50,15 @@ class BaselineSelectionTests(unittest.TestCase):
         summary = run_baselines.summary_path(run_dir, "sonnet-4.6", "smoke")
         self.assertEqual(str(summary), "/tmp/baselines/sonnet-4-6.smoke.summary.json")
 
+    def test_artifact_label_rejects_path_segments(self) -> None:
+        with self.assertRaisesRegex(ValueError, "path separators or traversal"):
+            run_baselines.validate_artifact_label("../outside", "RunConfig execution.mode")
+
+    def test_adapter_command_omits_arguments(self) -> None:
+        command = run_baselines.format_adapter_command(["provider", "--api-key", "secret"])
+        self.assertEqual(command, "provider '[arguments omitted]'")
+        self.assertNotIn("secret", command)
+
 
 class BaselineRunnerTests(unittest.TestCase):
     def setUp(self) -> None:
@@ -187,6 +196,27 @@ class BaselineRunnerTests(unittest.TestCase):
             self.assertEqual(row["adapter"]["stderr"], "")
             self.assertTrue(row["started_at"])
             self.assertTrue(row["completed_at"])
+
+    def test_provider_command_arguments_are_not_written_into_results(self) -> None:
+        row = {"id": "GG-01", "prompt": "Prompt one"}
+        provider = run_baselines.ProviderResult(
+            answer="answer",
+            reasoning="reasoning",
+            adapter_name="provider-command",
+            adapter_command=["provider", "--api-key", "secret-token"],
+            adapter_exit_code=0,
+        )
+
+        record = run_baselines.build_result_record(
+            row=row,
+            model="gpt-5.4",
+            answer=provider.answer,
+            reasoning=provider.reasoning,
+            provider=provider,
+        )
+
+        self.assertEqual(record["adapter"]["command"], "provider '[arguments omitted]'")
+        self.assertNotIn("secret-token", json.dumps(record))
 
     def test_config_file_drives_smoke_run_settings(self) -> None:
         dataset_path = self._dataset()
@@ -1962,6 +1992,48 @@ class BaselineRunnerTests(unittest.TestCase):
         )
 
         with self.assertRaisesRegex(ValueError, "RunConfig execution.mode must be an exact string"):
+            run_baselines.cmd_run(args)
+
+        self.assertFalse(run_dir.exists())
+
+    def test_config_file_rejects_path_execution_mode(self) -> None:
+        dataset_path = self._dataset()
+        run_dir = self.tmp_dir / "path-execution-mode-runs"
+        shutil.rmtree(run_dir, ignore_errors=True)
+
+        config_path = self.tmp_dir / "path-execution-mode-config.json"
+        config_path.write_text(
+            json.dumps(
+                {
+                    "schema_version": "2.0.0",
+                    "id": "unit-path-execution-mode",
+                    "benchmark": "reasoning-benchmark",
+                    "suite_id": "smoke",
+                    "dataset": {"path": str(dataset_path)},
+                    "models": ["gpt-5.4"],
+                    "prompt_contract": run_baselines.build_prompt_contract(),
+                    "execution": {
+                        "mode": "../outside",
+                        "skip_scoring": True,
+                    },
+                    "output": {"bundle_dir": str(run_dir)},
+                }
+            ),
+            encoding="utf-8",
+        )
+
+        args = argparse.Namespace(
+            config=str(config_path),
+            mode="full",
+            dataset=str(self.tmp_dir / "ignored.json"),
+            run_dir=str(self.tmp_dir / "ignored-runs"),
+            models=["sonnet-4.6"],
+            provider_command=None,
+            prompt_timeout=1.0,
+            skip_scoring=False,
+        )
+
+        with self.assertRaisesRegex(ValueError, "RunConfig execution.mode cannot contain path separators"):
             run_baselines.cmd_run(args)
 
         self.assertFalse(run_dir.exists())
