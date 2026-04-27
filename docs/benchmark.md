@@ -271,6 +271,7 @@ python3 scripts/run_baselines.py --config examples/configs/matrix-baseline.confi
 
 Matrix runs write one subdirectory per suite under the configured bundle directory and a top-level
 `matrix.index.json` that lists every suite/model cell, artifact paths, rollups, and any cell errors.
+Later cells still run after a cell failure, but the command exits nonzero when any cell records an error.
 
 Then compare:
 
