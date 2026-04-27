@@ -192,6 +192,18 @@ Compatibility fields preserved from v1:
   "output": {
     "bundle_dir": "runs/baseline/gpt-5-4.smoke"
   },
+  "matrix": {
+    "suites": [
+      {
+        "suite_id": "smoke",
+        "mode": "smoke"
+      },
+      {
+        "suite_id": "starter-pragmatics",
+        "case_ids": ["GG-01", "CR-01"]
+      }
+    ]
+  },
   "created_at": "2026-04-26T00:00:00Z"
 }
 ```
@@ -234,6 +246,12 @@ It requires `execution.mode` to be an exact, unpadded, non-empty string without 
 or artifact labels.
 Without an embedded `suite.case_ids` list, `execution.mode` must be `smoke` or `full`; with
 `suite.case_ids`, custom mode names are allowed and the listed cases run in the supplied order.
+When `matrix.suites` is supplied, the runner executes every suite/model cell. Each matrix suite must
+declare a unique exact `suite_id` without path separators or `.`/`..` traversal segments, may declare
+an exact `mode`, and may declare non-empty unique exact `case_ids`. Matrix suites without `case_ids`
+must use `smoke` or `full` as their mode; if `mode` is omitted, the suite id is used as the mode.
+Top-level `suite.case_ids` cannot be combined with `matrix.suites`; set `case_ids` per matrix suite
+instead.
 `execution.seed` shuffles only `smoke` or `full` selections, and `execution.max_cases` truncates the
 selected cases after mode or explicit-suite selection.
 It requires `execution.timeout_seconds` to be a finite positive number and `execution.skip_scoring`
@@ -436,6 +454,12 @@ Required fields:
 
 The initial implementation may store the bundle as a single JSON file beside existing raw and scored files. Later work can move to a directory layout without changing the manifest contract.
 Baseline runs write the `ReportSummary` as a sibling `*.summary.json` artifact copied from the scored output's embedded `summary` object. When `execution.skip_scoring` is true, baseline runs write only the raw artifact, skip the scored artifact, summary sidecar, and bundle manifest, and remove any stale manifest for that model/mode.
+Matrix baseline runs write per-suite raw, scored, summary, and manifest artifacts under suite
+subdirectories, plus a top-level `matrix.index.json` artifact. The index records the configured
+models and suites, one `cells[]` entry per suite/model pair, relative paths for each cell artifact,
+optional per-cell `summary_metrics`, optional per-cell `error` objects, and scored rollups in
+`model_summaries`, `suite_summaries`, and `overall_summary` when scoring is enabled. Failed matrix
+cells are captured in the index and do not prevent later cells from running.
 Report-summary regeneration requires bundle manifests to use exact, unpadded, non-empty `id`
 values so bundle identity is not silently normalized from malformed manifest metadata.
 Report-summary regeneration requires bundle manifests to use exact, unpadded, non-empty `suite_id`
@@ -516,6 +540,71 @@ before resolving the scored artifact path.
 Report-summary regeneration requires `artifacts.raw_results` to be a non-empty string
 so consumed bundle manifests preserve the required raw-output artifact reference.
 Report-summary generation validates `artifacts.raw_results` and `artifacts.scored_results` as exact, unpadded paths before resolving them relative to the manifest, rejects absolute paths and `..` traversal for `artifacts.raw_results`, `artifacts.scored_results`, and `artifacts.report_summary`, rejects missing, unsupported, or whitespace-padded manifest `schema_version` values, and requires manifest `benchmark` to be the exact `reasoning-benchmark` identity.
+
+## MatrixIndex
+
+`matrix.index.json` is the top-level artifact for matrix baseline runs. It records every configured suite/model cell, the cell artifact paths, any cell failure, and scored rollups when scoring is enabled.
+
+```json
+{
+  "schema_version": "1.0.0",
+  "benchmark": "reasoning-benchmark",
+  "run_config": "examples/configs/matrix-baseline.config.json",
+  "models": ["gpt-5.4", "sonnet-4.6"],
+  "suites": [
+    {
+      "suite_id": "smoke",
+      "mode": "smoke",
+      "case_ids": null
+    }
+  ],
+  "cells": [
+    {
+      "suite_id": "smoke",
+      "model": "gpt-5.4",
+      "mode": "smoke",
+      "raw_results": "smoke/gpt-5-4.smoke.raw.json",
+      "scored_results": "smoke/gpt-5-4.smoke.scored.json",
+      "report_summary": "smoke/gpt-5-4.smoke.summary.json",
+      "manifest": "smoke/gpt-5-4.smoke.manifest.json",
+      "summary_metrics": null,
+      "error": null
+    }
+  ],
+  "model_summaries": null,
+  "suite_summaries": null,
+  "overall_summary": null,
+  "dataset": {
+    "path": "data/questions.json",
+    "fingerprint": {
+      "algorithm": "sha256",
+      "value": "..."
+    }
+  },
+  "created_at": "2026-04-26T00:00:00Z",
+  "completed_at": "2026-04-26T00:00:02Z"
+}
+```
+
+Required fields:
+
+- `schema_version`
+- `benchmark`
+- `run_config`
+- `models`
+- `suites`
+- `cells`
+- `model_summaries`
+- `suite_summaries`
+- `overall_summary`
+- `dataset`
+- `created_at`
+- `completed_at`
+
+Each `cells[]` entry includes `suite_id`, `model`, `mode`, `raw_results`, `scored_results`,
+`report_summary`, `manifest`, `summary_metrics`, and `error`. When scoring is skipped, scored
+artifact paths and summaries are `null`; when a cell fails, `error` records the exception type and
+message.
 
 ## ReportSummary
 
