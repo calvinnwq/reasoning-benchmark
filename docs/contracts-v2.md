@@ -250,7 +250,8 @@ Without an embedded `suite.case_ids` list or `matrix.suites`, `execution.mode` m
 `suite.case_ids` run in the supplied order; matrix suite entries control each cell's selection.
 When `matrix` is supplied, it must be an object with a non-empty `suites` list, and the runner
 executes every suite/model cell. Each matrix suite must declare a unique exact `suite_id` without
-path separators or `.`/`..` traversal segments, may declare an exact `mode`, and may declare
+path separators or `.`/`..` traversal segments, may declare an exact `mode` without path separators
+or `.`/`..` traversal segments, and may declare
 non-empty unique exact `case_ids`. Matrix suites without `case_ids` must use `smoke` or `full` as
 their mode; if `mode` is omitted, the suite id is used as the mode.
 Top-level `suite.case_ids` cannot be combined with `matrix.suites`; set `case_ids` per matrix suite

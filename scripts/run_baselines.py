@@ -684,7 +684,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="Run the reasoning benchmark baseline models")
     parser.add_argument(
         "--config",
-        help="Optional v2 RunConfig JSON file. When provided, it drives dataset, suite/mode, models, output, adapter command, and budgets.",
+        help="Optional v2 RunConfig JSON file. When provided, it drives dataset, suite/mode or matrix.suites, models, output, adapter command, and budgets.",
     )
     parser.add_argument(
         "--mode",

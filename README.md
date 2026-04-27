@@ -177,7 +177,7 @@ Without `suite.case_ids` or `matrix.suites`, configured modes must be `smoke` or
 top-level mode and control selection per suite. `seed` shuffles only mode-derived selections, and
 `max_cases` truncates the selected suite after selection. Configured model ids must be one of
 `gpt-5.4`, `sonnet-4.6`, or `qwen3.5-9b`.
-RunConfig `matrix.suites` entries each declare a unique exact `suite_id`, optional exact `mode`, and optional exact unique `case_ids`; entries without `case_ids` must use `smoke` or `full` as their mode, with omitted modes defaulting to `suite_id`, and top-level `suite.case_ids` cannot be combined with matrix suites.
+RunConfig `matrix.suites` entries each declare a unique exact `suite_id`, optional exact `mode`, and optional exact unique `case_ids`; suite ids and modes cannot contain path separators or `.`/`..` traversal segments, entries without `case_ids` must use `smoke` or `full` as their mode, with omitted modes defaulting to `suite_id`, and top-level `suite.case_ids` cannot be combined with matrix suites.
 Supported RunConfig adapter values are `api`, `cli`, and `provider-command`; model-level
 `adapter_command` overrides adapter selection, while `execution.provider_command` supplies the
 default command for models without their own command.
