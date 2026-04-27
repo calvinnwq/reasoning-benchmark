@@ -58,8 +58,8 @@ Required fields:
 - `name`
 - `case_ids`
 
-`case_ids` entries are exact case identifiers. Config-driven runner validation rejects blank,
-non-string, or whitespace-padded entries before dataset selection.
+`case_ids` entries are exact, unique case identifiers. Config-driven runner validation rejects blank,
+duplicate, non-string, or whitespace-padded entries before dataset selection.
 
 Optional fields:
 
@@ -228,7 +228,11 @@ non-empty strings so configs do not preserve ambiguous model selections.
 It requires `execution.mode` to be an exact, unpadded, non-empty string when present so configs do
 not preserve ambiguous suite mode selections.
 It requires model adapter names to be exact, unpadded strings so configs do not preserve ambiguous
-adapter selections.
+adapter selections. Supported adapter values are `api`, `cli`, and `provider-command`; `api` and
+`cli` select the built-in adapter entrypoints, while `provider-command` relies on an explicit
+command. A model-level `adapter_command` overrides both the model adapter value and any default
+`execution.provider_command`; `execution.provider_command` is used as the default command for
+models that do not specify their own command.
 It requires string `execution.seed` values to be exact, unpadded, and non-empty so reproducible case
 selection does not depend on ambiguous invisible whitespace.
 It requires `prompt_contract.version` to be an exact, unpadded, non-empty string so artifacts do not

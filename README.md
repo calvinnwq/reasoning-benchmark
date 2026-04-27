@@ -159,8 +159,11 @@ Configured output directories must also
 provide an exact, unpadded, non-empty `output.bundle_dir`, configured execution timeouts must be numeric, finite, and
 positive, configured `max_cases` values must be whole positive integers, and configured
 `skip_scoring` values must be booleans. Configured execution modes and model adapter names must be exact, unpadded,
-non-empty strings, string seeds must be exact, unpadded, and non-empty, configured `suite.case_ids` entries must be exact, unpadded case ids, and
+non-empty strings, string seeds must be exact, unpadded, and non-empty, configured `suite.case_ids` entries must be exact, unique, unpadded case ids, and
 `adapter_command` and `execution.provider_command` string values and list entries must be exact, unpadded, and non-empty.
+Supported RunConfig adapter values are `api`, `cli`, and `provider-command`; model-level
+`adapter_command` overrides adapter selection, while `execution.provider_command` supplies the
+default command for models without their own command.
 Live provider-backed raw result records include v2 audit metadata for the captured provider response,
 adapter command/exit details, and per-prompt start/completion timestamps.
 
