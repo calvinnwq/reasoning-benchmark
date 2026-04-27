@@ -1,0 +1,56 @@
+{
+  "schema_version": "2.0.0",
+  "id": "matrix-baseline-example",
+  "benchmark": "reasoning-benchmark",
+  "suite_id": "matrix-baseline",
+  "dataset": {
+    "path": "data/questions.json"
+  },
+  "models": [
+    "gpt-5.4",
+    "sonnet-4.6",
+    "qwen3.5-9b"
+  ],
+  "prompt_contract": {
+    "version": "1.0.0",
+    "response_format": "json_object",
+    "required_fields": [
+      "answer",
+      "reasoning"
+    ],
+    "instruction": "Answer the question with a concise final answer.\nUse this exact JSON shape in the model-facing response:\n{\"answer\": \"<short final answer>\", \"reasoning\": \"<brief reason>\"}\nIf unsure, provide your best short answer and reasoning."
+  },
+  "execution": {
+    "mode": "matrix-baseline",
+    "skip_scoring": true,
+    "seed": 1729
+  },
+  "matrix": {
+    "suites": [
+      {
+        "suite_id": "smoke",
+        "mode": "smoke"
+      },
+      {
+        "suite_id": "starter-pragmatics",
+        "case_ids": [
+          "GG-01",
+          "GG-02",
+          "GG-05",
+          "CR-01",
+          "CR-02",
+          "CR-04",
+          "TW-02",
+          "SP-01",
+          "SP-05",
+          "PR-03",
+          "MC-01",
+          "MC-03"
+        ]
+      }
+    ]
+  },
+  "output": {
+    "bundle_dir": "runs/baseline-matrix"
+  }
+}

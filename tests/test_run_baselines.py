@@ -4361,5 +4361,39 @@ class MatrixIndexBuilderTests(unittest.TestCase):
         self.assertIsNone(failed["summary_metrics"])
 
 
+class ExampleMatrixConfigTests(unittest.TestCase):
+    """Validate the shipped example matrix RunConfig parses end-to-end.
+
+    The example doubles as a copy-paste starting point for users running the
+    baseline matrix runner. If this fails, the example has drifted from the
+    runner's RunConfig schema and should be updated alongside the schema change.
+    """
+
+    EXAMPLE_PATH = REPO_ROOT / "examples" / "configs" / "matrix-baseline.config.json"
+
+    def test_example_matrix_config_file_is_present(self) -> None:
+        self.assertTrue(
+            self.EXAMPLE_PATH.is_file(),
+            f"example matrix config missing at {self.EXAMPLE_PATH}",
+        )
+
+    def test_example_matrix_config_parses_via_request_from_config(self) -> None:
+        request = run_baselines.request_from_config(self.EXAMPLE_PATH)
+        self.assertIsNotNone(request.matrix_suites)
+        suite_ids = [s.suite_id for s in request.matrix_suites]
+        self.assertIn("smoke", suite_ids)
+        self.assertIn("starter-pragmatics", suite_ids)
+        starter = next(
+            s for s in request.matrix_suites if s.suite_id == "starter-pragmatics"
+        )
+        self.assertIsNotNone(starter.case_ids)
+        self.assertGreaterEqual(len(starter.case_ids), 2)
+        self.assertTrue(request.skip_scoring)
+        self.assertEqual(request.dataset_path, REPO_ROOT / "data" / "questions.json")
+        self.assertGreaterEqual(len(request.models), 1)
+        for model in request.models:
+            self.assertIn(model, run_baselines.SUPPORTED_MODELS)
+
+
 if __name__ == "__main__":
     unittest.main()
