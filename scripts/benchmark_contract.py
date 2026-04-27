@@ -5,6 +5,8 @@ from typing import Any, Dict
 
 PROMPT_CONTRACT: Dict[str, Any] = {
     "version": "1.0.0",
+    "response_format": "json_object",
+    "required_fields": ["answer", "reasoning"],
     "instruction": (
         "Answer the question with a concise final answer.\n"
         "Use this exact JSON shape in the model-facing response:\n"

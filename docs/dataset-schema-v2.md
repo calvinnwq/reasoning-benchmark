@@ -5,7 +5,7 @@
 **Depends on:** `docs/framework-v2.md`, `docs/contracts-v2.md`
 **Purpose:** Extend the current question row contract so ambiguity and pragmatic reasoning cases can be evaluated without forcing every case into exact-answer scoring.
 
-This document defines the richer `BenchmarkCase` fields that M2 can migrate into code. The current `data/questions.json` rows remain valid during migration; new fields are additive until all cases are backfilled.
+This document defines the richer `BenchmarkCase` fields now consumed by scoring and reporting. The current `data/questions.json` rows remain valid during the partial migration; migrated cases already carry v2 metadata, and new fields are additive until all cases are backfilled.
 
 ## Design Goals
 
@@ -123,7 +123,7 @@ The fields below are optional by case type, but required when their concept appl
 
 ### `task_family_id`
 
-Stable reporting group such as `goal-grounding`, `social-pragmatics`, `temporal-state`, `reference-resolution`, `physical-commonsense`, or `classic-riddle-override`.
+Stable reporting group such as `goal-grounding`, `social-pragmatics`, `instruction-ambiguity`, `temporal-state`, `reference-resolution`, `physical-commonsense`, or `classic-riddle-override`.
 
 The legacy `category` field remains for compatibility, but v2 reporting should group by `task_family_id`.
 
@@ -160,7 +160,9 @@ Supported `mode` values:
 
 Captures whether the prompt has an intended ambiguity and how the benchmark expects it to be resolved.
 
-Recommended `ambiguity_type` values:
+Recommended `ambiguity_type` values are descriptive slugs. Broad legacy values remain valid, and migrated instruction-ambiguity cases use concrete `*-ambiguous` values such as `reference-ambiguous`, `temporal-ambiguous`, `payment-ambiguous`, and `ticket-closure-ambiguous`.
+
+Common broad values:
 
 - `none`
 - `lexical`
@@ -200,6 +202,7 @@ Holdout and calibration slices should be represented here first, then collected 
 | `CR` | `classic-riddle-override` | `exact` | `classic-template` |
 | `TW` | `temporal-state` | `exact` | `none` |
 | `SP` | `social-pragmatics` | `hybrid` | `pragmatic` |
+| `IA` | `instruction-ambiguity` | `hybrid` | `underspecified` |
 | `PR` | `reference-resolution` | `exact` | `referential` |
 | `MC` | `physical-commonsense` | `exact` | `test-condition` |
 

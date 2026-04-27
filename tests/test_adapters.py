@@ -21,6 +21,11 @@ class ContractTests(unittest.TestCase):
         self.assertIn("Question:", prompt)
         self.assertIn("flat-tyre bike", prompt)
 
+    def test_prompt_contract_exposes_v2_response_shape_metadata(self) -> None:
+        contract = benchmark_contract.build_prompt_contract()
+        self.assertEqual(contract["response_format"], "json_object")
+        self.assertEqual(contract["required_fields"], ["answer", "reasoning"])
+
 
 class AdapterParsingTests(unittest.TestCase):
     def test_extract_json_object_from_wrapped_text(self) -> None:

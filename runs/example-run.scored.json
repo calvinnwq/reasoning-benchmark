@@ -1,16 +1,25 @@
 {
-  "schema_version": "1.0.0",
+  "schema_version": "2.0.0",
   "scoring_contract": "conservative_answer_correctness_only",
-  "scored_at": "2026-04-21T12:52:35.738758+00:00",
+  "scored_at": "2026-04-26T20:48:27.605474+00:00",
   "source_input": "runs/example-run.json",
-  "dataset_path": "/Users/ngxcalvin/repos/reasoning-benchmark/data/questions.json",
+  "dataset_path": "data/questions.json",
   "input_meta": {
+    "schema_version": "2.0.0",
     "benchmark": "reasoning-benchmark",
     "created_at": "2026-04-21T10:00:00Z",
+    "suite_id": "example",
+    "case_count": 4,
     "question_count": 4
   },
   "summary": {
+    "schema_version": "2.0.0",
+    "benchmark": "reasoning-benchmark",
+    "suite_id": "example",
+    "source_bundles": [],
+    "generated_at": "2026-04-26T20:48:27.605562+00:00",
     "overall": {
+      "case_count": 4,
       "question_count": 4,
       "answered_count": 3,
       "missing_count": 1
@@ -27,11 +36,138 @@
       "notes_present": 0,
       "heuristic_flags_total": 0
     },
+    "manual_review": {
+      "reasoning_scores_present": 0,
+      "constraint_scores_present": 0,
+      "notes_present": 0,
+      "heuristic_flags_total": 0
+    },
+    "by_model": {
+      "gpt-5.3-codex-spark": {
+        "total": 4,
+        "auto_scored": 4,
+        "correct": 2,
+        "incorrect": 2,
+        "accuracy": 0.5,
+        "manual_review_required": 0,
+        "case_count": 4
+      }
+    },
+    "by_evaluation_mode": {
+      "exact": {
+        "total": 4,
+        "auto_scored": 4,
+        "correct": 2,
+        "incorrect": 2,
+        "accuracy": 0.5,
+        "manual_review_required": 0,
+        "case_count": 4
+      }
+    },
+    "by_task_family": {
+      "goal-grounding": {
+        "total": 2,
+        "auto_scored": 2,
+        "correct": 1,
+        "incorrect": 1,
+        "accuracy": 0.5,
+        "manual_review_required": 0,
+        "case_count": 2
+      },
+      "temporal-state": {
+        "total": 1,
+        "auto_scored": 1,
+        "correct": 0,
+        "incorrect": 1,
+        "accuracy": 0.0,
+        "manual_review_required": 0,
+        "case_count": 1
+      },
+      "social-pragmatics": {
+        "total": 1,
+        "auto_scored": 1,
+        "correct": 1,
+        "incorrect": 0,
+        "accuracy": 1.0,
+        "manual_review_required": 0,
+        "case_count": 1
+      }
+    },
+    "by_failure_mode": {
+      "Optimises for human walking distance instead of the task goal.": {
+        "total": 1,
+        "auto_scored": 1,
+        "correct": 1,
+        "incorrect": 0,
+        "accuracy": 1.0,
+        "manual_review_required": 0,
+        "case_count": 1
+      },
+      "Ignores where the needed object currently is.": {
+        "total": 1,
+        "auto_scored": 1,
+        "correct": 0,
+        "incorrect": 1,
+        "accuracy": 0.0,
+        "manual_review_required": 0,
+        "case_count": 1
+      },
+      "Repeats the initial state and ignores the update.": {
+        "total": 1,
+        "auto_scored": 1,
+        "correct": 0,
+        "incorrect": 1,
+        "accuracy": 0.0,
+        "manual_review_required": 0,
+        "case_count": 1
+      },
+      "Takes the sentence too literally and misses pragmatic meaning.": {
+        "total": 1,
+        "auto_scored": 1,
+        "correct": 1,
+        "incorrect": 0,
+        "accuracy": 1.0,
+        "manual_review_required": 0,
+        "case_count": 1
+      }
+    },
+    "by_ambiguity_type": {
+      "none": {
+        "total": 3,
+        "auto_scored": 3,
+        "correct": 1,
+        "incorrect": 2,
+        "accuracy": 0.3333,
+        "manual_review_required": 0,
+        "case_count": 3
+      },
+      "pragmatic": {
+        "total": 1,
+        "auto_scored": 1,
+        "correct": 1,
+        "incorrect": 0,
+        "accuracy": 1.0,
+        "manual_review_required": 0,
+        "case_count": 1
+      }
+    },
+    "by_calibration_split": {
+      "full": {
+        "total": 4,
+        "auto_scored": 4,
+        "correct": 2,
+        "incorrect": 2,
+        "accuracy": 0.5,
+        "manual_review_required": 0,
+        "case_count": 4
+      }
+    },
     "heuristic_flags": {}
   },
   "results": [
     {
       "id": "GG-01",
+      "case_id": "GG-01",
       "prompt": "I want to wash my car. The car wash is only 100 metres away. Should I drive there or walk?",
       "model": "gpt-5.3-codex-spark",
       "answer": "Drive there.",
@@ -41,11 +177,26 @@
       "score_constraint_extraction": null,
       "penalties": [],
       "notes": "",
+      "schema_version": "2.0.0",
+      "scored_at": "2026-04-26T20:48:27.604118+00:00",
+      "evaluation_mode": "exact",
+      "task_family_id": "goal-grounding",
+      "failure_mode": "Optimises for human walking distance instead of the task goal.",
+      "ambiguity_type": "none",
+      "clarification_expected": false,
+      "calibration_difficulty": "unknown",
+      "calibration_split": "full",
+      "gold_confidence": "unknown",
+      "human_disagreement_risk": "unknown",
+      "review_status": "unknown",
       "scoring_status": {
         "matched": true,
         "score": 1,
         "reason": "exact_normalized_match",
         "matched_by": "exact",
+        "answer_field": "answer",
+        "reasoning_field": "reasoning",
+        "accepted_variant_policy": "normalized_exact_or_configured_heuristic",
         "heuristic_flags": [
           {
             "name": "answer_match",
@@ -57,7 +208,8 @@
             "value": true,
             "is_heuristic": false
           }
-        ]
+        ],
+        "dimensions": []
       },
       "score_answer_normalized": {
         "expected": "Drive there. The car is the thing that needs to reach the car wash.",
@@ -69,6 +221,7 @@
     },
     {
       "id": "GG-02",
+      "case_id": "GG-02",
       "prompt": "I need to pick up my car from the mechanic, and the mechanic is 200 metres away. Should I walk there or drive there?",
       "model": "gpt-5.3-codex-spark",
       "answer": "Drive there.",
@@ -78,11 +231,26 @@
       "score_constraint_extraction": null,
       "penalties": [],
       "notes": "",
+      "schema_version": "2.0.0",
+      "scored_at": "2026-04-26T20:48:27.604887+00:00",
+      "evaluation_mode": "exact",
+      "task_family_id": "goal-grounding",
+      "failure_mode": "Ignores where the needed object currently is.",
+      "ambiguity_type": "none",
+      "clarification_expected": false,
+      "calibration_difficulty": "unknown",
+      "calibration_split": "full",
+      "gold_confidence": "unknown",
+      "human_disagreement_risk": "unknown",
+      "review_status": "unknown",
       "scoring_status": {
         "matched": false,
         "score": 0,
         "reason": "no_match_after_normalization",
         "matched_by": "none",
+        "answer_field": "answer",
+        "reasoning_field": "reasoning",
+        "accepted_variant_policy": "normalized_exact_or_configured_heuristic",
         "heuristic_flags": [
           {
             "name": "answer_match",
@@ -94,7 +262,8 @@
             "value": false,
             "is_heuristic": false
           }
-        ]
+        ],
+        "dimensions": []
       },
       "score_answer_normalized": {
         "expected": "Walk there, then drive back.",
@@ -106,6 +275,7 @@
     },
     {
       "id": "TW-02",
+      "case_id": "TW-02",
       "prompt": "There was one empty seat left on the plane, and I sat in it. Is there still an empty seat left?",
       "model": "gpt-5.3-codex-spark",
       "answer": "",
@@ -115,11 +285,26 @@
       "score_constraint_extraction": null,
       "penalties": [],
       "notes": "",
+      "schema_version": "2.0.0",
+      "scored_at": "2026-04-26T20:48:27.605168+00:00",
+      "evaluation_mode": "exact",
+      "task_family_id": "temporal-state",
+      "failure_mode": "Repeats the initial state and ignores the update.",
+      "ambiguity_type": "none",
+      "clarification_expected": false,
+      "calibration_difficulty": "unknown",
+      "calibration_split": "full",
+      "gold_confidence": "unknown",
+      "human_disagreement_risk": "unknown",
+      "review_status": "unknown",
       "scoring_status": {
         "matched": false,
         "score": 0,
         "reason": "missing_answer",
         "matched_by": "missing",
+        "answer_field": "answer",
+        "reasoning_field": "reasoning",
+        "accepted_variant_policy": "normalized_exact_or_configured_heuristic",
         "heuristic_flags": [
           {
             "name": "answer_match",
@@ -131,7 +316,8 @@
             "value": false,
             "is_heuristic": false
           }
-        ]
+        ],
+        "dimensions": []
       },
       "score_answer_normalized": {
         "expected": "No.",
@@ -143,6 +329,7 @@
     },
     {
       "id": "SP-01",
+      "case_id": "SP-01",
       "prompt": "At dinner, someone says, ‘Can you pass the salt?’ Are they usually asking whether you are physically capable?",
       "model": "gpt-5.3-codex-spark",
       "answer": "No, they are asking you to pass the salt.",
@@ -152,11 +339,26 @@
       "score_constraint_extraction": null,
       "penalties": [],
       "notes": "",
+      "schema_version": "2.0.0",
+      "scored_at": "2026-04-26T20:48:27.605267+00:00",
+      "evaluation_mode": "exact",
+      "task_family_id": "social-pragmatics",
+      "failure_mode": "Takes the sentence too literally and misses pragmatic meaning.",
+      "ambiguity_type": "pragmatic",
+      "clarification_expected": false,
+      "calibration_difficulty": "unknown",
+      "calibration_split": "full",
+      "gold_confidence": "unknown",
+      "human_disagreement_risk": "unknown",
+      "review_status": "unknown",
       "scoring_status": {
         "matched": true,
         "score": 1,
         "reason": "expected_binary_answer_detected",
         "matched_by": "binary_match",
+        "answer_field": "answer",
+        "reasoning_field": "reasoning",
+        "accepted_variant_policy": "normalized_exact_or_configured_heuristic",
         "heuristic_flags": [
           {
             "name": "answer_match",
@@ -168,7 +370,8 @@
             "value": false,
             "is_heuristic": false
           }
-        ]
+        ],
+        "dimensions": []
       },
       "score_answer_normalized": {
         "expected": "No. They are asking you to hand them the salt.",
