@@ -3596,7 +3596,7 @@ class MatrixRunnerTests(unittest.TestCase):
             )
             rc = run_baselines.cmd_run(args)
 
-        self.assertEqual(rc, 0)
+        self.assertEqual(rc, 1)
         index_path = run_dir / "matrix.index.json"
         self.assertTrue(index_path.is_file(), f"Expected {index_path}")
         index = json.loads(index_path.read_text(encoding="utf-8"))

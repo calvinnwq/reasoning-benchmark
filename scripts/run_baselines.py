@@ -1322,7 +1322,7 @@ def cmd_run(args: argparse.Namespace) -> int:
         )
         write_json(index_path, index_payload)
         print(f"wrote matrix index: {index_path}")
-        return 0
+        return 1 if cell_errors else 0
 
     for model in request.models:
         raw_path, scored_path = run_paths(request.run_dir, model, request.mode)
