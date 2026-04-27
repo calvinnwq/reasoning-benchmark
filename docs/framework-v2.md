@@ -107,7 +107,7 @@ V2 should expose extension points where the next milestones already point:
 
 - **Dataset schema extension:** add ambiguity, cooperative-intent, accepted-interpretation, calibration, and evaluator fields without breaking existing questions.
 - **Evaluator modes:** support exact, rubric, and hybrid evaluation through explicit per-case configuration.
-- **Suite selection:** allow named slices such as smoke, starter, full, and holdout.
+- **Suite selection:** allow named slices such as smoke, starter, full, and holdout. Calibrated `starter` and `holdout` suite manifests live under `data/suites/` and are loaded via `scripts/suites.py`; `run_benchmark.py` honors them through `--suite NAME`.
 - **Adapters:** keep CLI and direct/provider adapters behind the shared adapter library.
 - **Reporting:** compute comparisons by family, failure mode, model, and evaluator mode from saved artifacts.
 

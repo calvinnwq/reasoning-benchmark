@@ -3,11 +3,23 @@ from __future__ import annotations
 
 import argparse
 import json
+import sys
 from datetime import datetime, timezone
 from pathlib import Path
 
+SCRIPT_DIR = Path(__file__).resolve().parent
+if str(SCRIPT_DIR) not in sys.path:
+    sys.path.insert(0, str(SCRIPT_DIR))
+
+from suites import (
+    SUITES_DIR as _DEFAULT_SUITES_DIR,
+    list_available_suites,
+    resolve_suite_case_ids,
+)
+
 REPO_ROOT = Path(__file__).resolve().parent.parent
 DATA_PATH = REPO_ROOT / "data" / "questions.json"
+SUITES_DIR = _DEFAULT_SUITES_DIR
 
 
 def load_questions() -> list[dict]:
@@ -15,21 +27,37 @@ def load_questions() -> list[dict]:
         return json.load(f)
 
 
-def cmd_list() -> int:
+def _select_questions(suite: str | None) -> tuple[list[dict], str]:
     questions = load_questions()
+    if suite is None:
+        return questions, "full"
+
+    case_ids = resolve_suite_case_ids(suite, suites_dir=SUITES_DIR)
+    by_id = {q["id"]: q for q in questions}
+    missing = [cid for cid in case_ids if cid not in by_id]
+    if missing:
+        raise ValueError(
+            f"suite {suite!r} references unknown case ids: {', '.join(missing)}"
+        )
+    selected = [by_id[cid] for cid in case_ids]
+    return selected, suite
+
+
+def cmd_list(suite: str | None = None) -> int:
+    questions, _ = _select_questions(suite)
     for q in questions:
         print(f"{q['id']} [{q['category']}] {q['prompt']}")
     print(f"\nTotal: {len(questions)} questions")
     return 0
 
 
-def cmd_sample_run() -> int:
-    questions = load_questions()
+def cmd_sample_run(suite: str | None = None) -> int:
+    questions, suite_id = _select_questions(suite)
     payload = {
         "schema_version": "2.0.0",
         "benchmark": "reasoning-benchmark",
         "created_at": datetime.now(timezone.utc).isoformat(),
-        "suite_id": "full",
+        "suite_id": suite_id,
         "case_count": len(questions),
         "question_count": len(questions),
         "results": [
@@ -53,8 +81,8 @@ def cmd_sample_run() -> int:
     return 0
 
 
-def cmd_emit_prompts(output: str) -> int:
-    questions = load_questions()
+def cmd_emit_prompts(output: str, suite: str | None = None) -> int:
+    questions, _ = _select_questions(suite)
     out_path = Path(output)
     if not out_path.is_absolute():
         out_path = REPO_ROOT / out_path
@@ -73,12 +101,32 @@ def cmd_emit_prompts(output: str) -> int:
     return 0
 
 
+def cmd_list_suites() -> int:
+    names = list_available_suites(suites_dir=SUITES_DIR)
+    if not names:
+        print("No suite manifests found.")
+        return 0
+    for name in names:
+        print(name)
+    return 0
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="Reasoning benchmark helper")
+    parser.add_argument(
+        "--suite",
+        metavar="NAME",
+        help="Restrict the command to a named suite manifest (e.g. starter, holdout)",
+    )
     group = parser.add_mutually_exclusive_group(required=True)
     group.add_argument("--list", action="store_true", help="List benchmark questions")
     group.add_argument("--sample-run", action="store_true", help="Print a blank run template JSON")
     group.add_argument("--emit-prompts", metavar="OUTPUT", help="Write a JSONL prompt pack")
+    group.add_argument(
+        "--list-suites",
+        action="store_true",
+        help="List the available named suite manifests",
+    )
     return parser
 
 
@@ -86,12 +134,16 @@ def main() -> int:
     parser = build_parser()
     args = parser.parse_args()
 
+    if args.list_suites:
+        if args.suite is not None:
+            parser.error("--suite cannot be combined with --list-suites")
+        return cmd_list_suites()
     if args.list:
-        return cmd_list()
+        return cmd_list(suite=args.suite)
     if args.sample_run:
-        return cmd_sample_run()
+        return cmd_sample_run(suite=args.suite)
     if args.emit_prompts:
-        return cmd_emit_prompts(args.emit_prompts)
+        return cmd_emit_prompts(args.emit_prompts, suite=args.suite)
     return 1
 
 

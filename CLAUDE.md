@@ -20,6 +20,13 @@ python3 scripts/run_benchmark.py --sample-run
 # Export a JSONL prompt pack for external model runners
 python3 scripts/run_benchmark.py --emit-prompts runs/prompts.jsonl
 
+# Restrict any of the commands above to a calibrated suite manifest
+python3 scripts/run_benchmark.py --list --suite starter
+python3 scripts/run_benchmark.py --emit-prompts runs/prompts.jsonl --suite holdout
+
+# List the available suite manifests
+python3 scripts/run_benchmark.py --list-suites
+
 # Score a completed run
 python3 scripts/score_run.py --input runs/example-run.json --output runs/example-run.scored.json
 ```
@@ -33,8 +40,9 @@ This is a pure-Python reasoning benchmark with no framework, package manager, or
 ### Data flow
 
 1. **Dataset** lives in `data/questions.json` — 100 questions, each with `id`, `category`, `prompt`, `expected_answer`, `accepted_variants`, `common_wrong_answer`, `rationale`, and `failure_mode`.
-2. **Run files** (`runs/*.json`) contain model answers against the dataset. The canonical input shape has a top-level `results` list (also accepted: `runs`, `items`, `answers`, or a bare list).
-3. **Scorer** (`scripts/score_run.py`) reads a run file + the dataset and writes a scored artifact.
+2. **Suite manifests** live in `data/suites/<name>.json`. `starter.json` is a 14-case high-signal slice (2 cases per family) used for frequent runs; `holdout.json` is a disjoint 14-case reserved set for cleaner cross-model comparison. The loader is `scripts/suites.py` (`load_suite_manifest`, `resolve_suite_case_ids`, `list_available_suites`).
+3. **Run files** (`runs/*.json`) contain model answers against the dataset. The canonical input shape has a top-level `results` list (also accepted: `runs`, `items`, `answers`, or a bare list).
+4. **Scorer** (`scripts/score_run.py`) reads a run file + the dataset and writes a scored artifact.
 
 ### Two-layer scoring model
 

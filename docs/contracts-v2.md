@@ -69,6 +69,28 @@ Optional fields:
 - `created_at`
 - `tags`
 
+### Persisted suite manifests
+
+Calibrated suites are stored as plain JSON files under `data/suites/<suite_id>.json` and loaded by `scripts/suites.py`. The persisted shape uses `suite_id` instead of `id` to match how the runner reads suite identifiers from RunConfig matrices, and adds a `selection_rationale` field that explains why each case was included.
+
+```json
+{
+  "schema_version": "2.0.0",
+  "suite_id": "starter",
+  "name": "Calibrated Starter Slice",
+  "description": "...",
+  "selection_rationale": "...",
+  "case_ids": ["GG-01", "GG-02", "..."]
+}
+```
+
+The current calibrated manifests are:
+
+- `data/suites/starter.json` — high-signal subset for frequent runs (2 cases per family, 14 total).
+- `data/suites/holdout.json` — disjoint reserved set for cross-model comparison and future public reporting (2 cases per family, 14 total).
+
+Required fields for persisted manifests: `schema_version`, `suite_id`, `name`, `description`, `selection_rationale`, `case_ids`. The suite loader rejects manifests whose `suite_id` does not match the filename, whose `case_ids` list is empty, or which contain duplicate or whitespace-padded ids.
+
 ## TaskFamily
 
 A task family is a stable grouping used for curation and reporting. It should be broader than an individual case and more stable than a one-off tag.
