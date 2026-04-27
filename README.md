@@ -182,6 +182,7 @@ positive, configured `max_cases` values must be whole positive integers, and con
 `skip_scoring` values must be booleans. Configured execution modes and model adapter names must be exact, unpadded,
 non-empty strings, string seeds must be exact, unpadded, and non-empty, configured `suite.case_ids` entries must be exact, unique, unpadded case ids, and
 `adapter_command` and `execution.provider_command` string values and list entries must be exact, unpadded, and non-empty.
+Optional RunConfig `extensions` entries are limited to the reserved `tool_use` and `multi_agent` namespaces; each payload must be a JSON object with an explicit boolean `enabled`, and `enabled: true` is rejected until the matching implementation ships.
 Without `suite.case_ids` or `matrix.suites`, configured modes must be `smoke` or `full`; explicit
 `suite.case_ids` preserve their order and allow custom mode names, while matrix suites allow a custom
 top-level mode and control selection per suite. `seed` shuffles only mode-derived selections, and
