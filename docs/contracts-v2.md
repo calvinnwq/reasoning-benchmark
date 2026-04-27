@@ -299,6 +299,29 @@ String-form `adapter_command` and `execution.provider_command` values and list-f
 also be exact, unpadded, non-empty strings so configured commands fail validation before subprocess
 execution when they preserve ambiguous whitespace.
 
+### Forward-compatible extension hooks
+
+`RunConfig` may carry an optional top-level `extensions` block that reserves namespaces for future
+expansion packs without activating them in the current short-reasoning core. The reserved namespaces
+are `tool_use` and `multi_agent`; unknown namespaces are rejected so a typo cannot silently disable
+the forward-compatibility check. Each declared namespace must be a JSON object with an explicit
+`enabled` boolean. Until the corresponding milestone wires runner support, `enabled` must be `false`
+so configs can persist planned extension metadata without referring to code that does not exist yet.
+Anything else inside a namespace payload is opaque to the validator; individual expansion packs own
+their own schema in their own milestone.
+
+```json
+{
+  "extensions": {
+    "tool_use": {"enabled": false, "notes": "reserved for M5 tool-use pack"},
+    "multi_agent": {"enabled": false}
+  }
+}
+```
+
+The validator lives in `scripts/extensions.py` (`RESERVED_EXTENSION_NAMESPACES`,
+`validate_extensions_block`) and is wired into RunConfig parsing in `scripts/run_baselines.py`.
+
 ## ModelResult
 
 `ModelResult` is the raw model answer for one case before scoring. Current `results[]` records in run files already cover the minimum shape.
