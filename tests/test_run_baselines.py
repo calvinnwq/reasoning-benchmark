@@ -4464,5 +4464,61 @@ class RunConfigExtensionsHookTests(unittest.TestCase):
             run_baselines.request_from_config(config_path)
 
 
+class ScorePayloadIntegrationTests(unittest.TestCase):
+    """score_payload must score in-process and surface real exceptions."""
+
+    def setUp(self) -> None:
+        self.tmp_dir = Path(__file__).resolve().parent / "tmp" / "score-payload"
+        self.tmp_dir.mkdir(parents=True, exist_ok=True)
+
+    def tearDown(self) -> None:
+        for item in self.tmp_dir.glob("*.json"):
+            item.unlink()
+
+    def _dataset(self) -> Path:
+        dataset_path = self.tmp_dir / "questions.json"
+        dataset_path.write_text(
+            json.dumps(
+                [
+                    {
+                        "id": "GG-01",
+                        "prompt": "Is the sky blue?",
+                        "expected_answer": "yes",
+                        "accepted_variants": [],
+                    }
+                ]
+            ),
+            encoding="utf-8",
+        )
+        return dataset_path
+
+    def test_score_payload_writes_scored_artifact_in_process(self) -> None:
+        dataset_path = self._dataset()
+        raw_path = self.tmp_dir / "raw.json"
+        raw_path.write_text(
+            json.dumps(
+                {
+                    "input_meta": {"benchmark": "reasoning-benchmark", "suite_id": "smoke"},
+                    "results": [{"id": "GG-01", "answer": "yes"}],
+                }
+            ),
+            encoding="utf-8",
+        )
+        scored_path = self.tmp_dir / "scored.json"
+
+        run_baselines.score_payload(raw_path, scored_path, dataset_path)
+
+        scored = json.loads(scored_path.read_text(encoding="utf-8"))
+        self.assertEqual(scored["summary"]["auto_scored"]["correct"], 1)
+
+    def test_score_payload_surfaces_file_not_found_directly(self) -> None:
+        dataset_path = self._dataset()
+        missing = self.tmp_dir / "missing.json"
+        scored_path = self.tmp_dir / "scored.json"
+
+        with self.assertRaises(FileNotFoundError):
+            run_baselines.score_payload(missing, scored_path, dataset_path)
+
+
 if __name__ == "__main__":
     unittest.main()

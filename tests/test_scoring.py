@@ -957,6 +957,21 @@ class ScoringFixtureTests(unittest.TestCase):
         )
         self.assertEqual(summary["manual_review"], summary["manual_only"])
 
+    def test_summary_manual_only_and_manual_review_are_independent(self) -> None:
+        scored = [
+            {
+                "answer": "right",
+                "score_reasoning": 3,
+                "scoring_status": {"score": 1, "heuristic_flags": []},
+            },
+        ]
+
+        summary = score_run.build_summary(scored)
+
+        summary["manual_only"]["reasoning_scores_present"] = 999
+
+        self.assertEqual(summary["manual_review"]["reasoning_scores_present"], 1)
+
     def test_summary_cross_tabs_models_against_task_family(self) -> None:
         scored = [
             {
@@ -1207,6 +1222,55 @@ class ScoringFixtureTests(unittest.TestCase):
                 },
             },
         )
+
+
+class ScoreToFileTests(unittest.TestCase):
+    def setUp(self) -> None:
+        self.tmp_dir = CURRENT_DIR / "tmp" / "score-to-file"
+        self.tmp_dir.mkdir(parents=True, exist_ok=True)
+
+    def tearDown(self) -> None:
+        for item in self.tmp_dir.glob("*.json"):
+            item.unlink()
+
+    def test_score_to_file_writes_scored_artifact(self) -> None:
+        dataset_path = self.tmp_dir / "dataset.json"
+        dataset_path.write_text(
+            json.dumps(
+                [
+                    {
+                        "id": "GG-01",
+                        "prompt": "Is the sky blue?",
+                        "expected_answer": "yes",
+                        "accepted_variants": [],
+                    }
+                ]
+            ),
+            encoding="utf-8",
+        )
+
+        input_path = self.tmp_dir / "raw.json"
+        input_path.write_text(
+            json.dumps(
+                {
+                    "input_meta": {"benchmark": "reasoning-benchmark", "suite_id": "smoke"},
+                    "results": [{"id": "GG-01", "answer": "yes"}],
+                }
+            ),
+            encoding="utf-8",
+        )
+
+        output_path = self.tmp_dir / "scored.json"
+        score_run.score_to_file(
+            input_path=input_path,
+            output_path=output_path,
+            dataset_path=dataset_path,
+        )
+
+        scored = json.loads(output_path.read_text(encoding="utf-8"))
+        self.assertEqual(scored["schema_version"], "2.0.0")
+        self.assertEqual(scored["summary"]["auto_scored"]["correct"], 1)
+        self.assertEqual(len(scored["results"]), 1)
 
 
 if __name__ == "__main__":
