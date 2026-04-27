@@ -55,7 +55,7 @@ The v2 framework direction is captured in [`docs/framework-v2.md`](docs/framewor
 
 The canonical v2 entity and artifact shapes are captured in [`docs/contracts-v2.md`](docs/contracts-v2.md). They define suites, task families, benchmark cases, run configs, artifact bundles, score records, and report summaries.
 
-The v2 dataset schema extension is captured in [`docs/dataset-schema-v2.md`](docs/dataset-schema-v2.md). It defines ambiguity metadata, cooperative-intent expectations, accepted interpretations, evaluator modes, and calibration fields for future migrated cases.
+The v2 dataset schema extension is captured in [`docs/dataset-schema-v2.md`](docs/dataset-schema-v2.md). It defines ambiguity metadata, cooperative-intent expectations, accepted interpretations, evaluator modes, and calibration fields that are present on migrated cases and additive for the rest of the dataset.
 
 ## Usage
 

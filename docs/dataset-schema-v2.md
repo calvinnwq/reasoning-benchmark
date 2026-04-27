@@ -160,7 +160,9 @@ Supported `mode` values:
 
 Captures whether the prompt has an intended ambiguity and how the benchmark expects it to be resolved.
 
-Recommended `ambiguity_type` values:
+Recommended `ambiguity_type` values are descriptive slugs. Broad legacy values remain valid, and migrated instruction-ambiguity cases use concrete `*-ambiguous` values such as `reference-ambiguous`, `temporal-ambiguous`, `payment-ambiguous`, and `ticket-closure-ambiguous`.
+
+Common broad values:
 
 - `none`
 - `lexical`

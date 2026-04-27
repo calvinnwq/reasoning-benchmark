@@ -22,10 +22,10 @@ This benchmark is intentionally **short, natural-language, and deceptively simpl
 
 ## Canonical dataset files
 
-- `data/questions.json`
-- `data/questions.csv`
+- `data/questions.json` — canonical source for runs and scoring
+- `data/questions.csv` — spreadsheet-friendly export view
 
-This markdown note is the human-readable overview. The JSON and CSV are the machine-readable source for runs and scoring.
+This markdown note is the human-readable overview. The JSON file is the machine-readable scoring source; the CSV export omits some v2 metadata such as `evaluation`, `ambiguity`, `cooperative_intent`, and `calibration`.
 
 ---
 
@@ -204,7 +204,7 @@ Each row in the JSON/CSV exports includes:
 - `rationale`
 - `failure_mode`
 
-The v2 dataset schema extension is documented in [`dataset-schema-v2.md`](dataset-schema-v2.md). It adds optional fields for task family IDs, evaluator mode, accepted interpretations, ambiguity metadata, cooperative-intent expectations, and calibration splits while preserving the current row shape during migration.
+The v2 dataset schema extension is documented in [`dataset-schema-v2.md`](dataset-schema-v2.md). Migrated cases already include fields for task family IDs, evaluator mode, accepted interpretations, ambiguity metadata, cooperative-intent expectations, and calibration splits; the fields remain optional while the rest of the dataset is migrated.
 
 ---
 

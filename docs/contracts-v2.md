@@ -490,38 +490,75 @@ Report-summary generation validates `artifacts.raw_results` and `artifacts.score
   "generated_at": "2026-04-26T00:00:03Z",
   "overall": {
     "case_count": 5,
+    "question_count": 5,
     "answered_count": 5,
     "missing_count": 0
   },
+  "auto_scored": {
+    "total": 5,
+    "correct": 4,
+    "incorrect": 1,
+    "accuracy": 0.8
+  },
+  "manual_only": {
+    "reasoning_scores_present": 0,
+    "constraint_scores_present": 0,
+    "notes_present": 0,
+    "heuristic_flags_total": 0
+  },
   "by_model": {
     "gpt-5.4": {
+      "total": 5,
+      "auto_scored": 5,
       "correct": 4,
       "incorrect": 1,
-      "accuracy": 0.8
+      "accuracy": 0.8,
+      "manual_review_required": 0,
+      "case_count": 5
     }
   },
   "by_task_family": {
     "goal-grounding": {
-      "case_count": 5,
-      "accuracy": 0.8
+      "total": 5,
+      "auto_scored": 5,
+      "correct": 4,
+      "incorrect": 1,
+      "accuracy": 0.8,
+      "manual_review_required": 0,
+      "case_count": 5
     }
   },
   "by_failure_mode": {
     "optimizes for distance while ignoring the task object": {
-      "case_count": 1,
-      "accuracy": 1.0
+      "total": 1,
+      "auto_scored": 1,
+      "correct": 1,
+      "incorrect": 0,
+      "accuracy": 1.0,
+      "manual_review_required": 0,
+      "case_count": 1
     }
   },
   "by_ambiguity_type": {
     "none": {
-      "case_count": 5,
-      "accuracy": 0.8
+      "total": 5,
+      "auto_scored": 5,
+      "correct": 4,
+      "incorrect": 1,
+      "accuracy": 0.8,
+      "manual_review_required": 0,
+      "case_count": 5
     }
   },
   "by_calibration_split": {
     "smoke": {
-      "case_count": 5,
-      "accuracy": 0.8
+      "total": 5,
+      "auto_scored": 5,
+      "correct": 4,
+      "incorrect": 1,
+      "accuracy": 0.8,
+      "manual_review_required": 0,
+      "case_count": 5
     }
   },
   "manual_review": {
@@ -529,7 +566,8 @@ Report-summary generation validates `artifacts.raw_results` and `artifacts.score
     "constraint_scores_present": 0,
     "notes_present": 0,
     "heuristic_flags_total": 0
-  }
+  },
+  "heuristic_flags": {}
 }
 ```
 
@@ -541,7 +579,10 @@ Required fields:
 - `source_bundles`
 - `generated_at`
 - `overall`
+- `auto_scored`
+- `manual_only`
 - `by_model`
+- `heuristic_flags`
 
 Optional but expected for M3 reporting:
 
@@ -551,6 +592,8 @@ Optional but expected for M3 reporting:
 - `by_ambiguity_type`
 - `by_calibration_split`
 - `manual_review`
+
+Per-bucket summaries in `by_model`, `by_evaluation_mode`, `by_task_family`, `by_failure_mode`, `by_ambiguity_type`, and `by_calibration_split` use the same shape: `total`, `auto_scored`, `correct`, `incorrect`, `accuracy`, `manual_review_required`, and `case_count`.
 
 ## Current-To-V2 Mapping
 
