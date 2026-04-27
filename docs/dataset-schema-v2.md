@@ -5,7 +5,7 @@
 **Depends on:** `docs/framework-v2.md`, `docs/contracts-v2.md`
 **Purpose:** Extend the current question row contract so ambiguity and pragmatic reasoning cases can be evaluated without forcing every case into exact-answer scoring.
 
-This document defines the richer `BenchmarkCase` fields that M2 can migrate into code. The current `data/questions.json` rows remain valid during migration; new fields are additive until all cases are backfilled.
+This document defines the richer `BenchmarkCase` fields now consumed by scoring and reporting. The current `data/questions.json` rows remain valid during the partial migration; migrated cases already carry v2 metadata, and new fields are additive until all cases are backfilled.
 
 ## Design Goals
 

@@ -186,7 +186,8 @@ Compatibility fields preserved from v1:
     "mode": "smoke",
     "timeout_seconds": 45.0,
     "seed": null,
-    "max_cases": 5
+    "max_cases": 5,
+    "skip_scoring": false
   },
   "output": {
     "bundle_dir": "runs/baseline/gpt-5-4.smoke"
@@ -213,8 +214,8 @@ It requires `schema_version` to be the exact, unpadded `2.0.0` string so configs
 ambiguous contract-version identifiers.
 It requires `benchmark` to be the exact, unpadded `reasoning-benchmark` value so configs do not
 preserve ambiguous benchmark identifiers.
-It requires `suite_id` to be an exact, unpadded, non-empty string so run configs reference a stable
-suite identifier without preserving ambiguous whitespace.
+It requires `suite_id` to be an exact, unpadded, non-empty string without path separators or `.`/`..`
+traversal segments so run configs reference a stable suite identifier and artifact label.
 It also requires `id` to be an exact, unpadded, non-empty string so artifacts preserve a stable
 execution request identifier.
 It requires `dataset.path` to be an exact, unpadded, non-empty string so configs do not preserve
@@ -225,12 +226,15 @@ It requires `output.bundle_dir` to be an exact, unpadded, non-empty string so co
 artifacts into ambiguous output locations.
 It requires model ids, whether listed directly or inside model objects, to be exact, unpadded,
 non-empty strings from the current baseline runner set: `gpt-5.4`, `sonnet-4.6`, or `qwen3.5-9b`.
-It requires `execution.mode` to be an exact, unpadded, non-empty string when present so configs do
-not preserve ambiguous suite mode selections.
+It requires `execution.mode` to be an exact, unpadded, non-empty string without path separators or
+`.`/`..` traversal segments when present so configs do not preserve ambiguous suite mode selections
+or artifact labels.
 Without an embedded `suite.case_ids` list, `execution.mode` must be `smoke` or `full`; with
 `suite.case_ids`, custom mode names are allowed and the listed cases run in the supplied order.
 `execution.seed` shuffles only `smoke` or `full` selections, and `execution.max_cases` truncates the
 selected cases after mode or explicit-suite selection.
+It requires `execution.timeout_seconds` to be a finite positive number and `execution.skip_scoring`
+to be a boolean when supplied.
 It requires model adapter names to be exact, unpadded strings so configs do not preserve ambiguous
 adapter selections. Supported adapter values are `api`, `cli`, and `provider-command`; `api` and
 `cli` select the built-in adapter entrypoints, while `provider-command` relies on an explicit
@@ -300,6 +304,15 @@ Optional fields:
   "case_id": "GG-01",
   "model": "gpt-5.4",
   "evaluation_mode": "exact",
+  "task_family_id": "goal-grounding",
+  "failure_mode": "optimizes for distance while ignoring the task object",
+  "ambiguity_type": "none",
+  "clarification_expected": false,
+  "calibration_difficulty": "starter",
+  "calibration_split": "smoke",
+  "gold_confidence": "high",
+  "human_disagreement_risk": "low",
+  "review_status": "reviewed",
   "answer": "Drive there.",
   "reasoning": "The car needs to reach the car wash.",
   "score_answer": 1,
@@ -321,7 +334,8 @@ Optional fields:
         "value": true,
         "is_heuristic": false
       }
-    ]
+    ],
+    "dimensions": []
   },
   "score_answer_normalized": {
     "expected": "Drive there. The car is the thing that needs to reach the car wash.",
@@ -340,12 +354,21 @@ Required fields:
 - `case_id` or the v1-compatible alias `id`
 - `model`
 - `evaluation_mode`
+- `task_family_id`
+- `failure_mode`
+- `ambiguity_type`
 - `score_answer`
 - `score_reasoning`
 - `score_constraint_extraction`
 - `penalties`
 - `notes`
 - `scoring_status`
+
+Dataset-backed records also preserve `clarification_expected`, calibration fields
+(`calibration_difficulty`, `calibration_split`, `gold_confidence`, `human_disagreement_risk`, and
+`review_status`), and any available ambiguity or cooperative-intent review context such as
+`ambiguity_tags`, `literal_reading_defensible`, `preferred_resolution`, `ambiguity_notes`,
+`accepted_interpretations`, and `cooperative_intent`.
 
 ## RunArtifactBundle
 
@@ -525,6 +548,17 @@ Report-summary generation validates `artifacts.raw_results` and `artifacts.score
       "case_count": 5
     }
   },
+  "by_evaluation_mode": {
+    "exact": {
+      "total": 5,
+      "auto_scored": 5,
+      "correct": 4,
+      "incorrect": 1,
+      "accuracy": 0.8,
+      "manual_review_required": 0,
+      "case_count": 5
+    }
+  },
   "by_task_family": {
     "goal-grounding": {
       "total": 5,
@@ -590,16 +624,13 @@ Required fields:
 - `auto_scored`
 - `manual_only`
 - `by_model`
-- `heuristic_flags`
-
-Optional but expected for M3 reporting:
-
-- `by_task_family`
 - `by_evaluation_mode`
+- `by_task_family`
 - `by_failure_mode`
 - `by_ambiguity_type`
 - `by_calibration_split`
 - `manual_review`
+- `heuristic_flags`
 
 Per-bucket summaries in `by_model`, `by_evaluation_mode`, `by_task_family`, `by_failure_mode`, `by_ambiguity_type`, and `by_calibration_split` use the same shape: `total`, `auto_scored`, `correct`, `incorrect`, `accuracy`, `manual_review_required`, and `case_count`.
 
