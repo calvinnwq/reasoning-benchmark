@@ -161,6 +161,10 @@ positive, configured `max_cases` values must be whole positive integers, and con
 `skip_scoring` values must be booleans. Configured execution modes and model adapter names must be exact, unpadded,
 non-empty strings, string seeds must be exact, unpadded, and non-empty, configured `suite.case_ids` entries must be exact, unique, unpadded case ids, and
 `adapter_command` and `execution.provider_command` string values and list entries must be exact, unpadded, and non-empty.
+Without `suite.case_ids`, configured modes must be `smoke` or `full`; explicit `suite.case_ids`
+preserve their order and allow custom mode names. `seed` shuffles only mode-derived selections, and
+`max_cases` truncates the selected suite after selection. Configured model ids must be one of
+`gpt-5.4`, `sonnet-4.6`, or `qwen3.5-9b`.
 Supported RunConfig adapter values are `api`, `cli`, and `provider-command`; model-level
 `adapter_command` overrides adapter selection, while `execution.provider_command` supplies the
 default command for models without their own command.

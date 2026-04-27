@@ -224,9 +224,13 @@ unpadded strings before the value is compared with the dataset's SHA-256 hash.
 It requires `output.bundle_dir` to be an exact, unpadded, non-empty string so configs do not write
 artifacts into ambiguous output locations.
 It requires model ids, whether listed directly or inside model objects, to be exact, unpadded,
-non-empty strings so configs do not preserve ambiguous model selections.
+non-empty strings from the current baseline runner set: `gpt-5.4`, `sonnet-4.6`, or `qwen3.5-9b`.
 It requires `execution.mode` to be an exact, unpadded, non-empty string when present so configs do
 not preserve ambiguous suite mode selections.
+Without an embedded `suite.case_ids` list, `execution.mode` must be `smoke` or `full`; with
+`suite.case_ids`, custom mode names are allowed and the listed cases run in the supplied order.
+`execution.seed` shuffles only `smoke` or `full` selections, and `execution.max_cases` truncates the
+selected cases after mode or explicit-suite selection.
 It requires model adapter names to be exact, unpadded strings so configs do not preserve ambiguous
 adapter selections. Supported adapter values are `api`, `cli`, and `provider-command`; `api` and
 `cli` select the built-in adapter entrypoints, while `provider-command` relies on an explicit
