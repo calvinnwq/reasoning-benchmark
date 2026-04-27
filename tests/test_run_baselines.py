@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import math
 import shutil
 import sys
 from pathlib import Path
@@ -1704,6 +1705,46 @@ class BaselineRunnerTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "RunConfig execution.timeout_seconds must be numeric"):
             run_baselines.cmd_run(args)
 
+    def test_config_file_rejects_string_timeout(self) -> None:
+        dataset_path = self._dataset()
+        run_dir = self.tmp_dir / "string-timeout-runs"
+
+        config_path = self.tmp_dir / "string-timeout-config.json"
+        config_path.write_text(
+            json.dumps(
+                {
+                    "schema_version": "2.0.0",
+                    "id": "unit-string-timeout",
+                    "benchmark": "reasoning-benchmark",
+                    "suite_id": "smoke",
+                    "dataset": {"path": str(dataset_path)},
+                    "models": ["gpt-5.4"],
+                    "prompt_contract": run_baselines.build_prompt_contract(),
+                    "execution": {
+                        "mode": "smoke",
+                        "timeout_seconds": "5",
+                        "skip_scoring": True,
+                    },
+                    "output": {"bundle_dir": str(run_dir)},
+                }
+            ),
+            encoding="utf-8",
+        )
+
+        args = argparse.Namespace(
+            config=str(config_path),
+            mode="full",
+            dataset=str(self.tmp_dir / "ignored.json"),
+            run_dir=str(self.tmp_dir / "ignored-runs"),
+            models=["sonnet-4.6"],
+            provider_command=None,
+            prompt_timeout=1.0,
+            skip_scoring=False,
+        )
+
+        with self.assertRaisesRegex(ValueError, "RunConfig execution.timeout_seconds must be numeric"):
+            run_baselines.cmd_run(args)
+
     def test_config_file_rejects_non_finite_timeout(self) -> None:
         dataset_path = self._dataset()
         run_dir = self.tmp_dir / "non-finite-timeout-runs"
@@ -1722,7 +1763,7 @@ class BaselineRunnerTests(unittest.TestCase):
                     "prompt_contract": run_baselines.build_prompt_contract(),
                     "execution": {
                         "mode": "smoke",
-                        "timeout_seconds": "nan",
+                        "timeout_seconds": math.nan,
                         "skip_scoring": True,
                     },
                     "output": {"bundle_dir": str(run_dir)},

@@ -659,12 +659,9 @@ def config_seed(execution: dict[str, Any]) -> int | str | None:
 
 def config_timeout_seconds(execution: dict[str, Any]) -> float:
     value = execution.get("timeout_seconds", 45.0)
-    if isinstance(value, bool):
+    if isinstance(value, bool) or not isinstance(value, (int, float)):
         raise ValueError("RunConfig execution.timeout_seconds must be numeric")
-    try:
-        timeout = float(value)
-    except (TypeError, ValueError) as exc:
-        raise ValueError("RunConfig execution.timeout_seconds must be numeric") from exc
+    timeout = float(value)
     if not math.isfinite(timeout):
         raise ValueError("RunConfig execution.timeout_seconds must be finite")
     if timeout <= 0:
