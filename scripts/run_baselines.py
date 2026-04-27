@@ -364,15 +364,17 @@ def build_payload(
     max_cases: int | None = None,
     seed: int | str | None = None,
     prompt_contract: dict[str, Any] | None = None,
+    suite_id: str | None = None,
 ) -> Dict[str, Any]:
     contract = copy.deepcopy(prompt_contract) if prompt_contract is not None else build_prompt_contract()
+    artifact_suite_id = suite_id if suite_id is not None else mode
     payload = {
         "schema_version": RAW_ARTIFACT_SCHEMA_VERSION,
         "benchmark": BENCHMARK_ID,
         "runner": "scripts/run_baselines.py",
         "runner_version": RUNNER_VERSION,
         "created_at": datetime.now(timezone.utc).isoformat(),
-        "suite_id": mode,
+        "suite_id": artifact_suite_id,
         "run_mode": mode,
         "case_count": len(questions),
         "question_count": len(questions),
@@ -407,6 +409,7 @@ def build_run_artifact_bundle(
     *,
     model: str,
     mode: str,
+    suite_id: str | None = None,
     raw_path: Path,
     scored_path: Path | None,
     report_summary_path: Path | None = None,
@@ -416,6 +419,7 @@ def build_run_artifact_bundle(
     config_path: Path | None = None,
 ) -> Dict[str, Any]:
     model_slug = normalize_model_id(model)
+    artifact_suite_id = suite_id if suite_id is not None else mode
     scored_results = scored_path.name if scored_path else None
     scored_fingerprint = (
         {"algorithm": "sha256", "value": file_fingerprint(scored_path)}
@@ -429,9 +433,9 @@ def build_run_artifact_bundle(
     )
     return {
         "schema_version": "2.0.0",
-        "id": f"baseline-{mode}-{model_slug}",
+        "id": f"baseline-{artifact_suite_id}-{model_slug}",
         "benchmark": BENCHMARK_ID,
-        "suite_id": mode,
+        "suite_id": artifact_suite_id,
         "run_config": str(config_path) if config_path else None,
         "artifacts": {
             "raw_results": raw_path.name,
@@ -1203,6 +1207,7 @@ def _execute_run_pass(
     questions: list[dict[str, Any]],
     model: str,
     mode: str,
+    suite_id: str | None,
     suite_case_ids: tuple[str, ...] | None,
     raw_path: Path,
     scored_path: Path,
@@ -1225,6 +1230,7 @@ def _execute_run_pass(
         max_cases=request.max_cases,
         seed=request.seed,
         prompt_contract=request.prompt_contract,
+        suite_id=suite_id,
     )
     if request.config_payload:
         payload["run_config"] = sanitize_run_config_for_artifact(request.config_payload)
@@ -1257,6 +1263,7 @@ def _execute_run_pass(
     manifest = build_run_artifact_bundle(
         model=model,
         mode=mode,
+        suite_id=suite_id,
         raw_path=raw_path,
         scored_path=scored_path,
         report_summary_path=report_summary_path,
@@ -1294,6 +1301,7 @@ def cmd_run(args: argparse.Namespace) -> int:
                         questions=questions,
                         model=model,
                         mode=suite.mode,
+                        suite_id=suite.suite_id,
                         suite_case_ids=suite.case_ids,
                         raw_path=raw_path,
                         scored_path=scored_path,
@@ -1333,6 +1341,7 @@ def cmd_run(args: argparse.Namespace) -> int:
             questions=questions,
             model=model,
             mode=request.mode,
+            suite_id=None,
             suite_case_ids=request.suite_case_ids,
             raw_path=raw_path,
             scored_path=scored_path,

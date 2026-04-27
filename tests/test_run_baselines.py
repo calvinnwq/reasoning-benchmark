@@ -3313,7 +3313,7 @@ class MatrixRunnerTests(unittest.TestCase):
                     },
                     "matrix": {
                         "suites": [
-                            {"suite_id": "smoke", "mode": "smoke"},
+                            {"suite_id": "starter-pragmatics", "mode": "full"},
                         ],
                     },
                     "output": {"bundle_dir": str(run_dir)},
@@ -3330,8 +3330,8 @@ class MatrixRunnerTests(unittest.TestCase):
                             "summary": {
                                 "schema_version": "2.0.0",
                                 "benchmark": "reasoning-benchmark",
-                                "suite_id": "smoke",
-                                "overall": {"case_count": 5},
+                                "suite_id": "starter-pragmatics",
+                                "overall": {"case_count": 6},
                             },
                             "results": [],
                         }
@@ -3352,16 +3352,23 @@ class MatrixRunnerTests(unittest.TestCase):
             )
             run_baselines.cmd_run(args)
 
-        scored_path = run_dir / "smoke" / "gpt-5-4.smoke.scored.json"
-        summary_path = run_dir / "smoke" / "gpt-5-4.smoke.summary.json"
-        manifest_path = run_dir / "smoke" / "gpt-5-4.smoke.manifest.json"
+        raw_path = run_dir / "starter-pragmatics" / "gpt-5-4.full.raw.json"
+        scored_path = run_dir / "starter-pragmatics" / "gpt-5-4.full.scored.json"
+        summary_path = run_dir / "starter-pragmatics" / "gpt-5-4.full.summary.json"
+        manifest_path = run_dir / "starter-pragmatics" / "gpt-5-4.full.manifest.json"
+        self.assertTrue(raw_path.is_file())
         self.assertTrue(scored_path.is_file())
         self.assertTrue(summary_path.is_file())
         self.assertTrue(manifest_path.is_file())
 
+        raw_payload = json.loads(raw_path.read_text(encoding="utf-8"))
         manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
-        self.assertEqual(manifest["artifacts"]["raw_results"], "gpt-5-4.smoke.raw.json")
-        self.assertEqual(manifest["artifacts"]["scored_results"], "gpt-5-4.smoke.scored.json")
+        self.assertEqual(raw_payload["suite_id"], "starter-pragmatics")
+        self.assertEqual(raw_payload["run_mode"], "full")
+        self.assertEqual(manifest["id"], "baseline-starter-pragmatics-gpt-5-4")
+        self.assertEqual(manifest["suite_id"], "starter-pragmatics")
+        self.assertEqual(manifest["artifacts"]["raw_results"], "gpt-5-4.full.raw.json")
+        self.assertEqual(manifest["artifacts"]["scored_results"], "gpt-5-4.full.scored.json")
         shutil.rmtree(run_dir, ignore_errors=True)
 
     def test_matrix_index_inlines_per_cell_summary_metrics_from_report_summaries(
