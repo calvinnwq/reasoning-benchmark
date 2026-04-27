@@ -170,6 +170,8 @@ Supported RunConfig adapter values are `api`, `cli`, and `provider-command`; mod
 default command for models without their own command.
 Live provider-backed raw result records include v2 audit metadata for the captured provider response,
 adapter command/exit details, and per-prompt start/completion timestamps.
+Artifact command fields redact adapter arguments as `program '[arguments omitted]'`, including
+embedded sanitized RunConfig command values, so full commands and secrets are not persisted.
 
 If you have a local model adapter, you can execute live by providing a command that accepts
 `MODEL` and `PROMPT` as positional args and returns JSON with `answer` and `reasoning` fields.

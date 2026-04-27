@@ -220,6 +220,9 @@ It also requires `id` to be an exact, unpadded, non-empty string so artifacts pr
 execution request identifier.
 It requires `dataset.path` to be an exact, unpadded, non-empty string so configs do not preserve
 ambiguous dataset references.
+Relative RunConfig paths, including the config file path itself, `dataset.path`, and
+`output.bundle_dir`, resolve from the repository root rather than the current working directory or
+the config file's directory.
 When supplied, `dataset.fingerprint.algorithm` and `dataset.fingerprint.value` must also be exact,
 unpadded strings before the value is compared with the dataset's SHA-256 hash.
 It requires `output.bundle_dir` to be an exact, unpadded, non-empty string so configs do not write
@@ -268,8 +271,8 @@ execution when they preserve ambiguous whitespace.
     "format": "json"
   },
   "adapter": {
-    "name": "cli",
-    "command": "python3 scripts/cli_adapter.py",
+    "name": "python3",
+    "command": "python3 '[arguments omitted]'",
     "exit_code": 0,
     "stderr": ""
   },
@@ -293,6 +296,10 @@ Optional fields:
 - `started_at`
 - `completed_at`
 - `notes`
+
+For live provider-backed runs, `adapter.name` records the executed program basename and
+`adapter.command` redacts arguments as `program '[arguments omitted]'` so artifact audit metadata
+does not persist adapter arguments or secrets.
 
 ## ScoreRecord
 
@@ -363,6 +370,8 @@ Required fields:
 - `penalties`
 - `notes`
 - `scoring_status`
+- `score_answer_normalized`
+- `scored_at`
 
 Dataset-backed records also preserve `clarification_expected`, calibration fields
 (`calibration_difficulty`, `calibration_split`, `gold_confidence`, `human_disagreement_risk`, and
