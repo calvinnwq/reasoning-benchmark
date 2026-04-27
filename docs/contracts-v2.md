@@ -245,8 +245,9 @@ non-empty strings from the current baseline runner set: `gpt-5.4`, `sonnet-4.6`,
 It requires `execution.mode` to be an exact, unpadded, non-empty string without path separators or
 `.`/`..` traversal segments when present so configs do not preserve ambiguous suite mode selections
 or artifact labels.
-Without an embedded `suite.case_ids` list, `execution.mode` must be `smoke` or `full`; with
-`suite.case_ids`, custom mode names are allowed and the listed cases run in the supplied order.
+Without an embedded `suite.case_ids` list or `matrix.suites`, `execution.mode` must be `smoke` or
+`full`; with `suite.case_ids` or `matrix.suites`, custom top-level mode names are allowed. Explicit
+`suite.case_ids` run in the supplied order; matrix suite entries control each cell's selection.
 When `matrix` is supplied, it must be an object with a non-empty `suites` list, and the runner
 executes every suite/model cell. Each matrix suite must declare a unique exact `suite_id` without
 path separators or `.`/`..` traversal segments, may declare an exact `mode`, and may declare
