@@ -37,6 +37,10 @@ CATEGORY_AMBIGUITY_TYPES = {
     "MC": "test-condition",
 }
 
+BINARY_TOKEN_LOOKAHEAD = 6
+HEURISTIC_SPAN_MAX_TOKENS = 10
+CONCISE_PREFIX_MAX_TOKENS = 3
+
 
 @dataclass(frozen=True)
 class MatchResult:
@@ -134,7 +138,7 @@ def trim_prefillers(text: str) -> str:
 def extract_binary_token(text: str) -> Optional[str]:
     # Explicit yes/no handling should be deterministic for short answers.
     tokens = normalize_text(trim_prefillers(text)).split()
-    for token in tokens[:6]:
+    for token in tokens[:BINARY_TOKEN_LOOKAHEAD]:
         if token == "yes":
             return "yes"
         if token == "no":
@@ -279,7 +283,7 @@ def score_single_answer(answer: Any, expected_text: str, accepted_variants: Iter
 
     for normalized_answer in answer_norms:
         answer_tokens = token_sequence(normalized_answer)
-        if len(answer_tokens) <= 10:
+        if len(answer_tokens) <= HEURISTIC_SPAN_MAX_TOKENS:
             for candidate_norm in candidate_norms:
                 candidate_tokens = token_sequence(candidate_norm)
                 if contains_expected_as_contiguous_span(answer_tokens, candidate_tokens):
@@ -312,7 +316,7 @@ def score_single_answer(answer: Any, expected_text: str, accepted_variants: Iter
 
     for normalized_answer in answer_norms:
         answer_tokens = token_sequence(normalized_answer)
-        if 0 < len(answer_tokens) <= 3 and answer_tokens[0] not in {"yes", "no"}:
+        if 0 < len(answer_tokens) <= CONCISE_PREFIX_MAX_TOKENS and answer_tokens[0] not in {"yes", "no"}:
             for candidate_norm in candidate_norms:
                 candidate_tokens = token_sequence(candidate_norm)
                 if starts_with_token_sequence(candidate_tokens, answer_tokens):
