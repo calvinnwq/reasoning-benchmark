@@ -501,6 +501,114 @@ def build_matrix_index(
                     ),
                 }
             )
+    model_summaries: Dict[str, Dict[str, Any]] | None = None
+    suite_summaries: Dict[str, Dict[str, Any]] | None = None
+    overall_summary: Dict[str, Any] | None = None
+    if not request.skip_scoring and summaries:
+        model_summaries = {}
+        for model in request.models:
+            aggregate_total = 0
+            aggregate_correct = 0
+            aggregate_incorrect = 0
+            suite_count = 0
+            for suite in suites:
+                summary = summaries.get((suite.suite_id, model))
+                if not isinstance(summary, dict):
+                    continue
+                auto_scored = summary.get("auto_scored")
+                if not isinstance(auto_scored, dict):
+                    continue
+                suite_count += 1
+                aggregate_total += int(auto_scored.get("total", 0) or 0)
+                aggregate_correct += int(auto_scored.get("correct", 0) or 0)
+                aggregate_incorrect += int(auto_scored.get("incorrect", 0) or 0)
+            if suite_count == 0:
+                continue
+            accuracy = (
+                round(aggregate_correct / aggregate_total, 4)
+                if aggregate_total
+                else 0.0
+            )
+            model_summaries[model] = {
+                "suite_count": suite_count,
+                "auto_scored": {
+                    "total": aggregate_total,
+                    "correct": aggregate_correct,
+                    "incorrect": aggregate_incorrect,
+                    "accuracy": accuracy,
+                },
+            }
+        if not model_summaries:
+            model_summaries = None
+
+        suite_summaries = {}
+        for suite in suites:
+            aggregate_total = 0
+            aggregate_correct = 0
+            aggregate_incorrect = 0
+            model_count = 0
+            for model in request.models:
+                summary = summaries.get((suite.suite_id, model))
+                if not isinstance(summary, dict):
+                    continue
+                auto_scored = summary.get("auto_scored")
+                if not isinstance(auto_scored, dict):
+                    continue
+                model_count += 1
+                aggregate_total += int(auto_scored.get("total", 0) or 0)
+                aggregate_correct += int(auto_scored.get("correct", 0) or 0)
+                aggregate_incorrect += int(auto_scored.get("incorrect", 0) or 0)
+            if model_count == 0:
+                continue
+            accuracy = (
+                round(aggregate_correct / aggregate_total, 4)
+                if aggregate_total
+                else 0.0
+            )
+            suite_summaries[suite.suite_id] = {
+                "model_count": model_count,
+                "auto_scored": {
+                    "total": aggregate_total,
+                    "correct": aggregate_correct,
+                    "incorrect": aggregate_incorrect,
+                    "accuracy": accuracy,
+                },
+            }
+        if not suite_summaries:
+            suite_summaries = None
+
+        aggregate_total = 0
+        aggregate_correct = 0
+        aggregate_incorrect = 0
+        cell_count = 0
+        for suite in suites:
+            for model in request.models:
+                summary = summaries.get((suite.suite_id, model))
+                if not isinstance(summary, dict):
+                    continue
+                auto_scored = summary.get("auto_scored")
+                if not isinstance(auto_scored, dict):
+                    continue
+                cell_count += 1
+                aggregate_total += int(auto_scored.get("total", 0) or 0)
+                aggregate_correct += int(auto_scored.get("correct", 0) or 0)
+                aggregate_incorrect += int(auto_scored.get("incorrect", 0) or 0)
+        if cell_count:
+            accuracy = (
+                round(aggregate_correct / aggregate_total, 4)
+                if aggregate_total
+                else 0.0
+            )
+            overall_summary = {
+                "cell_count": cell_count,
+                "auto_scored": {
+                    "total": aggregate_total,
+                    "correct": aggregate_correct,
+                    "incorrect": aggregate_incorrect,
+                    "accuracy": accuracy,
+                },
+            }
+
     return {
         "schema_version": "1.0.0",
         "benchmark": BENCHMARK_ID,
@@ -515,6 +623,9 @@ def build_matrix_index(
             for suite in suites
         ],
         "cells": cells,
+        "model_summaries": model_summaries,
+        "suite_summaries": suite_summaries,
+        "overall_summary": overall_summary,
         "dataset": {
             "path": str(request.dataset_path),
             "fingerprint": {

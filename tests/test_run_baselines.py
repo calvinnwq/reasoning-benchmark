@@ -3776,6 +3776,422 @@ class MatrixIndexBuilderTests(unittest.TestCase):
 
         self.assertIsNone(index["cells"][0]["summary_metrics"])
 
+    def test_build_matrix_index_aggregates_per_model_summaries_across_suites(
+        self,
+    ) -> None:
+        dataset_path = self._dataset()
+        run_dir = self.tmp_dir / "matrix-index-model-summaries-runs"
+        suites = (
+            run_baselines.MatrixSuite(suite_id="smoke", mode="smoke"),
+            run_baselines.MatrixSuite(suite_id="starter", mode="starter"),
+        )
+        request = self._request(
+            run_dir=run_dir,
+            dataset_path=dataset_path,
+            models=("gpt-5.4", "sonnet-4.6"),
+            suites=suites,
+        )
+        cell_summaries = {
+            ("smoke", "gpt-5.4"): {
+                "auto_scored": {"total": 5, "correct": 4, "incorrect": 1, "accuracy": 0.8}
+            },
+            ("starter", "gpt-5.4"): {
+                "auto_scored": {"total": 5, "correct": 3, "incorrect": 2, "accuracy": 0.6}
+            },
+            ("smoke", "sonnet-4.6"): {
+                "auto_scored": {"total": 5, "correct": 2, "incorrect": 3, "accuracy": 0.4}
+            },
+            ("starter", "sonnet-4.6"): {
+                "auto_scored": {"total": 5, "correct": 1, "incorrect": 4, "accuracy": 0.2}
+            },
+        }
+
+        index = run_baselines.build_matrix_index(
+            request=request,
+            created_at="2026-04-27T00:00:00+00:00",
+            cell_summaries=cell_summaries,
+        )
+
+        self.assertEqual(
+            index["model_summaries"],
+            {
+                "gpt-5.4": {
+                    "suite_count": 2,
+                    "auto_scored": {
+                        "total": 10,
+                        "correct": 7,
+                        "incorrect": 3,
+                        "accuracy": 0.7,
+                    },
+                },
+                "sonnet-4.6": {
+                    "suite_count": 2,
+                    "auto_scored": {
+                        "total": 10,
+                        "correct": 3,
+                        "incorrect": 7,
+                        "accuracy": 0.3,
+                    },
+                },
+            },
+        )
+
+    def test_build_matrix_index_model_summaries_skip_cells_without_summaries(
+        self,
+    ) -> None:
+        dataset_path = self._dataset()
+        run_dir = self.tmp_dir / "matrix-index-partial-summaries-runs"
+        suites = (
+            run_baselines.MatrixSuite(suite_id="smoke", mode="smoke"),
+            run_baselines.MatrixSuite(suite_id="starter", mode="starter"),
+        )
+        request = self._request(
+            run_dir=run_dir,
+            dataset_path=dataset_path,
+            models=("gpt-5.4",),
+            suites=suites,
+        )
+        cell_summaries = {
+            ("smoke", "gpt-5.4"): {
+                "auto_scored": {"total": 5, "correct": 4, "incorrect": 1, "accuracy": 0.8}
+            },
+        }
+
+        index = run_baselines.build_matrix_index(
+            request=request,
+            created_at="2026-04-27T00:00:00+00:00",
+            cell_summaries=cell_summaries,
+        )
+
+        self.assertEqual(
+            index["model_summaries"],
+            {
+                "gpt-5.4": {
+                    "suite_count": 1,
+                    "auto_scored": {
+                        "total": 5,
+                        "correct": 4,
+                        "incorrect": 1,
+                        "accuracy": 0.8,
+                    },
+                },
+            },
+        )
+
+    def test_build_matrix_index_model_summaries_default_none(self) -> None:
+        dataset_path = self._dataset()
+        run_dir = self.tmp_dir / "matrix-index-empty-model-summaries-runs"
+        request = self._request(
+            run_dir=run_dir,
+            dataset_path=dataset_path,
+            models=("gpt-5.4",),
+            suites=(run_baselines.MatrixSuite(suite_id="smoke", mode="smoke"),),
+        )
+
+        index = run_baselines.build_matrix_index(
+            request=request,
+            created_at="2026-04-27T00:00:00+00:00",
+        )
+
+        self.assertIsNone(index["model_summaries"])
+
+    def test_build_matrix_index_model_summaries_none_when_skip_scoring(self) -> None:
+        dataset_path = self._dataset()
+        run_dir = self.tmp_dir / "matrix-index-skip-model-summaries-runs"
+        request = self._request(
+            run_dir=run_dir,
+            dataset_path=dataset_path,
+            models=("gpt-5.4",),
+            suites=(run_baselines.MatrixSuite(suite_id="smoke", mode="smoke"),),
+            skip_scoring=True,
+        )
+
+        index = run_baselines.build_matrix_index(
+            request=request,
+            created_at="2026-04-27T00:00:00+00:00",
+            cell_summaries={
+                ("smoke", "gpt-5.4"): {
+                    "auto_scored": {"total": 5, "correct": 5, "incorrect": 0, "accuracy": 1.0}
+                }
+            },
+        )
+
+        self.assertIsNone(index["model_summaries"])
+
+    def test_build_matrix_index_aggregates_per_suite_summaries_across_models(
+        self,
+    ) -> None:
+        dataset_path = self._dataset()
+        run_dir = self.tmp_dir / "matrix-index-suite-summaries-runs"
+        suites = (
+            run_baselines.MatrixSuite(suite_id="smoke", mode="smoke"),
+            run_baselines.MatrixSuite(suite_id="starter", mode="starter"),
+        )
+        request = self._request(
+            run_dir=run_dir,
+            dataset_path=dataset_path,
+            models=("gpt-5.4", "sonnet-4.6"),
+            suites=suites,
+        )
+        cell_summaries = {
+            ("smoke", "gpt-5.4"): {
+                "auto_scored": {"total": 5, "correct": 4, "incorrect": 1, "accuracy": 0.8}
+            },
+            ("smoke", "sonnet-4.6"): {
+                "auto_scored": {"total": 5, "correct": 2, "incorrect": 3, "accuracy": 0.4}
+            },
+            ("starter", "gpt-5.4"): {
+                "auto_scored": {"total": 5, "correct": 3, "incorrect": 2, "accuracy": 0.6}
+            },
+            ("starter", "sonnet-4.6"): {
+                "auto_scored": {"total": 5, "correct": 1, "incorrect": 4, "accuracy": 0.2}
+            },
+        }
+
+        index = run_baselines.build_matrix_index(
+            request=request,
+            created_at="2026-04-27T00:00:00+00:00",
+            cell_summaries=cell_summaries,
+        )
+
+        self.assertEqual(
+            index["suite_summaries"],
+            {
+                "smoke": {
+                    "model_count": 2,
+                    "auto_scored": {
+                        "total": 10,
+                        "correct": 6,
+                        "incorrect": 4,
+                        "accuracy": 0.6,
+                    },
+                },
+                "starter": {
+                    "model_count": 2,
+                    "auto_scored": {
+                        "total": 10,
+                        "correct": 4,
+                        "incorrect": 6,
+                        "accuracy": 0.4,
+                    },
+                },
+            },
+        )
+
+    def test_build_matrix_index_suite_summaries_skip_cells_without_summaries(
+        self,
+    ) -> None:
+        dataset_path = self._dataset()
+        run_dir = self.tmp_dir / "matrix-index-partial-suite-summaries-runs"
+        suites = (
+            run_baselines.MatrixSuite(suite_id="smoke", mode="smoke"),
+            run_baselines.MatrixSuite(suite_id="starter", mode="starter"),
+        )
+        request = self._request(
+            run_dir=run_dir,
+            dataset_path=dataset_path,
+            models=("gpt-5.4", "sonnet-4.6"),
+            suites=suites,
+        )
+        cell_summaries = {
+            ("smoke", "gpt-5.4"): {
+                "auto_scored": {"total": 5, "correct": 4, "incorrect": 1, "accuracy": 0.8}
+            },
+        }
+
+        index = run_baselines.build_matrix_index(
+            request=request,
+            created_at="2026-04-27T00:00:00+00:00",
+            cell_summaries=cell_summaries,
+        )
+
+        self.assertEqual(
+            index["suite_summaries"],
+            {
+                "smoke": {
+                    "model_count": 1,
+                    "auto_scored": {
+                        "total": 5,
+                        "correct": 4,
+                        "incorrect": 1,
+                        "accuracy": 0.8,
+                    },
+                },
+            },
+        )
+
+    def test_build_matrix_index_suite_summaries_default_none(self) -> None:
+        dataset_path = self._dataset()
+        run_dir = self.tmp_dir / "matrix-index-empty-suite-summaries-runs"
+        request = self._request(
+            run_dir=run_dir,
+            dataset_path=dataset_path,
+            models=("gpt-5.4",),
+            suites=(run_baselines.MatrixSuite(suite_id="smoke", mode="smoke"),),
+        )
+
+        index = run_baselines.build_matrix_index(
+            request=request,
+            created_at="2026-04-27T00:00:00+00:00",
+        )
+
+        self.assertIsNone(index["suite_summaries"])
+
+    def test_build_matrix_index_suite_summaries_none_when_skip_scoring(self) -> None:
+        dataset_path = self._dataset()
+        run_dir = self.tmp_dir / "matrix-index-skip-suite-summaries-runs"
+        request = self._request(
+            run_dir=run_dir,
+            dataset_path=dataset_path,
+            models=("gpt-5.4",),
+            suites=(run_baselines.MatrixSuite(suite_id="smoke", mode="smoke"),),
+            skip_scoring=True,
+        )
+
+        index = run_baselines.build_matrix_index(
+            request=request,
+            created_at="2026-04-27T00:00:00+00:00",
+            cell_summaries={
+                ("smoke", "gpt-5.4"): {
+                    "auto_scored": {"total": 5, "correct": 5, "incorrect": 0, "accuracy": 1.0}
+                }
+            },
+        )
+
+        self.assertIsNone(index["suite_summaries"])
+
+    def test_build_matrix_index_aggregates_overall_summary_across_all_cells(
+        self,
+    ) -> None:
+        dataset_path = self._dataset()
+        run_dir = self.tmp_dir / "matrix-index-overall-summary-runs"
+        suites = (
+            run_baselines.MatrixSuite(suite_id="smoke", mode="smoke"),
+            run_baselines.MatrixSuite(suite_id="starter", mode="starter"),
+        )
+        request = self._request(
+            run_dir=run_dir,
+            dataset_path=dataset_path,
+            models=("gpt-5.4", "sonnet-4.6"),
+            suites=suites,
+        )
+        cell_summaries = {
+            ("smoke", "gpt-5.4"): {
+                "auto_scored": {"total": 5, "correct": 4, "incorrect": 1, "accuracy": 0.8}
+            },
+            ("smoke", "sonnet-4.6"): {
+                "auto_scored": {"total": 5, "correct": 2, "incorrect": 3, "accuracy": 0.4}
+            },
+            ("starter", "gpt-5.4"): {
+                "auto_scored": {"total": 5, "correct": 3, "incorrect": 2, "accuracy": 0.6}
+            },
+            ("starter", "sonnet-4.6"): {
+                "auto_scored": {"total": 5, "correct": 1, "incorrect": 4, "accuracy": 0.2}
+            },
+        }
+
+        index = run_baselines.build_matrix_index(
+            request=request,
+            created_at="2026-04-27T00:00:00+00:00",
+            cell_summaries=cell_summaries,
+        )
+
+        self.assertEqual(
+            index["overall_summary"],
+            {
+                "cell_count": 4,
+                "auto_scored": {
+                    "total": 20,
+                    "correct": 10,
+                    "incorrect": 10,
+                    "accuracy": 0.5,
+                },
+            },
+        )
+
+    def test_build_matrix_index_overall_summary_skips_cells_without_summaries(
+        self,
+    ) -> None:
+        dataset_path = self._dataset()
+        run_dir = self.tmp_dir / "matrix-index-partial-overall-summary-runs"
+        suites = (
+            run_baselines.MatrixSuite(suite_id="smoke", mode="smoke"),
+            run_baselines.MatrixSuite(suite_id="starter", mode="starter"),
+        )
+        request = self._request(
+            run_dir=run_dir,
+            dataset_path=dataset_path,
+            models=("gpt-5.4", "sonnet-4.6"),
+            suites=suites,
+        )
+        cell_summaries = {
+            ("smoke", "gpt-5.4"): {
+                "auto_scored": {"total": 5, "correct": 4, "incorrect": 1, "accuracy": 0.8}
+            },
+            ("starter", "sonnet-4.6"): {
+                "auto_scored": {"total": 5, "correct": 1, "incorrect": 4, "accuracy": 0.2}
+            },
+        }
+
+        index = run_baselines.build_matrix_index(
+            request=request,
+            created_at="2026-04-27T00:00:00+00:00",
+            cell_summaries=cell_summaries,
+        )
+
+        self.assertEqual(
+            index["overall_summary"],
+            {
+                "cell_count": 2,
+                "auto_scored": {
+                    "total": 10,
+                    "correct": 5,
+                    "incorrect": 5,
+                    "accuracy": 0.5,
+                },
+            },
+        )
+
+    def test_build_matrix_index_overall_summary_default_none(self) -> None:
+        dataset_path = self._dataset()
+        run_dir = self.tmp_dir / "matrix-index-empty-overall-summary-runs"
+        request = self._request(
+            run_dir=run_dir,
+            dataset_path=dataset_path,
+            models=("gpt-5.4",),
+            suites=(run_baselines.MatrixSuite(suite_id="smoke", mode="smoke"),),
+        )
+
+        index = run_baselines.build_matrix_index(
+            request=request,
+            created_at="2026-04-27T00:00:00+00:00",
+        )
+
+        self.assertIsNone(index["overall_summary"])
+
+    def test_build_matrix_index_overall_summary_none_when_skip_scoring(self) -> None:
+        dataset_path = self._dataset()
+        run_dir = self.tmp_dir / "matrix-index-skip-overall-summary-runs"
+        request = self._request(
+            run_dir=run_dir,
+            dataset_path=dataset_path,
+            models=("gpt-5.4",),
+            suites=(run_baselines.MatrixSuite(suite_id="smoke", mode="smoke"),),
+            skip_scoring=True,
+        )
+
+        index = run_baselines.build_matrix_index(
+            request=request,
+            created_at="2026-04-27T00:00:00+00:00",
+            cell_summaries={
+                ("smoke", "gpt-5.4"): {
+                    "auto_scored": {"total": 5, "correct": 5, "incorrect": 0, "accuracy": 1.0}
+                }
+            },
+        )
+
+        self.assertIsNone(index["overall_summary"])
+
 
 if __name__ == "__main__":
     unittest.main()
