@@ -3190,6 +3190,45 @@ class MatrixRunnerTests(unittest.TestCase):
         self.assertEqual(request.matrix_suites[1].case_ids, ("GG-01", "GG-03"))
         shutil.rmtree(run_dir, ignore_errors=True)
 
+    def test_request_from_config_rejects_top_level_suite_case_ids_with_matrix(
+        self,
+    ) -> None:
+        dataset_path = self._dataset()
+        run_dir = self.tmp_dir / "matrix-conflict-runs"
+        config_path = self.tmp_dir / "matrix-conflict-config.json"
+        config_path.write_text(
+            json.dumps(
+                {
+                    "schema_version": "2.0.0",
+                    "id": "unit-matrix-conflict",
+                    "benchmark": "reasoning-benchmark",
+                    "suite_id": "matrix-baseline",
+                    "dataset": {"path": str(dataset_path)},
+                    "models": ["gpt-5.4"],
+                    "prompt_contract": run_baselines.build_prompt_contract(),
+                    "execution": {
+                        "mode": "matrix-baseline",
+                        "skip_scoring": True,
+                    },
+                    "suite": {"case_ids": ["GG-01"]},
+                    "matrix": {
+                        "suites": [
+                            {"suite_id": "smoke", "mode": "smoke"},
+                        ],
+                    },
+                    "output": {"bundle_dir": str(run_dir)},
+                }
+            ),
+            encoding="utf-8",
+        )
+
+        with self.assertRaisesRegex(
+            ValueError,
+            "RunConfig suite.case_ids cannot be combined with matrix.suites",
+        ):
+            run_baselines.request_from_config(config_path)
+        shutil.rmtree(run_dir, ignore_errors=True)
+
     def test_matrix_config_writes_per_suite_raw_artifacts(self) -> None:
         dataset_path = self._dataset()
         run_dir = self.tmp_dir / "matrix-runs"

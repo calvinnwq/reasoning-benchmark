@@ -1012,6 +1012,11 @@ def request_from_config(config_path: Path) -> RunRequest:
     suite_case_ids = config_suite_case_ids(config_payload)
     mode = config_execution_mode(config_payload, execution)
     matrix_suites = config_matrix_suites(config_payload)
+    if matrix_suites is not None and suite_case_ids is not None:
+        raise ValueError(
+            "RunConfig suite.case_ids cannot be combined with matrix.suites; "
+            "set case_ids per matrix suite instead"
+        )
     if mode not in SUPPORTED_MODES and suite_case_ids is None and matrix_suites is None:
         raise ValueError(f"Unsupported suite or mode in RunConfig: {mode}")
 
