@@ -222,8 +222,23 @@ Compatibility fields preserved from v1:
         "mode": "smoke"
       },
       {
-        "suite_id": "starter-pragmatics",
-        "case_ids": ["GG-01", "CR-01"]
+        "suite_id": "starter",
+        "case_ids": [
+          "GG-01",
+          "GG-02",
+          "CR-01",
+          "CR-02",
+          "TW-01",
+          "TW-02",
+          "SP-01",
+          "SP-02",
+          "IA-01",
+          "IA-02",
+          "PR-01",
+          "PR-02",
+          "MC-01",
+          "MC-02"
+        ]
       }
     ]
   },
