@@ -644,18 +644,18 @@ Per-bucket summaries in `by_model`, `by_evaluation_mode`, `by_task_family`, `by_
 | `scripts/run_baselines.py` payload metadata | `RunConfig` plus `RunArtifactBundle` |
 | raw run `results[]` | `ModelResult[]` |
 | scored run `results[]` | `ScoreRecord[]` |
-| scored run `summary` | `ReportSummary.overall`, `by_model`, and `manual_review` |
+| scored run `summary` | `ReportSummary.overall`, `auto_scored`, `manual_only`, `by_model`, `by_evaluation_mode`, `by_task_family`, `by_failure_mode`, `by_ambiguity_type`, `by_calibration_split`, `manual_review`, and `heuristic_flags` |
 | `runs/example-run.json` | v1-compatible raw result artifact |
 | `runs/example-run.scored.json` | v1-compatible scored result artifact |
 
 ## Migration Guidance
 
-M2 should implement these contracts incrementally:
+M3 implements these contracts incrementally:
 
 1. Keep reading current v1 dataset rows and run shapes.
 2. Add v2-compatible aliases such as `case_id` while preserving `id`.
 3. Emit `schema_version` consistently for new artifacts.
-4. Introduce manifest writing next to existing raw and scored outputs before changing directory layout.
+4. Write baseline `RunArtifactBundle` manifests next to existing raw, scored, and report-summary outputs.
 5. Let reports consume scored artifacts and bundle manifests instead of raw runner internals.
 
 NGX-133 owns the richer dataset fields for ambiguity and pragmatic reasoning in [`docs/dataset-schema-v2.md`](dataset-schema-v2.md). This document reserves the top-level object boundary; the dataset schema document defines the detailed `evaluation`, `accepted_interpretations`, `ambiguity`, `cooperative_intent`, and `calibration` contents.

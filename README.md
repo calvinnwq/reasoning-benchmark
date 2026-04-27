@@ -236,7 +236,7 @@ Scoring is **V1 conservative**:
 - yes/no answers are handled explicitly, including polite/brief explanation variants
 - blank or missing answers are scored as `0` with `missing_answer`
 - heuristic matches are marked with `is_heuristic: true` in `results[].scoring_status.heuristic_flags`
-- summary includes separate `auto_scored` and `manual_only` sections
+- summary includes v2 report fields such as `auto_scored`, `manual_only`, `manual_review`, per-bucket breakdowns, and `heuristic_flags`
 
 See [`docs/scoring.md`](docs/scoring.md) for the full contract and normalization rules.
 
