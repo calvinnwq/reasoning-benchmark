@@ -62,6 +62,7 @@ The framework can borrow platform-level concepts from org-bench-style systems on
 - **Task family:** a stable grouping for analysis, such as goal grounding, social pragmatics, or physical commonsense.
 - **Run config:** a reproducible declaration of suite, models, adapter, prompt contract, budget, and output path.
 - **Artifact bundle:** a directory or JSON manifest that ties together raw outputs, scored outputs, config, and fingerprints.
+- **Matrix index:** a top-level artifact that ties together suite/model cells for matrix baseline runs.
 - **Report summary:** aggregate accuracy and breakdowns by model, suite, task family, evaluation mode, and failure mode.
 
 Concepts that should not be pulled into the core yet:
@@ -85,6 +86,7 @@ The detailed JSON shapes are defined in [`docs/contracts-v2.md`](contracts-v2.md
 - **ModelResult:** one model's raw answer and reasoning for one case.
 - **ScoreRecord:** one evaluated result with scoring trace and preserved manual fields.
 - **RunArtifactBundle:** the durable saved evidence for a run.
+- **MatrixIndex:** the top-level index for a matrix run's suite/model cells.
 - **ReportSummary:** aggregate comparison output.
 
 These boundaries should be simple enough to represent as plain JSON and Python dictionaries until implementation pressure proves a need for stronger abstractions.

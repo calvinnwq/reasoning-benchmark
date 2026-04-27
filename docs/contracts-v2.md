@@ -19,7 +19,7 @@ These contracts are data-first. They describe stable JSON objects the current st
 
 ## Canonical Entities
 
-V2 has seven core entities:
+V2 has eight core entities:
 
 1. `Suite`: an ordered selection of cases.
 2. `TaskFamily`: a reporting and curation grouping.
@@ -28,6 +28,7 @@ V2 has seven core entities:
 5. `RunArtifactBundle`: the manifest tying a run's durable files together.
 6. `ScoreRecord`: one evaluated model result for one case.
 7. `ReportSummary`: aggregate metrics derived from scored records.
+8. `MatrixIndex`: the top-level index for matrix baseline run artifacts.
 
 `PromptContract` and `ModelResult` remain support objects. They are embedded in `RunConfig`, raw result files, and artifact bundles rather than owned as standalone persisted entities.
 
@@ -192,6 +193,18 @@ Compatibility fields preserved from v1:
   "output": {
     "bundle_dir": "runs/baseline/gpt-5-4.smoke"
   },
+  "matrix": {
+    "suites": [
+      {
+        "suite_id": "smoke",
+        "mode": "smoke"
+      },
+      {
+        "suite_id": "starter-pragmatics",
+        "case_ids": ["GG-01", "CR-01"]
+      }
+    ]
+  },
   "created_at": "2026-04-26T00:00:00Z"
 }
 ```
@@ -232,8 +245,17 @@ non-empty strings from the current baseline runner set: `gpt-5.4`, `sonnet-4.6`,
 It requires `execution.mode` to be an exact, unpadded, non-empty string without path separators or
 `.`/`..` traversal segments when present so configs do not preserve ambiguous suite mode selections
 or artifact labels.
-Without an embedded `suite.case_ids` list, `execution.mode` must be `smoke` or `full`; with
-`suite.case_ids`, custom mode names are allowed and the listed cases run in the supplied order.
+Without an embedded `suite.case_ids` list or `matrix.suites`, `execution.mode` must be `smoke` or
+`full`; with `suite.case_ids` or `matrix.suites`, custom top-level mode names are allowed. Explicit
+`suite.case_ids` run in the supplied order; matrix suite entries control each cell's selection.
+When `matrix` is supplied, it must be an object with a non-empty `suites` list, and the runner
+executes every suite/model cell. Each matrix suite must declare a unique exact `suite_id` without
+path separators or `.`/`..` traversal segments, may declare an exact `mode` without path separators
+or `.`/`..` traversal segments, and may declare
+non-empty unique exact `case_ids`. Matrix suites without `case_ids` must use `smoke` or `full` as
+their mode; if `mode` is omitted, the suite id is used as the mode.
+Top-level `suite.case_ids` cannot be combined with `matrix.suites`; set `case_ids` per matrix suite
+instead.
 `execution.seed` shuffles only `smoke` or `full` selections, and `execution.max_cases` truncates the
 selected cases after mode or explicit-suite selection.
 It requires `execution.timeout_seconds` to be a finite positive number and `execution.skip_scoring`
@@ -436,6 +458,12 @@ Required fields:
 
 The initial implementation may store the bundle as a single JSON file beside existing raw and scored files. Later work can move to a directory layout without changing the manifest contract.
 Baseline runs write the `ReportSummary` as a sibling `*.summary.json` artifact copied from the scored output's embedded `summary` object. When `execution.skip_scoring` is true, baseline runs write only the raw artifact, skip the scored artifact, summary sidecar, and bundle manifest, and remove any stale manifest for that model/mode.
+Matrix baseline runs write per-suite raw, scored, summary, and manifest artifacts under suite
+subdirectories, plus a top-level `matrix.index.json` artifact. The index records the configured
+models and suites, one `cells[]` entry per suite/model pair, relative paths for each cell artifact,
+optional per-cell `summary_metrics`, optional per-cell `error` objects, and scored rollups in
+`model_summaries`, `suite_summaries`, and `overall_summary` when scoring is enabled. Failed matrix
+cells are captured in the index and do not prevent later cells from running.
 Report-summary regeneration requires bundle manifests to use exact, unpadded, non-empty `id`
 values so bundle identity is not silently normalized from malformed manifest metadata.
 Report-summary regeneration requires bundle manifests to use exact, unpadded, non-empty `suite_id`
@@ -516,6 +544,80 @@ before resolving the scored artifact path.
 Report-summary regeneration requires `artifacts.raw_results` to be a non-empty string
 so consumed bundle manifests preserve the required raw-output artifact reference.
 Report-summary generation validates `artifacts.raw_results` and `artifacts.scored_results` as exact, unpadded paths before resolving them relative to the manifest, rejects absolute paths and `..` traversal for `artifacts.raw_results`, `artifacts.scored_results`, and `artifacts.report_summary`, rejects missing, unsupported, or whitespace-padded manifest `schema_version` values, and requires manifest `benchmark` to be the exact `reasoning-benchmark` identity.
+
+## MatrixIndex
+
+`matrix.index.json` is the top-level artifact for matrix baseline runs. It records every configured suite/model cell, the cell artifact paths, any cell failure, and scored rollups when scoring is enabled.
+
+```json
+{
+  "schema_version": "1.0.0",
+  "benchmark": "reasoning-benchmark",
+  "run_config": "examples/configs/matrix-baseline.config.json",
+  "models": ["gpt-5.4", "sonnet-4.6"],
+  "suites": [
+    {
+      "suite_id": "smoke",
+      "mode": "smoke",
+      "case_ids": null
+    }
+  ],
+  "cells": [
+    {
+      "suite_id": "smoke",
+      "model": "gpt-5.4",
+      "mode": "smoke",
+      "raw_results": "smoke/gpt-5-4.smoke.raw.json",
+      "scored_results": "smoke/gpt-5-4.smoke.scored.json",
+      "report_summary": "smoke/gpt-5-4.smoke.summary.json",
+      "manifest": "smoke/gpt-5-4.smoke.manifest.json",
+      "summary_metrics": null,
+      "error": null
+    }
+  ],
+  "model_summaries": null,
+  "suite_summaries": null,
+  "overall_summary": null,
+  "dataset": {
+    "path": "data/questions.json",
+    "fingerprint": {
+      "algorithm": "sha256",
+      "value": "..."
+    }
+  },
+  "created_at": "2026-04-26T00:00:00Z",
+  "completed_at": "2026-04-26T00:00:02Z"
+}
+```
+
+Required fields:
+
+- `schema_version`
+- `benchmark`
+- `run_config`
+- `models`
+- `suites`
+- `cells`
+- `model_summaries`
+- `suite_summaries`
+- `overall_summary`
+- `dataset`
+- `created_at`
+- `completed_at`
+
+Each `cells[]` entry includes `suite_id`, `model`, `mode`, `raw_results`, `scored_results`,
+`report_summary`, `manifest`, `summary_metrics`, and `error`. When scoring is skipped, scored
+artifact paths and summaries are `null`; when a cell fails, `error` records the exception type and
+message. Failed cells may still list deterministic artifact paths that were planned for that cell;
+consumers must treat non-null `error` as authoritative and not assume those paths exist.
+
+When scoring is enabled, `summary_metrics` is the cell's report-summary object. `model_summaries`
+is keyed by model and each value contains `suite_count` plus `auto_scored.total`, `correct`,
+`incorrect`, and `accuracy`. `suite_summaries` is keyed by suite id and each value contains
+`model_count` plus the same `auto_scored` fields. `overall_summary` contains `cell_count` plus the
+same `auto_scored` fields. Rollups include only cells that produced a report-summary object with
+`auto_scored`; cells with errors, missing summaries, or summaries without `auto_scored` are omitted,
+so `suite_count`, `model_count`, and `cell_count` can be lower than the configured matrix dimensions.
 
 ## ReportSummary
 
@@ -651,6 +753,7 @@ Per-bucket summaries in `by_model`, `by_evaluation_mode`, `by_task_family`, `by_
 | `category` | `legacy_category`, then `task_family_id` after migration |
 | `scripts/benchmark_contract.py::PROMPT_CONTRACT` | embedded `prompt_contract` |
 | `scripts/run_baselines.py` payload metadata | `RunConfig` plus `RunArtifactBundle` |
+| `runs/baseline/matrix.index.json` | `MatrixIndex` |
 | raw run `results[]` | `ModelResult[]` |
 | scored run `results[]` | `ScoreRecord[]` |
 | scored run `summary` | `ReportSummary.overall`, `auto_scored`, `manual_only`, `by_model`, `by_evaluation_mode`, `by_task_family`, `by_failure_mode`, `by_ambiguity_type`, `by_calibration_split`, `manual_review`, and `heuristic_flags` |
@@ -665,6 +768,7 @@ M3 implements these contracts incrementally:
 2. Add v2-compatible aliases such as `case_id` while preserving `id`.
 3. Emit `schema_version` consistently for new artifacts.
 4. Write baseline `RunArtifactBundle` manifests next to existing raw, scored, and report-summary outputs.
-5. Let reports consume scored artifacts and bundle manifests instead of raw runner internals.
+5. Emit `MatrixIndex` for matrix baseline runs.
+6. Let reports consume scored artifacts and bundle manifests instead of raw runner internals.
 
 NGX-133 owns the richer dataset fields for ambiguity and pragmatic reasoning in [`docs/dataset-schema-v2.md`](dataset-schema-v2.md). This document reserves the top-level object boundary; the dataset schema document defines the detailed `evaluation`, `accepted_interpretations`, `ambiguity`, `cooperative_intent`, and `calibration` contents.

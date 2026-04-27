@@ -52,6 +52,13 @@ class ProviderResult:
 
 
 @dataclass(frozen=True)
+class MatrixSuite:
+    suite_id: str
+    mode: str
+    case_ids: tuple[str, ...] | None = None
+
+
+@dataclass(frozen=True)
 class RunRequest:
     mode: str
     dataset_path: Path
@@ -66,6 +73,7 @@ class RunRequest:
     prompt_contract: dict[str, Any] | None = None
     config_payload: dict[str, Any] | None = None
     config_path: Path | None = None
+    matrix_suites: tuple[MatrixSuite, ...] | None = None
 
 
 def load_questions(dataset_path: Path) -> list[dict[str, Any]]:
@@ -139,6 +147,33 @@ def manifest_path(run_dir: Path, model: str, mode: str) -> Path:
 def summary_path(run_dir: Path, model: str, mode: str) -> Path:
     model_slug = normalize_model_id(model)
     return run_dir / f"{model_slug}.{mode}.summary.json"
+
+
+def matrix_run_paths(
+    run_dir: Path, suite_id: str, model: str, mode: str
+) -> tuple[Path, Path]:
+    validate_artifact_label(suite_id, "matrix suite_id")
+    suite_dir = run_dir / suite_id
+    raw, scored = run_paths(suite_dir, model, mode)
+    return raw, scored
+
+
+def matrix_summary_path(
+    run_dir: Path, suite_id: str, model: str, mode: str
+) -> Path:
+    validate_artifact_label(suite_id, "matrix suite_id")
+    return summary_path(run_dir / suite_id, model, mode)
+
+
+def matrix_manifest_path(
+    run_dir: Path, suite_id: str, model: str, mode: str
+) -> Path:
+    validate_artifact_label(suite_id, "matrix suite_id")
+    return manifest_path(run_dir / suite_id, model, mode)
+
+
+def matrix_index_path(run_dir: Path) -> Path:
+    return run_dir / "matrix.index.json"
 
 
 def dataset_fingerprint(dataset_path: Path) -> str:
@@ -329,15 +364,17 @@ def build_payload(
     max_cases: int | None = None,
     seed: int | str | None = None,
     prompt_contract: dict[str, Any] | None = None,
+    suite_id: str | None = None,
 ) -> Dict[str, Any]:
     contract = copy.deepcopy(prompt_contract) if prompt_contract is not None else build_prompt_contract()
+    artifact_suite_id = suite_id if suite_id is not None else mode
     payload = {
         "schema_version": RAW_ARTIFACT_SCHEMA_VERSION,
         "benchmark": BENCHMARK_ID,
         "runner": "scripts/run_baselines.py",
         "runner_version": RUNNER_VERSION,
         "created_at": datetime.now(timezone.utc).isoformat(),
-        "suite_id": mode,
+        "suite_id": artifact_suite_id,
         "run_mode": mode,
         "case_count": len(questions),
         "question_count": len(questions),
@@ -372,6 +409,7 @@ def build_run_artifact_bundle(
     *,
     model: str,
     mode: str,
+    suite_id: str | None = None,
     raw_path: Path,
     scored_path: Path | None,
     report_summary_path: Path | None = None,
@@ -381,6 +419,7 @@ def build_run_artifact_bundle(
     config_path: Path | None = None,
 ) -> Dict[str, Any]:
     model_slug = normalize_model_id(model)
+    artifact_suite_id = suite_id if suite_id is not None else mode
     scored_results = scored_path.name if scored_path else None
     scored_fingerprint = (
         {"algorithm": "sha256", "value": file_fingerprint(scored_path)}
@@ -394,9 +433,9 @@ def build_run_artifact_bundle(
     )
     return {
         "schema_version": "2.0.0",
-        "id": f"baseline-{mode}-{model_slug}",
+        "id": f"baseline-{artifact_suite_id}-{model_slug}",
         "benchmark": BENCHMARK_ID,
-        "suite_id": mode,
+        "suite_id": artifact_suite_id,
         "run_config": str(config_path) if config_path else None,
         "artifacts": {
             "raw_results": raw_path.name,
@@ -412,6 +451,195 @@ def build_run_artifact_bundle(
         },
         "models": [model],
         "case_count": case_count,
+        "created_at": created_at,
+        "completed_at": datetime.now(timezone.utc).isoformat(),
+    }
+
+
+def build_matrix_index(
+    *,
+    request: RunRequest,
+    created_at: str,
+    cell_summaries: Dict[tuple[str, str], Dict[str, Any]] | None = None,
+    cell_errors: Dict[tuple[str, str], Dict[str, Any]] | None = None,
+) -> Dict[str, Any]:
+    suites = request.matrix_suites or ()
+    run_dir = request.run_dir
+    summaries = cell_summaries or {}
+    errors = cell_errors or {}
+    cells: list[Dict[str, Any]] = []
+    for suite in suites:
+        for model in request.models:
+            raw_path, scored_path = matrix_run_paths(
+                run_dir, suite.suite_id, model, suite.mode
+            )
+            summary = matrix_summary_path(
+                run_dir, suite.suite_id, model, suite.mode
+            )
+            manifest = matrix_manifest_path(
+                run_dir, suite.suite_id, model, suite.mode
+            )
+            cells.append(
+                {
+                    "suite_id": suite.suite_id,
+                    "model": model,
+                    "mode": suite.mode,
+                    "raw_results": raw_path.relative_to(run_dir).as_posix(),
+                    "scored_results": (
+                        None
+                        if request.skip_scoring
+                        else scored_path.relative_to(run_dir).as_posix()
+                    ),
+                    "report_summary": (
+                        None
+                        if request.skip_scoring
+                        else summary.relative_to(run_dir).as_posix()
+                    ),
+                    "manifest": (
+                        None
+                        if request.skip_scoring
+                        else manifest.relative_to(run_dir).as_posix()
+                    ),
+                    "summary_metrics": (
+                        None
+                        if request.skip_scoring
+                        else summaries.get((suite.suite_id, model))
+                    ),
+                    "error": errors.get((suite.suite_id, model)),
+                }
+            )
+    model_summaries: Dict[str, Dict[str, Any]] | None = None
+    suite_summaries: Dict[str, Dict[str, Any]] | None = None
+    overall_summary: Dict[str, Any] | None = None
+    if not request.skip_scoring and summaries:
+        model_summaries = {}
+        for model in request.models:
+            aggregate_total = 0
+            aggregate_correct = 0
+            aggregate_incorrect = 0
+            suite_count = 0
+            for suite in suites:
+                summary = summaries.get((suite.suite_id, model))
+                if not isinstance(summary, dict):
+                    continue
+                auto_scored = summary.get("auto_scored")
+                if not isinstance(auto_scored, dict):
+                    continue
+                suite_count += 1
+                aggregate_total += int(auto_scored.get("total", 0) or 0)
+                aggregate_correct += int(auto_scored.get("correct", 0) or 0)
+                aggregate_incorrect += int(auto_scored.get("incorrect", 0) or 0)
+            if suite_count == 0:
+                continue
+            accuracy = (
+                round(aggregate_correct / aggregate_total, 4)
+                if aggregate_total
+                else 0.0
+            )
+            model_summaries[model] = {
+                "suite_count": suite_count,
+                "auto_scored": {
+                    "total": aggregate_total,
+                    "correct": aggregate_correct,
+                    "incorrect": aggregate_incorrect,
+                    "accuracy": accuracy,
+                },
+            }
+        if not model_summaries:
+            model_summaries = None
+
+        suite_summaries = {}
+        for suite in suites:
+            aggregate_total = 0
+            aggregate_correct = 0
+            aggregate_incorrect = 0
+            model_count = 0
+            for model in request.models:
+                summary = summaries.get((suite.suite_id, model))
+                if not isinstance(summary, dict):
+                    continue
+                auto_scored = summary.get("auto_scored")
+                if not isinstance(auto_scored, dict):
+                    continue
+                model_count += 1
+                aggregate_total += int(auto_scored.get("total", 0) or 0)
+                aggregate_correct += int(auto_scored.get("correct", 0) or 0)
+                aggregate_incorrect += int(auto_scored.get("incorrect", 0) or 0)
+            if model_count == 0:
+                continue
+            accuracy = (
+                round(aggregate_correct / aggregate_total, 4)
+                if aggregate_total
+                else 0.0
+            )
+            suite_summaries[suite.suite_id] = {
+                "model_count": model_count,
+                "auto_scored": {
+                    "total": aggregate_total,
+                    "correct": aggregate_correct,
+                    "incorrect": aggregate_incorrect,
+                    "accuracy": accuracy,
+                },
+            }
+        if not suite_summaries:
+            suite_summaries = None
+
+        aggregate_total = 0
+        aggregate_correct = 0
+        aggregate_incorrect = 0
+        cell_count = 0
+        for suite in suites:
+            for model in request.models:
+                summary = summaries.get((suite.suite_id, model))
+                if not isinstance(summary, dict):
+                    continue
+                auto_scored = summary.get("auto_scored")
+                if not isinstance(auto_scored, dict):
+                    continue
+                cell_count += 1
+                aggregate_total += int(auto_scored.get("total", 0) or 0)
+                aggregate_correct += int(auto_scored.get("correct", 0) or 0)
+                aggregate_incorrect += int(auto_scored.get("incorrect", 0) or 0)
+        if cell_count:
+            accuracy = (
+                round(aggregate_correct / aggregate_total, 4)
+                if aggregate_total
+                else 0.0
+            )
+            overall_summary = {
+                "cell_count": cell_count,
+                "auto_scored": {
+                    "total": aggregate_total,
+                    "correct": aggregate_correct,
+                    "incorrect": aggregate_incorrect,
+                    "accuracy": accuracy,
+                },
+            }
+
+    return {
+        "schema_version": "1.0.0",
+        "benchmark": BENCHMARK_ID,
+        "run_config": str(request.config_path) if request.config_path else None,
+        "models": list(request.models),
+        "suites": [
+            {
+                "suite_id": suite.suite_id,
+                "mode": suite.mode,
+                "case_ids": list(suite.case_ids) if suite.case_ids else None,
+            }
+            for suite in suites
+        ],
+        "cells": cells,
+        "model_summaries": model_summaries,
+        "suite_summaries": suite_summaries,
+        "overall_summary": overall_summary,
+        "dataset": {
+            "path": str(request.dataset_path),
+            "fingerprint": {
+                "algorithm": "sha256",
+                "value": dataset_fingerprint(request.dataset_path),
+            },
+        },
         "created_at": created_at,
         "completed_at": datetime.now(timezone.utc).isoformat(),
     }
@@ -456,7 +684,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="Run the reasoning benchmark baseline models")
     parser.add_argument(
         "--config",
-        help="Optional v2 RunConfig JSON file. When provided, it drives dataset, suite/mode, models, output, adapter command, and budgets.",
+        help="Optional v2 RunConfig JSON file. When provided, it drives dataset, suite/mode or matrix.suites, models, output, adapter command, and budgets.",
     )
     parser.add_argument(
         "--mode",
@@ -737,6 +965,73 @@ def config_suite_case_ids(config_payload: dict[str, Any]) -> tuple[str, ...] | N
     return tuple(case_ids)
 
 
+def config_matrix_suites(
+    config_payload: dict[str, Any],
+) -> tuple[MatrixSuite, ...] | None:
+    if "matrix" not in config_payload:
+        return None
+    matrix = config_payload.get("matrix")
+    if not isinstance(matrix, dict):
+        raise ValueError("RunConfig matrix must be an object")
+
+    raw_suites = matrix.get("suites")
+    if not isinstance(raw_suites, list):
+        raise ValueError("RunConfig matrix.suites must be a list")
+    if not raw_suites:
+        raise ValueError("RunConfig matrix.suites must be a non-empty list")
+
+    parsed: list[MatrixSuite] = []
+    seen_suite_ids: set[str] = set()
+    for entry in raw_suites:
+        if not isinstance(entry, dict):
+            raise ValueError("RunConfig matrix.suites entries must be objects")
+
+        suite_id = entry.get("suite_id")
+        if not isinstance(suite_id, str) or not suite_id.strip():
+            raise ValueError("RunConfig matrix.suites entry suite_id must be a non-empty string")
+        if suite_id != suite_id.strip():
+            raise ValueError("RunConfig matrix.suites entry suite_id must be an exact string")
+        validate_artifact_label(suite_id, "RunConfig matrix.suites suite_id")
+        if suite_id in seen_suite_ids:
+            raise ValueError("RunConfig matrix.suites suite_ids must be unique")
+        seen_suite_ids.add(suite_id)
+
+        case_ids: tuple[str, ...] | None = None
+        if "case_ids" in entry:
+            raw_case_ids = entry.get("case_ids")
+            if not isinstance(raw_case_ids, list) or not raw_case_ids:
+                raise ValueError("RunConfig matrix.suites case_ids must be a non-empty list")
+            collected: list[str] = []
+            seen_case_ids: set[str] = set()
+            for case_id in raw_case_ids:
+                if not isinstance(case_id, str) or not case_id.strip():
+                    raise ValueError("RunConfig matrix.suites case_ids entries must be non-empty strings")
+                if case_id != case_id.strip():
+                    raise ValueError("RunConfig matrix.suites case_ids entries must be exact case ids")
+                if case_id in seen_case_ids:
+                    raise ValueError("RunConfig matrix.suites case_ids entries must be unique")
+                seen_case_ids.add(case_id)
+                collected.append(case_id)
+            case_ids = tuple(collected)
+
+        if "mode" in entry:
+            mode = entry.get("mode")
+            if not isinstance(mode, str) or not mode.strip():
+                raise ValueError("RunConfig matrix.suites entry mode must be a non-empty string")
+            if mode != mode.strip():
+                raise ValueError("RunConfig matrix.suites entry mode must be an exact string")
+            validate_artifact_label(mode, "RunConfig matrix.suites mode")
+        else:
+            mode = suite_id
+
+        if mode not in SUPPORTED_MODES and case_ids is None:
+            raise ValueError(f"Unsupported suite or mode in RunConfig matrix.suites: {mode}")
+
+        parsed.append(MatrixSuite(suite_id=suite_id, mode=mode, case_ids=case_ids))
+
+    return tuple(parsed)
+
+
 def config_prompt_contract(config_payload: dict[str, Any]) -> dict[str, Any]:
     if "prompt_contract" not in config_payload:
         raise ValueError("RunConfig prompt_contract is required")
@@ -841,7 +1136,13 @@ def request_from_config(config_path: Path) -> RunRequest:
 
     suite_case_ids = config_suite_case_ids(config_payload)
     mode = config_execution_mode(config_payload, execution)
-    if mode not in SUPPORTED_MODES and suite_case_ids is None:
+    matrix_suites = config_matrix_suites(config_payload)
+    if matrix_suites is not None and suite_case_ids is not None:
+        raise ValueError(
+            "RunConfig suite.case_ids cannot be combined with matrix.suites; "
+            "set case_ids per matrix suite instead"
+        )
+    if mode not in SUPPORTED_MODES and suite_case_ids is None and matrix_suites is None:
         raise ValueError(f"Unsupported suite or mode in RunConfig: {mode}")
 
     models = config_models(config_payload)
@@ -860,6 +1161,7 @@ def request_from_config(config_path: Path) -> RunRequest:
         prompt_contract=prompt_contract,
         config_payload=config_payload,
         config_path=config_path,
+        matrix_suites=matrix_suites,
     )
 
 
@@ -900,73 +1202,152 @@ def resolve_models(models: Iterable[str]) -> tuple[str, ...]:
     return requested
 
 
+def _execute_run_pass(
+    request: RunRequest,
+    questions: list[dict[str, Any]],
+    model: str,
+    mode: str,
+    suite_id: str | None,
+    suite_case_ids: tuple[str, ...] | None,
+    raw_path: Path,
+    scored_path: Path,
+    report_summary_path: Path,
+    bundle_path: Path,
+) -> None:
+    selected = select_questions(
+        questions,
+        mode,
+        request.max_cases,
+        request.seed,
+        suite_case_ids,
+    )
+    provider_command = request.provider_commands.get(model)
+    payload = build_payload(
+        model=model,
+        mode=mode,
+        questions=selected,
+        dataset_path=request.dataset_path,
+        max_cases=request.max_cases,
+        seed=request.seed,
+        prompt_contract=request.prompt_contract,
+        suite_id=suite_id,
+    )
+    if request.config_payload:
+        payload["run_config"] = sanitize_run_config_for_artifact(request.config_payload)
+
+    if provider_command:
+        for index, row in enumerate(selected):
+            response = run_provider(provider_command, model, row["prompt"], request.prompt_timeout)
+            payload["results"][index] = build_result_record(
+                row=row,
+                model=model,
+                answer=response.answer,
+                reasoning=response.reasoning,
+                notes=response.notes,
+                provider=response,
+            )
+    write_json(raw_path, payload)
+    print(f"wrote raw artifact: {raw_path}")
+
+    if request.skip_scoring:
+        if bundle_path.exists():
+            bundle_path.unlink()
+        print("skipping scoring")
+        return
+
+    score_payload(raw_path, scored_path, request.dataset_path, bundle_path)
+    print(f"wrote scored artifact: {scored_path}")
+    write_report_summary(scored_path, report_summary_path)
+    print(f"wrote report summary: {report_summary_path}")
+
+    manifest = build_run_artifact_bundle(
+        model=model,
+        mode=mode,
+        suite_id=suite_id,
+        raw_path=raw_path,
+        scored_path=scored_path,
+        report_summary_path=report_summary_path,
+        dataset_path=request.dataset_path,
+        case_count=len(selected),
+        created_at=str(payload["created_at"]),
+        config_path=request.config_path,
+    )
+    write_json(bundle_path, manifest)
+    print(f"wrote manifest: {bundle_path}")
+
+
 def cmd_run(args: argparse.Namespace) -> int:
     request = build_run_request(args)
     questions = load_questions(request.dataset_path)
-    selected = select_questions(
-        questions,
-        request.mode,
-        request.max_cases,
-        request.seed,
-        request.suite_case_ids,
-    )
+
+    if request.matrix_suites:
+        matrix_started_at = datetime.now(timezone.utc).isoformat()
+        cell_summaries: Dict[tuple[str, str], Dict[str, Any]] = {}
+        cell_errors: Dict[tuple[str, str], Dict[str, Any]] = {}
+        for suite in request.matrix_suites:
+            for model in request.models:
+                raw_path, scored_path = matrix_run_paths(
+                    request.run_dir, suite.suite_id, model, suite.mode
+                )
+                report_summary_path = matrix_summary_path(
+                    request.run_dir, suite.suite_id, model, suite.mode
+                )
+                bundle_path = matrix_manifest_path(
+                    request.run_dir, suite.suite_id, model, suite.mode
+                )
+                try:
+                    _execute_run_pass(
+                        request=request,
+                        questions=questions,
+                        model=model,
+                        mode=suite.mode,
+                        suite_id=suite.suite_id,
+                        suite_case_ids=suite.case_ids,
+                        raw_path=raw_path,
+                        scored_path=scored_path,
+                        report_summary_path=report_summary_path,
+                        bundle_path=bundle_path,
+                    )
+                except Exception as exc:
+                    cell_errors[(suite.suite_id, model)] = {
+                        "type": type(exc).__name__,
+                        "message": str(exc),
+                    }
+                    print(
+                        f"matrix cell failed: suite={suite.suite_id} "
+                        f"model={model}: {type(exc).__name__}: {exc}"
+                    )
+                    continue
+                if not request.skip_scoring and report_summary_path.is_file():
+                    with report_summary_path.open("r", encoding="utf-8") as stream:
+                        cell_summaries[(suite.suite_id, model)] = json.load(stream)
+        index_path = matrix_index_path(request.run_dir)
+        index_payload = build_matrix_index(
+            request=request,
+            created_at=matrix_started_at,
+            cell_summaries=cell_summaries or None,
+            cell_errors=cell_errors or None,
+        )
+        write_json(index_path, index_payload)
+        print(f"wrote matrix index: {index_path}")
+        return 1 if cell_errors else 0
 
     for model in request.models:
-        provider_command = request.provider_commands.get(model)
         raw_path, scored_path = run_paths(request.run_dir, model, request.mode)
         report_summary_path = summary_path(request.run_dir, model, request.mode)
-        payload = build_payload(
-            model=model,
-            mode=request.mode,
-            questions=selected,
-            dataset_path=request.dataset_path,
-            max_cases=request.max_cases,
-            seed=request.seed,
-            prompt_contract=request.prompt_contract,
-        )
-        if request.config_payload:
-            payload["run_config"] = sanitize_run_config_for_artifact(request.config_payload)
-
-        if provider_command:
-            for index, row in enumerate(selected):
-                response = run_provider(provider_command, model, row["prompt"], request.prompt_timeout)
-                payload["results"][index] = build_result_record(
-                    row=row,
-                    model=model,
-                    answer=response.answer,
-                    reasoning=response.reasoning,
-                    notes=response.notes,
-                    provider=response,
-                )
-        write_json(raw_path, payload)
-        print(f"wrote raw artifact: {raw_path}")
-
-        if request.skip_scoring:
-            bundle_path = manifest_path(request.run_dir, model, request.mode)
-            if bundle_path.exists():
-                bundle_path.unlink()
-            print("skipping scoring")
-            continue
-
         bundle_path = manifest_path(request.run_dir, model, request.mode)
-        score_payload(raw_path, scored_path, request.dataset_path, bundle_path)
-        print(f"wrote scored artifact: {scored_path}")
-        write_report_summary(scored_path, report_summary_path)
-        print(f"wrote report summary: {report_summary_path}")
-
-        manifest = build_run_artifact_bundle(
+        _execute_run_pass(
+            request=request,
+            questions=questions,
             model=model,
             mode=request.mode,
+            suite_id=None,
+            suite_case_ids=request.suite_case_ids,
             raw_path=raw_path,
             scored_path=scored_path,
             report_summary_path=report_summary_path,
-            dataset_path=request.dataset_path,
-            case_count=len(selected),
-            created_at=str(payload["created_at"]),
-            config_path=request.config_path,
+            bundle_path=bundle_path,
         )
-        write_json(bundle_path, manifest)
-        print(f"wrote manifest: {bundle_path}")
 
     return 0
 

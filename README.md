@@ -107,8 +107,17 @@ Run from a v2 RunConfig:
 python3 scripts/run_baselines.py --config runs/baseline/run-config.json
 ```
 
+Run a matrix baseline from the starter config:
+
+```bash
+python3 scripts/run_baselines.py --config examples/configs/matrix-baseline.config.json
+```
+
 Raw artifacts are written under `runs/baseline/` as one JSON per model, plus scored files with `.scored.json`
-and report summary sidecars with `.summary.json`. When `--skip-scoring` or RunConfig
+and report summary sidecars with `.summary.json`. Matrix runs write each suite/model cell under a suite
+subdirectory and write `matrix.index.json` at the configured bundle root; failed cells are recorded in
+that index while later cells continue, and the command exits nonzero if any cell records an error.
+When `--skip-scoring` or RunConfig
 `execution.skip_scoring` is set, baseline runs write only raw artifacts, suppress scored outputs,
 summary sidecars, and bundle manifests, and remove any stale manifest for that model/mode.
 Bundle manifests used for report-summary regeneration must include `artifacts` as a JSON object,
@@ -163,10 +172,12 @@ positive, configured `max_cases` values must be whole positive integers, and con
 `skip_scoring` values must be booleans. Configured execution modes and model adapter names must be exact, unpadded,
 non-empty strings, string seeds must be exact, unpadded, and non-empty, configured `suite.case_ids` entries must be exact, unique, unpadded case ids, and
 `adapter_command` and `execution.provider_command` string values and list entries must be exact, unpadded, and non-empty.
-Without `suite.case_ids`, configured modes must be `smoke` or `full`; explicit `suite.case_ids`
-preserve their order and allow custom mode names. `seed` shuffles only mode-derived selections, and
+Without `suite.case_ids` or `matrix.suites`, configured modes must be `smoke` or `full`; explicit
+`suite.case_ids` preserve their order and allow custom mode names, while matrix suites allow a custom
+top-level mode and control selection per suite. `seed` shuffles only mode-derived selections, and
 `max_cases` truncates the selected suite after selection. Configured model ids must be one of
 `gpt-5.4`, `sonnet-4.6`, or `qwen3.5-9b`.
+RunConfig `matrix.suites` entries each declare a unique exact `suite_id`, optional exact `mode`, and optional exact unique `case_ids`; suite ids and modes cannot contain path separators or `.`/`..` traversal segments, entries without `case_ids` must use `smoke` or `full` as their mode, with omitted modes defaulting to `suite_id`, and top-level `suite.case_ids` cannot be combined with matrix suites.
 Supported RunConfig adapter values are `api`, `cli`, and `provider-command`; model-level
 `adapter_command` overrides adapter selection, while `execution.provider_command` supplies the
 default command for models without their own command.
