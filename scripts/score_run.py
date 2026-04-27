@@ -945,8 +945,8 @@ def build_summary(
             "incorrect": auto_total - auto_correct,
             "accuracy": auto_accuracy,
         },
-        "manual_only": manual_review,
-        "manual_review": manual_review,
+        "manual_only": dict(manual_review),
+        "manual_review": dict(manual_review),
         "by_model": by_model,
         "by_evaluation_mode": by_evaluation_mode,
         "by_task_family": by_task_family,
@@ -984,11 +984,12 @@ def build_output_payload(
     }
 
 
-def cmd_score(args: argparse.Namespace) -> int:
-    input_path = Path(args.input)
-    output_path = Path(args.output)
-    dataset_path = Path(args.dataset)
-
+def score_to_file(
+    input_path: Path,
+    output_path: Path,
+    dataset_path: Path,
+    source_bundles: Optional[Sequence[str]] = None,
+) -> Dict[str, Any]:
     if not input_path.is_file():
         raise FileNotFoundError(f"Run input not found: {input_path}")
 
@@ -1004,13 +1005,29 @@ def cmd_score(args: argparse.Namespace) -> int:
         scored=scored,
         dataset_path=str(dataset_path),
         source_input=str(input_path),
-        source_bundles=getattr(args, "source_bundle", None),
+        source_bundles=source_bundles,
     )
 
     output_path.parent.mkdir(parents=True, exist_ok=True)
     with output_path.open("w", encoding="utf-8") as stream:
         json.dump(output_payload, stream, ensure_ascii=False, indent=2)
 
+    return output_payload
+
+
+def cmd_score(args: argparse.Namespace) -> int:
+    input_path = Path(args.input)
+    output_path = Path(args.output)
+    dataset_path = Path(args.dataset)
+
+    output_payload = score_to_file(
+        input_path=input_path,
+        output_path=output_path,
+        dataset_path=dataset_path,
+        source_bundles=getattr(args, "source_bundle", None),
+    )
+
+    scored = output_payload["results"]
     summary = output_payload["summary"]
     auto = summary["auto_scored"]
     manual = summary["manual_only"]

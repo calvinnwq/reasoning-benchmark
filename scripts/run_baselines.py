@@ -19,6 +19,7 @@ SCRIPT_DIR = Path(__file__).resolve().parent
 if str(SCRIPT_DIR) not in sys.path:
     sys.path.insert(0, str(SCRIPT_DIR))
 
+import score_run
 from benchmark_contract import build_prompt_contract
 from extensions import validate_extensions_block
 
@@ -652,23 +653,13 @@ def score_payload(
     dataset_path: Path,
     source_bundle: Path | None = None,
 ) -> None:
-    cmd = [
-        sys.executable,
-        str(REPO_ROOT / "scripts" / "score_run.py"),
-        "--input",
-        str(input_path),
-        "--output",
-        str(output_path),
-        "--dataset",
-        str(dataset_path),
-    ]
-    if source_bundle is not None:
-        cmd.extend(["--source-bundle", str(source_bundle)])
-    process = subprocess.run(cmd, capture_output=True, text=True)
-    if process.returncode != 0:
-        stdout = process.stdout.strip()
-        stderr = process.stderr.strip()
-        raise RuntimeError(f"Scoring failed for {input_path}: {stdout or stderr}")
+    source_bundles = [str(source_bundle)] if source_bundle is not None else None
+    score_run.score_to_file(
+        input_path=input_path,
+        output_path=output_path,
+        dataset_path=dataset_path,
+        source_bundles=source_bundles,
+    )
 
 
 def write_report_summary(scored_path: Path, output_path: Path) -> None:
