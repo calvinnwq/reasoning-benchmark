@@ -178,7 +178,7 @@ def select_questions(
         raise ValueError(f"Unsupported mode: {mode}")
 
     selected = list(selected)
-    if seed is not None:
+    if seed is not None and case_ids is None:
         random.Random(seed).shuffle(selected)
 
     if max_cases is not None:
