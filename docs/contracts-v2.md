@@ -606,6 +606,12 @@ Each `cells[]` entry includes `suite_id`, `model`, `mode`, `raw_results`, `score
 artifact paths and summaries are `null`; when a cell fails, `error` records the exception type and
 message.
 
+When scoring is enabled, `summary_metrics` is the cell's report-summary object. `model_summaries`
+is keyed by model and each value contains `suite_count` plus `auto_scored.total`, `correct`,
+`incorrect`, and `accuracy`. `suite_summaries` is keyed by suite id and each value contains
+`model_count` plus the same `auto_scored` fields. `overall_summary` contains `cell_count` plus the
+same `auto_scored` fields.
+
 ## ReportSummary
 
 `ReportSummary` aggregates scored results for comparison. It should be generated from scored artifacts, not from raw model outputs.
