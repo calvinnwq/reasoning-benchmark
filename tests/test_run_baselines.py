@@ -1826,6 +1826,48 @@ class BaselineRunnerTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "RunConfig execution.max_cases must be a positive integer"):
             run_baselines.cmd_run(args)
 
+    def test_config_file_rejects_string_max_cases(self) -> None:
+        dataset_path = self._dataset()
+        run_dir = self.tmp_dir / "string-max-cases-runs"
+
+        config_path = self.tmp_dir / "string-max-cases-config.json"
+        config_path.write_text(
+            json.dumps(
+                {
+                    "schema_version": "2.0.0",
+                    "id": "unit-string-max-cases",
+                    "benchmark": "reasoning-benchmark",
+                    "suite_id": "smoke",
+                    "dataset": {"path": str(dataset_path)},
+                    "models": ["gpt-5.4"],
+                    "prompt_contract": run_baselines.build_prompt_contract(),
+                    "execution": {
+                        "mode": "smoke",
+                        "max_cases": "2",
+                        "skip_scoring": True,
+                    },
+                    "output": {"bundle_dir": str(run_dir)},
+                }
+            ),
+            encoding="utf-8",
+        )
+
+        args = argparse.Namespace(
+            config=str(config_path),
+            mode="full",
+            dataset=str(self.tmp_dir / "ignored.json"),
+            run_dir=str(self.tmp_dir / "ignored-runs"),
+            models=["sonnet-4.6"],
+            provider_command=None,
+            prompt_timeout=1.0,
+            skip_scoring=False,
+        )
+
+        with self.assertRaisesRegex(ValueError, "RunConfig execution.max_cases must be a positive integer"):
+            run_baselines.cmd_run(args)
+
+        self.assertFalse(run_dir.exists())
+
     def test_config_file_rejects_blank_seed(self) -> None:
         dataset_path = self._dataset()
         run_dir = self.tmp_dir / "blank-seed-runs"
@@ -2535,10 +2577,9 @@ class BaselineRunnerTests(unittest.TestCase):
         run_baselines.cmd_run(args)
 
         payload = json.loads((run_dir / "gpt-5-4.full.raw.json").read_text(encoding="utf-8"))
-        manifest = json.loads((run_dir / "gpt-5-4.full.manifest.json").read_text(encoding="utf-8"))
         self.assertEqual([item["id"] for item in payload["results"]], ["GG-01", "GG-02", "GG-03"])
         self.assertEqual(payload["execution"]["max_cases"], 3)
-        self.assertEqual(manifest["case_count"], 3)
+        self.assertFalse((run_dir / "gpt-5-4.full.manifest.json").exists())
 
     def test_config_file_seed_makes_budgeted_selection_reproducible(self) -> None:
         dataset_path = self._dataset()
@@ -2625,11 +2666,28 @@ class BaselineRunnerTests(unittest.TestCase):
         run_baselines.cmd_run(args)
 
         payload = json.loads((run_dir / "gpt-5-4.custom.raw.json").read_text(encoding="utf-8"))
-        manifest = json.loads((run_dir / "gpt-5-4.custom.manifest.json").read_text(encoding="utf-8"))
         self.assertEqual([item["id"] for item in payload["results"]], ["GG-04", "GG-02", "GG-06"])
         self.assertEqual(payload["execution"]["mode"], "custom")
-        self.assertEqual(manifest["suite_id"], "custom")
-        self.assertEqual(manifest["case_count"], 3)
+        self.assertFalse((run_dir / "gpt-5-4.custom.manifest.json").exists())
+
+    def test_skip_scoring_does_not_write_bundle_manifest(self) -> None:
+        dataset_path = self._dataset()
+        run_dir = self.tmp_dir / "skip-scoring-manifest-runs"
+
+        args = argparse.Namespace(
+            config=None,
+            mode="smoke",
+            dataset=str(dataset_path),
+            run_dir=str(run_dir),
+            models=["gpt-5.4"],
+            provider_command=None,
+            prompt_timeout=1.0,
+            skip_scoring=True,
+        )
+        run_baselines.cmd_run(args)
+
+        self.assertTrue((run_dir / "gpt-5-4.smoke.raw.json").is_file())
+        self.assertFalse((run_dir / "gpt-5-4.smoke.manifest.json").exists())
 
     def test_config_file_rejects_padded_suite_case_ids(self) -> None:
         dataset_path = self._dataset()

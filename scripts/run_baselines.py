@@ -637,15 +637,11 @@ def config_max_cases(execution: dict[str, Any]) -> int | None:
     value = execution.get("max_cases")
     if value is None:
         return None
-    if isinstance(value, bool) or (isinstance(value, float) and not value.is_integer()):
+    if isinstance(value, bool) or not isinstance(value, int):
         raise ValueError("RunConfig execution.max_cases must be a positive integer")
-    try:
-        max_cases = int(value)
-    except (TypeError, ValueError) as exc:
-        raise ValueError("RunConfig execution.max_cases must be a positive integer") from exc
-    if max_cases < 1:
+    if value < 1:
         raise ValueError("RunConfig execution.max_cases must be a positive integer")
-    return max_cases
+    return value
 
 
 def config_seed(execution: dict[str, Any]) -> int | str | None:
@@ -921,19 +917,9 @@ def cmd_run(args: argparse.Namespace) -> int:
         print(f"wrote raw artifact: {raw_path}")
 
         if request.skip_scoring:
-            manifest = build_run_artifact_bundle(
-                model=model,
-                mode=request.mode,
-                raw_path=raw_path,
-                scored_path=None,
-                dataset_path=request.dataset_path,
-                case_count=len(selected),
-                created_at=str(payload["created_at"]),
-                config_path=request.config_path,
-            )
             bundle_path = manifest_path(request.run_dir, model, request.mode)
-            write_json(bundle_path, manifest)
-            print(f"wrote manifest: {bundle_path}")
+            if bundle_path.exists():
+                bundle_path.unlink()
             print("skipping scoring")
             continue
 
