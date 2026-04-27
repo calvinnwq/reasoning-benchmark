@@ -178,20 +178,15 @@ def matrix_index_path(run_dir: Path) -> Path:
     return run_dir / "matrix.index.json"
 
 
-def dataset_fingerprint(dataset_path: Path) -> str:
-    digest = hashlib.sha256()
-    with dataset_path.open("rb") as stream:
-        for chunk in iter(lambda: stream.read(4096), b""):
-            digest.update(chunk)
-    return digest.hexdigest()
-
-
 def file_fingerprint(path: Path) -> str:
     digest = hashlib.sha256()
     with path.open("rb") as stream:
         for chunk in iter(lambda: stream.read(4096), b""):
             digest.update(chunk)
     return digest.hexdigest()
+
+
+dataset_fingerprint = file_fingerprint
 
 
 def select_questions(
