@@ -615,7 +615,9 @@ When scoring is enabled, `summary_metrics` is the cell's report-summary object. 
 is keyed by model and each value contains `suite_count` plus `auto_scored.total`, `correct`,
 `incorrect`, and `accuracy`. `suite_summaries` is keyed by suite id and each value contains
 `model_count` plus the same `auto_scored` fields. `overall_summary` contains `cell_count` plus the
-same `auto_scored` fields.
+same `auto_scored` fields. Rollups include only cells that produced a report-summary object with
+`auto_scored`; cells with errors, missing summaries, or summaries without `auto_scored` are omitted,
+so `suite_count`, `model_count`, and `cell_count` can be lower than the configured matrix dimensions.
 
 ## ReportSummary
 
