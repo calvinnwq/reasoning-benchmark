@@ -116,7 +116,8 @@ python3 scripts/run_baselines.py --config examples/configs/matrix-baseline.confi
 Raw artifacts are written under `runs/baseline/` as one JSON per model, plus scored files with `.scored.json`
 and report summary sidecars with `.summary.json`. Matrix runs write each suite/model cell under a suite
 subdirectory and write `matrix.index.json` at the configured bundle root; failed cells are recorded in
-that index while later cells continue. When `--skip-scoring` or RunConfig
+that index while later cells continue, and the command exits nonzero if any cell records an error.
+When `--skip-scoring` or RunConfig
 `execution.skip_scoring` is set, baseline runs write only raw artifacts, suppress scored outputs,
 summary sidecars, and bundle manifests, and remove any stale manifest for that model/mode.
 Bundle manifests used for report-summary regeneration must include `artifacts` as a JSON object,

@@ -604,7 +604,8 @@ Required fields:
 Each `cells[]` entry includes `suite_id`, `model`, `mode`, `raw_results`, `scored_results`,
 `report_summary`, `manifest`, `summary_metrics`, and `error`. When scoring is skipped, scored
 artifact paths and summaries are `null`; when a cell fails, `error` records the exception type and
-message.
+message. Failed cells may still list deterministic artifact paths that were planned for that cell;
+consumers must treat non-null `error` as authoritative and not assume those paths exist.
 
 When scoring is enabled, `summary_metrics` is the cell's report-summary object. `model_summaries`
 is keyed by model and each value contains `suite_count` plus `auto_scored.total`, `correct`,
@@ -746,6 +747,7 @@ Per-bucket summaries in `by_model`, `by_evaluation_mode`, `by_task_family`, `by_
 | `category` | `legacy_category`, then `task_family_id` after migration |
 | `scripts/benchmark_contract.py::PROMPT_CONTRACT` | embedded `prompt_contract` |
 | `scripts/run_baselines.py` payload metadata | `RunConfig` plus `RunArtifactBundle` |
+| `runs/baseline/matrix.index.json` | `MatrixIndex` |
 | raw run `results[]` | `ModelResult[]` |
 | scored run `results[]` | `ScoreRecord[]` |
 | scored run `summary` | `ReportSummary.overall`, `auto_scored`, `manual_only`, `by_model`, `by_evaluation_mode`, `by_task_family`, `by_failure_mode`, `by_ambiguity_type`, `by_calibration_split`, `manual_review`, and `heuristic_flags` |
@@ -760,6 +762,7 @@ M3 implements these contracts incrementally:
 2. Add v2-compatible aliases such as `case_id` while preserving `id`.
 3. Emit `schema_version` consistently for new artifacts.
 4. Write baseline `RunArtifactBundle` manifests next to existing raw, scored, and report-summary outputs.
-5. Let reports consume scored artifacts and bundle manifests instead of raw runner internals.
+5. Emit `MatrixIndex` for matrix baseline runs.
+6. Let reports consume scored artifacts and bundle manifests instead of raw runner internals.
 
 NGX-133 owns the richer dataset fields for ambiguity and pragmatic reasoning in [`docs/dataset-schema-v2.md`](dataset-schema-v2.md). This document reserves the top-level object boundary; the dataset schema document defines the detailed `evaluation`, `accepted_interpretations`, `ambiguity`, `cooperative_intent`, and `calibration` contents.
