@@ -453,6 +453,34 @@ def build_run_artifact_bundle(
     }
 
 
+def _aggregate_auto_scored(
+    cell_summaries: Iterable[Any],
+) -> tuple[int, Dict[str, Any]] | None:
+    total = 0
+    correct = 0
+    incorrect = 0
+    count = 0
+    for summary in cell_summaries:
+        if not isinstance(summary, dict):
+            continue
+        auto_scored = summary.get("auto_scored")
+        if not isinstance(auto_scored, dict):
+            continue
+        count += 1
+        total += int(auto_scored.get("total", 0) or 0)
+        correct += int(auto_scored.get("correct", 0) or 0)
+        incorrect += int(auto_scored.get("incorrect", 0) or 0)
+    if count == 0:
+        return None
+    accuracy = round(correct / total, 4) if total else 0.0
+    return count, {
+        "total": total,
+        "correct": correct,
+        "incorrect": incorrect,
+        "accuracy": accuracy,
+    }
+
+
 def build_matrix_index(
     *,
     request: RunRequest,
@@ -511,107 +539,36 @@ def build_matrix_index(
     if not request.skip_scoring and summaries:
         model_summaries = {}
         for model in request.models:
-            aggregate_total = 0
-            aggregate_correct = 0
-            aggregate_incorrect = 0
-            suite_count = 0
-            for suite in suites:
-                summary = summaries.get((suite.suite_id, model))
-                if not isinstance(summary, dict):
-                    continue
-                auto_scored = summary.get("auto_scored")
-                if not isinstance(auto_scored, dict):
-                    continue
-                suite_count += 1
-                aggregate_total += int(auto_scored.get("total", 0) or 0)
-                aggregate_correct += int(auto_scored.get("correct", 0) or 0)
-                aggregate_incorrect += int(auto_scored.get("incorrect", 0) or 0)
-            if suite_count == 0:
-                continue
-            accuracy = (
-                round(aggregate_correct / aggregate_total, 4)
-                if aggregate_total
-                else 0.0
+            result = _aggregate_auto_scored(
+                summaries.get((suite.suite_id, model)) for suite in suites
             )
-            model_summaries[model] = {
-                "suite_count": suite_count,
-                "auto_scored": {
-                    "total": aggregate_total,
-                    "correct": aggregate_correct,
-                    "incorrect": aggregate_incorrect,
-                    "accuracy": accuracy,
-                },
-            }
+            if result is None:
+                continue
+            count, auto_scored = result
+            model_summaries[model] = {"suite_count": count, "auto_scored": auto_scored}
         if not model_summaries:
             model_summaries = None
 
         suite_summaries = {}
         for suite in suites:
-            aggregate_total = 0
-            aggregate_correct = 0
-            aggregate_incorrect = 0
-            model_count = 0
-            for model in request.models:
-                summary = summaries.get((suite.suite_id, model))
-                if not isinstance(summary, dict):
-                    continue
-                auto_scored = summary.get("auto_scored")
-                if not isinstance(auto_scored, dict):
-                    continue
-                model_count += 1
-                aggregate_total += int(auto_scored.get("total", 0) or 0)
-                aggregate_correct += int(auto_scored.get("correct", 0) or 0)
-                aggregate_incorrect += int(auto_scored.get("incorrect", 0) or 0)
-            if model_count == 0:
-                continue
-            accuracy = (
-                round(aggregate_correct / aggregate_total, 4)
-                if aggregate_total
-                else 0.0
+            result = _aggregate_auto_scored(
+                summaries.get((suite.suite_id, model)) for model in request.models
             )
-            suite_summaries[suite.suite_id] = {
-                "model_count": model_count,
-                "auto_scored": {
-                    "total": aggregate_total,
-                    "correct": aggregate_correct,
-                    "incorrect": aggregate_incorrect,
-                    "accuracy": accuracy,
-                },
-            }
+            if result is None:
+                continue
+            count, auto_scored = result
+            suite_summaries[suite.suite_id] = {"model_count": count, "auto_scored": auto_scored}
         if not suite_summaries:
             suite_summaries = None
 
-        aggregate_total = 0
-        aggregate_correct = 0
-        aggregate_incorrect = 0
-        cell_count = 0
-        for suite in suites:
-            for model in request.models:
-                summary = summaries.get((suite.suite_id, model))
-                if not isinstance(summary, dict):
-                    continue
-                auto_scored = summary.get("auto_scored")
-                if not isinstance(auto_scored, dict):
-                    continue
-                cell_count += 1
-                aggregate_total += int(auto_scored.get("total", 0) or 0)
-                aggregate_correct += int(auto_scored.get("correct", 0) or 0)
-                aggregate_incorrect += int(auto_scored.get("incorrect", 0) or 0)
-        if cell_count:
-            accuracy = (
-                round(aggregate_correct / aggregate_total, 4)
-                if aggregate_total
-                else 0.0
-            )
-            overall_summary = {
-                "cell_count": cell_count,
-                "auto_scored": {
-                    "total": aggregate_total,
-                    "correct": aggregate_correct,
-                    "incorrect": aggregate_incorrect,
-                    "accuracy": accuracy,
-                },
-            }
+        result = _aggregate_auto_scored(
+            summaries.get((suite.suite_id, model))
+            for suite in suites
+            for model in request.models
+        )
+        if result is not None:
+            count, auto_scored = result
+            overall_summary = {"cell_count": count, "auto_scored": auto_scored}
 
     return {
         "schema_version": "1.0.0",
