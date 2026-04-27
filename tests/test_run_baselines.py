@@ -3543,6 +3543,78 @@ class MatrixRunnerTests(unittest.TestCase):
         self.assertIsNone(cells[1]["scored_results"])
         shutil.rmtree(run_dir, ignore_errors=True)
 
+    def test_matrix_continues_after_cell_failure_and_records_error(self) -> None:
+        dataset_path = self._dataset()
+        run_dir = self.tmp_dir / "matrix-cell-error-runs"
+
+        config_path = self.tmp_dir / "matrix-cell-error-config.json"
+        config_path.write_text(
+            json.dumps(
+                {
+                    "schema_version": "2.0.0",
+                    "id": "unit-matrix-cell-error",
+                    "benchmark": "reasoning-benchmark",
+                    "suite_id": "matrix-baseline",
+                    "dataset": {"path": str(dataset_path)},
+                    "models": ["gpt-5.4", "sonnet-4.6"],
+                    "prompt_contract": run_baselines.build_prompt_contract(),
+                    "execution": {
+                        "mode": "matrix-baseline",
+                        "skip_scoring": True,
+                    },
+                    "matrix": {
+                        "suites": [
+                            {"suite_id": "smoke", "mode": "smoke"},
+                            {"suite_id": "starter", "case_ids": ["GG-01", "GG-03"]},
+                        ],
+                    },
+                    "output": {"bundle_dir": str(run_dir)},
+                }
+            ),
+            encoding="utf-8",
+        )
+
+        real_execute = run_baselines._execute_run_pass
+
+        def _maybe_fail(**kwargs):
+            if kwargs["mode"] == "smoke" and kwargs["model"] == "sonnet-4.6":
+                raise RuntimeError("provider unavailable")
+            return real_execute(**kwargs)
+
+        with patch.object(
+            run_baselines, "_execute_run_pass", side_effect=_maybe_fail
+        ):
+            args = argparse.Namespace(
+                config=str(config_path),
+                mode="full",
+                dataset=str(self.tmp_dir / "ignored.json"),
+                run_dir=str(self.tmp_dir / "ignored-runs"),
+                models=["ignored"],
+                provider_command=None,
+                prompt_timeout=1.0,
+                skip_scoring=False,
+            )
+            rc = run_baselines.cmd_run(args)
+
+        self.assertEqual(rc, 0)
+        index_path = run_dir / "matrix.index.json"
+        self.assertTrue(index_path.is_file(), f"Expected {index_path}")
+        index = json.loads(index_path.read_text(encoding="utf-8"))
+        cells_by_key = {(c["suite_id"], c["model"]): c for c in index["cells"]}
+        self.assertEqual(
+            cells_by_key[("smoke", "sonnet-4.6")]["error"],
+            {"type": "RuntimeError", "message": "provider unavailable"},
+        )
+        self.assertIsNone(cells_by_key[("smoke", "gpt-5.4")]["error"])
+        self.assertIsNone(cells_by_key[("starter", "gpt-5.4")]["error"])
+        self.assertIsNone(cells_by_key[("starter", "sonnet-4.6")]["error"])
+
+        smoke_failed_raw = run_dir / "smoke" / "sonnet-4-6.smoke.raw.json"
+        smoke_ok_raw = run_dir / "smoke" / "gpt-5-4.smoke.raw.json"
+        self.assertFalse(smoke_failed_raw.exists())
+        self.assertTrue(smoke_ok_raw.is_file())
+        shutil.rmtree(run_dir, ignore_errors=True)
+
 
 class MatrixIndexBuilderTests(unittest.TestCase):
     def setUp(self) -> None:
@@ -4191,6 +4263,102 @@ class MatrixIndexBuilderTests(unittest.TestCase):
         )
 
         self.assertIsNone(index["overall_summary"])
+
+    def test_build_matrix_index_cell_error_default_none(self) -> None:
+        dataset_path = self._dataset()
+        run_dir = self.tmp_dir / "matrix-index-cell-error-default-runs"
+        request = self._request(
+            run_dir=run_dir,
+            dataset_path=dataset_path,
+            models=("gpt-5.4",),
+            suites=(run_baselines.MatrixSuite(suite_id="smoke", mode="smoke"),),
+        )
+
+        index = run_baselines.build_matrix_index(
+            request=request,
+            created_at="2026-04-27T00:00:00+00:00",
+        )
+
+        self.assertIsNone(index["cells"][0]["error"])
+
+    def test_build_matrix_index_records_cell_errors(self) -> None:
+        dataset_path = self._dataset()
+        run_dir = self.tmp_dir / "matrix-index-cell-errors-runs"
+        suites = (
+            run_baselines.MatrixSuite(suite_id="smoke", mode="smoke"),
+            run_baselines.MatrixSuite(suite_id="starter", mode="starter"),
+        )
+        request = self._request(
+            run_dir=run_dir,
+            dataset_path=dataset_path,
+            models=("gpt-5.4", "sonnet-4.6"),
+            suites=suites,
+        )
+
+        index = run_baselines.build_matrix_index(
+            request=request,
+            created_at="2026-04-27T00:00:00+00:00",
+            cell_errors={
+                ("smoke", "sonnet-4.6"): {
+                    "message": "provider timed out",
+                    "type": "TimeoutError",
+                },
+            },
+        )
+
+        cells_by_key = {(c["suite_id"], c["model"]): c for c in index["cells"]}
+        self.assertIsNone(cells_by_key[("smoke", "gpt-5.4")]["error"])
+        self.assertEqual(
+            cells_by_key[("smoke", "sonnet-4.6")]["error"],
+            {"message": "provider timed out", "type": "TimeoutError"},
+        )
+        self.assertIsNone(cells_by_key[("starter", "gpt-5.4")]["error"])
+        self.assertIsNone(cells_by_key[("starter", "sonnet-4.6")]["error"])
+
+    def test_build_matrix_index_cell_errors_alongside_summaries(self) -> None:
+        dataset_path = self._dataset()
+        run_dir = self.tmp_dir / "matrix-index-cell-errors-with-summaries-runs"
+        suites = (run_baselines.MatrixSuite(suite_id="smoke", mode="smoke"),)
+        request = self._request(
+            run_dir=run_dir,
+            dataset_path=dataset_path,
+            models=("gpt-5.4", "sonnet-4.6"),
+            suites=suites,
+        )
+
+        index = run_baselines.build_matrix_index(
+            request=request,
+            created_at="2026-04-27T00:00:00+00:00",
+            cell_summaries={
+                ("smoke", "gpt-5.4"): {
+                    "auto_scored": {
+                        "total": 5,
+                        "correct": 4,
+                        "incorrect": 1,
+                        "accuracy": 0.8,
+                    }
+                }
+            },
+            cell_errors={
+                ("smoke", "sonnet-4.6"): {
+                    "message": "boom",
+                    "type": "RuntimeError",
+                },
+            },
+        )
+
+        cells_by_key = {(c["suite_id"], c["model"]): c for c in index["cells"]}
+        successful = cells_by_key[("smoke", "gpt-5.4")]
+        failed = cells_by_key[("smoke", "sonnet-4.6")]
+        self.assertIsNone(successful["error"])
+        self.assertEqual(
+            successful["summary_metrics"]["auto_scored"]["correct"], 4
+        )
+        self.assertEqual(
+            failed["error"],
+            {"message": "boom", "type": "RuntimeError"},
+        )
+        self.assertIsNone(failed["summary_metrics"])
 
 
 if __name__ == "__main__":

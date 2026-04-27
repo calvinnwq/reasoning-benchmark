@@ -457,10 +457,12 @@ def build_matrix_index(
     request: RunRequest,
     created_at: str,
     cell_summaries: Dict[tuple[str, str], Dict[str, Any]] | None = None,
+    cell_errors: Dict[tuple[str, str], Dict[str, Any]] | None = None,
 ) -> Dict[str, Any]:
     suites = request.matrix_suites or ()
     run_dir = request.run_dir
     summaries = cell_summaries or {}
+    errors = cell_errors or {}
     cells: list[Dict[str, Any]] = []
     for suite in suites:
         for model in request.models:
@@ -499,6 +501,7 @@ def build_matrix_index(
                         if request.skip_scoring
                         else summaries.get((suite.suite_id, model))
                     ),
+                    "error": errors.get((suite.suite_id, model)),
                 }
             )
     model_summaries: Dict[str, Dict[str, Any]] | None = None
@@ -1273,6 +1276,7 @@ def cmd_run(args: argparse.Namespace) -> int:
     if request.matrix_suites:
         matrix_started_at = datetime.now(timezone.utc).isoformat()
         cell_summaries: Dict[tuple[str, str], Dict[str, Any]] = {}
+        cell_errors: Dict[tuple[str, str], Dict[str, Any]] = {}
         for suite in request.matrix_suites:
             for model in request.models:
                 raw_path, scored_path = matrix_run_paths(
@@ -1284,17 +1288,28 @@ def cmd_run(args: argparse.Namespace) -> int:
                 bundle_path = matrix_manifest_path(
                     request.run_dir, suite.suite_id, model, suite.mode
                 )
-                _execute_run_pass(
-                    request=request,
-                    questions=questions,
-                    model=model,
-                    mode=suite.mode,
-                    suite_case_ids=suite.case_ids,
-                    raw_path=raw_path,
-                    scored_path=scored_path,
-                    report_summary_path=report_summary_path,
-                    bundle_path=bundle_path,
-                )
+                try:
+                    _execute_run_pass(
+                        request=request,
+                        questions=questions,
+                        model=model,
+                        mode=suite.mode,
+                        suite_case_ids=suite.case_ids,
+                        raw_path=raw_path,
+                        scored_path=scored_path,
+                        report_summary_path=report_summary_path,
+                        bundle_path=bundle_path,
+                    )
+                except Exception as exc:
+                    cell_errors[(suite.suite_id, model)] = {
+                        "type": type(exc).__name__,
+                        "message": str(exc),
+                    }
+                    print(
+                        f"matrix cell failed: suite={suite.suite_id} "
+                        f"model={model}: {type(exc).__name__}: {exc}"
+                    )
+                    continue
                 if not request.skip_scoring and report_summary_path.is_file():
                     with report_summary_path.open("r", encoding="utf-8") as stream:
                         cell_summaries[(suite.suite_id, model)] = json.load(stream)
@@ -1303,6 +1318,7 @@ def cmd_run(args: argparse.Namespace) -> int:
             request=request,
             created_at=matrix_started_at,
             cell_summaries=cell_summaries or None,
+            cell_errors=cell_errors or None,
         )
         write_json(index_path, index_payload)
         print(f"wrote matrix index: {index_path}")
