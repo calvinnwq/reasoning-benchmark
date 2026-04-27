@@ -957,6 +957,257 @@ class ScoringFixtureTests(unittest.TestCase):
         )
         self.assertEqual(summary["manual_review"], summary["manual_only"])
 
+    def test_summary_cross_tabs_models_against_task_family(self) -> None:
+        scored = [
+            {
+                "model": "gpt-5.4",
+                "task_family_id": "social-pragmatics",
+                "answer": "right",
+                "scoring_status": {"score": 1, "dimensions": []},
+            },
+            {
+                "model": "gpt-5.4",
+                "task_family_id": "social-pragmatics",
+                "answer": "wrong",
+                "scoring_status": {"score": 0, "dimensions": []},
+            },
+            {
+                "model": "gpt-5.4",
+                "task_family_id": "goal-grounding",
+                "answer": "right",
+                "scoring_status": {"score": 1, "dimensions": []},
+            },
+            {
+                "model": "sonnet-4.6",
+                "task_family_id": "social-pragmatics",
+                "answer": "right",
+                "scoring_status": {"score": 1, "dimensions": []},
+            },
+            {
+                "model": "sonnet-4.6",
+                "task_family_id": "social-pragmatics",
+                "answer": "needs review",
+                "scoring_status": {
+                    "score": None,
+                    "dimensions": [{"status": "manual_review_required"}],
+                },
+            },
+        ]
+
+        summary = score_run.build_summary(scored)
+
+        self.assertEqual(
+            summary["by_model_task_family"],
+            {
+                "gpt-5.4": {
+                    "social-pragmatics": {
+                        "total": 2,
+                        "case_count": 2,
+                        "auto_scored": 2,
+                        "correct": 1,
+                        "incorrect": 1,
+                        "accuracy": 0.5,
+                        "manual_review_required": 0,
+                    },
+                    "goal-grounding": {
+                        "total": 1,
+                        "case_count": 1,
+                        "auto_scored": 1,
+                        "correct": 1,
+                        "incorrect": 0,
+                        "accuracy": 1.0,
+                        "manual_review_required": 0,
+                    },
+                },
+                "sonnet-4.6": {
+                    "social-pragmatics": {
+                        "total": 2,
+                        "case_count": 2,
+                        "auto_scored": 1,
+                        "correct": 1,
+                        "incorrect": 0,
+                        "accuracy": 1.0,
+                        "manual_review_required": 1,
+                    },
+                },
+            },
+        )
+
+    def test_summary_cross_tabs_models_against_failure_mode(self) -> None:
+        scored = [
+            {
+                "model": "gpt-5.4",
+                "failure_mode": "literalism",
+                "answer": "right",
+                "scoring_status": {"score": 1, "dimensions": []},
+            },
+            {
+                "model": "gpt-5.4",
+                "failure_mode": "literalism",
+                "answer": "wrong",
+                "scoring_status": {"score": 0, "dimensions": []},
+            },
+            {
+                "model": "sonnet-4.6",
+                "failure_mode": "literalism",
+                "answer": "right",
+                "scoring_status": {"score": 1, "dimensions": []},
+            },
+        ]
+
+        summary = score_run.build_summary(scored)
+
+        self.assertEqual(
+            summary["by_model_failure_mode"],
+            {
+                "gpt-5.4": {
+                    "literalism": {
+                        "total": 2,
+                        "case_count": 2,
+                        "auto_scored": 2,
+                        "correct": 1,
+                        "incorrect": 1,
+                        "accuracy": 0.5,
+                        "manual_review_required": 0,
+                    },
+                },
+                "sonnet-4.6": {
+                    "literalism": {
+                        "total": 1,
+                        "case_count": 1,
+                        "auto_scored": 1,
+                        "correct": 1,
+                        "incorrect": 0,
+                        "accuracy": 1.0,
+                        "manual_review_required": 0,
+                    },
+                },
+            },
+        )
+
+    def test_summary_cross_tabs_models_against_ambiguity_type(self) -> None:
+        scored = [
+            {
+                "model": "gpt-5.4",
+                "ambiguity_type": "pragmatic",
+                "answer": "right",
+                "scoring_status": {"score": 1, "dimensions": []},
+            },
+            {
+                "model": "gpt-5.4",
+                "ambiguity_type": "none",
+                "answer": "wrong",
+                "scoring_status": {"score": 0, "dimensions": []},
+            },
+            {
+                "model": "sonnet-4.6",
+                "ambiguity_type": "pragmatic",
+                "answer": "needs review",
+                "scoring_status": {
+                    "score": None,
+                    "dimensions": [{"status": "manual_review_required"}],
+                },
+            },
+        ]
+
+        summary = score_run.build_summary(scored)
+
+        self.assertEqual(
+            summary["by_model_ambiguity_type"],
+            {
+                "gpt-5.4": {
+                    "pragmatic": {
+                        "total": 1,
+                        "case_count": 1,
+                        "auto_scored": 1,
+                        "correct": 1,
+                        "incorrect": 0,
+                        "accuracy": 1.0,
+                        "manual_review_required": 0,
+                    },
+                    "none": {
+                        "total": 1,
+                        "case_count": 1,
+                        "auto_scored": 1,
+                        "correct": 0,
+                        "incorrect": 1,
+                        "accuracy": 0.0,
+                        "manual_review_required": 0,
+                    },
+                },
+                "sonnet-4.6": {
+                    "pragmatic": {
+                        "total": 1,
+                        "case_count": 1,
+                        "auto_scored": 0,
+                        "correct": 0,
+                        "incorrect": 0,
+                        "accuracy": 0.0,
+                        "manual_review_required": 1,
+                    },
+                },
+            },
+        )
+
+    def test_summary_cross_tabs_use_unknown_for_missing_metadata(self) -> None:
+        scored = [
+            {
+                "answer": "right",
+                "scoring_status": {"score": 1, "dimensions": []},
+            }
+        ]
+
+        summary = score_run.build_summary(scored)
+
+        self.assertEqual(
+            summary["by_model_task_family"],
+            {
+                "unknown": {
+                    "unknown": {
+                        "total": 1,
+                        "case_count": 1,
+                        "auto_scored": 1,
+                        "correct": 1,
+                        "incorrect": 0,
+                        "accuracy": 1.0,
+                        "manual_review_required": 0,
+                    },
+                },
+            },
+        )
+        self.assertEqual(
+            summary["by_model_failure_mode"],
+            {
+                "unknown": {
+                    "unknown": {
+                        "total": 1,
+                        "case_count": 1,
+                        "auto_scored": 1,
+                        "correct": 1,
+                        "incorrect": 0,
+                        "accuracy": 1.0,
+                        "manual_review_required": 0,
+                    },
+                },
+            },
+        )
+        self.assertEqual(
+            summary["by_model_ambiguity_type"],
+            {
+                "unknown": {
+                    "unknown": {
+                        "total": 1,
+                        "case_count": 1,
+                        "auto_scored": 1,
+                        "correct": 1,
+                        "incorrect": 0,
+                        "accuracy": 1.0,
+                        "manual_review_required": 0,
+                    },
+                },
+            },
+        )
+
 
 if __name__ == "__main__":
     unittest.main()

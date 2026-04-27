@@ -93,7 +93,7 @@ These boundaries should be simple enough to represent as plain JSON and Python d
 
 ## Data Flow
 
-1. Load a suite from `data/questions.json` or a future suite manifest.
+1. Load the full dataset from `data/questions.json` or a named suite manifest from `data/suites/` through `scripts/suites.py`.
 2. Build prompts using `scripts/benchmark_contract.py`.
 3. Execute each selected model through the adapter layer or emit blank/dry-run records.
 4. Write raw run records under `runs/`.
@@ -107,9 +107,10 @@ V2 should expose extension points where the next milestones already point:
 
 - **Dataset schema extension:** add ambiguity, cooperative-intent, accepted-interpretation, calibration, and evaluator fields without breaking existing questions.
 - **Evaluator modes:** support exact, rubric, and hybrid evaluation through explicit per-case configuration.
-- **Suite selection:** allow named slices such as smoke, starter, full, and holdout.
+- **Suite selection:** allow named slices such as smoke, starter, full, and holdout. Calibrated `starter` and `holdout` suite manifests live under `data/suites/` and are loaded via `scripts/suites.py`; `run_benchmark.py` honors them through `--suite NAME`.
 - **Adapters:** keep CLI and direct/provider adapters behind the shared adapter library.
 - **Reporting:** compute comparisons by family, failure mode, model, and evaluator mode from saved artifacts.
+- **Forward-compatible expansion hooks:** an optional top-level `extensions` block on `RunConfig` reserves the `tool_use` and `multi_agent` namespaces for future expansion packs. The validator lives in `scripts/extensions.py` and is wired into RunConfig parsing in `scripts/run_baselines.py`. Each declared namespace must include an explicit `enabled` boolean; until the matching milestone ships, `enabled` must remain `false` so configs can record planned extensions without activating runner code that does not exist yet. Unknown namespaces are rejected so a typo cannot quietly disable the forward-compatibility check.
 
 Extension points should be data contracts first. Code abstractions should appear only when they reduce duplication in the runner, scorer, or reporter.
 

@@ -14,11 +14,17 @@ python3 -m unittest tests.test_scoring
 # List all benchmark questions
 python3 scripts/run_benchmark.py --list
 
+# List available suite manifests
+python3 scripts/run_benchmark.py --list-suites
+
 # Generate a blank run template (fill in answers, then score)
 python3 scripts/run_benchmark.py --sample-run
 
 # Export a JSONL prompt pack for external model runners
 python3 scripts/run_benchmark.py --emit-prompts runs/prompts.jsonl
+
+# Restrict list/sample/export commands to a named suite
+python3 scripts/run_benchmark.py --list --suite starter
 
 # Score a completed run
 python3 scripts/score_run.py --input runs/example-run.json --output runs/example-run.scored.json
@@ -33,8 +39,9 @@ Pure-Python reasoning benchmark. No framework, package manager, or external depe
 ### Data flow
 
 1. **Dataset** — `data/questions.json`, 100 questions with `id`, `category`, `prompt`, `expected_answer`, `accepted_variants`, `common_wrong_answer`, `rationale`, `failure_mode`.
-2. **Run files** — `runs/*.json`, model answers against the dataset. Canonical shape: top-level `results` list (also accepted: `runs`, `items`, `answers`, or a bare list).
-3. **Scorer** — `scripts/score_run.py` reads a run file + dataset, writes a scored artifact.
+2. **Suite manifests** — `data/suites/<name>.json`, ordered case selections loaded by `scripts/suites.py`.
+3. **Run files** — `runs/*.json`, model answers against the dataset. Canonical shape: top-level `results` list (also accepted: `runs`, `items`, `answers`, or a bare list).
+4. **Scorer** — `scripts/score_run.py` reads a run file + dataset, writes a scored artifact.
 
 ### Adapter layer
 

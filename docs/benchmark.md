@@ -24,6 +24,8 @@ This benchmark is intentionally **short, natural-language, and deceptively simpl
 
 - `data/questions.json` — canonical source for runs and scoring
 - `data/questions.csv` — spreadsheet-friendly export view
+- `data/suites/starter.json` — calibrated 14-case starter slice, two cases per task family
+- `data/suites/holdout.json` — disjoint 14-case holdout slice, two cases per task family
 
 This markdown note is the human-readable overview. The JSON file is the machine-readable scoring source; the CSV export omits some v2 metadata such as `evaluation`, `ambiguity`, `cooperative_intent`, and `calibration`.
 
@@ -63,23 +65,9 @@ Did it explicitly notice the key thing that matters, such as object location, cu
 
 ---
 
-## Recommended public starter slice (12 questions)
+## Named suites
 
-If I want a small version to run quickly and publish early, start with:
-- GG-01 car wash
-- GG-02 mechanic pickup
-- GG-05 flat-tyre bike repair
-- CR-01 farmer with compartments
-- CR-02 six horses
-- CR-04 Russian roulette
-- TW-02 last empty seat
-- SP-01 pass the salt
-- SP-05 do you mind opening the window
-- PR-03 trophy / suitcase
-- MC-01 flashlight in bright room
-- MC-03 umbrella leak in rain
-
-That slice covers all the major failure types without turning the first pass into an overbuilt benchmark zoo.
+Use the `starter` suite for a small frequent-run slice and `holdout` for a disjoint reserved comparison slice. Both manifests live under `data/suites/` and can be selected with `scripts/run_benchmark.py --suite NAME`.
 
 ---
 

@@ -4402,5 +4402,67 @@ class ExampleMatrixConfigTests(unittest.TestCase):
             self.assertIn(model, run_baselines.SUPPORTED_MODELS)
 
 
+class RunConfigExtensionsHookTests(unittest.TestCase):
+    """RunConfig must validate the optional extensions hook block."""
+
+    def setUp(self) -> None:
+        self.tmp_dir = Path(__file__).resolve().parent / "tmp"
+        self.tmp_dir.mkdir(parents=True, exist_ok=True)
+
+    def tearDown(self) -> None:
+        for item in self.tmp_dir.glob("ext-config-*"):
+            if item.is_file():
+                item.unlink()
+
+    def _dataset(self) -> Path:
+        dataset_path = self.tmp_dir / "ext-config-questions.json"
+        rows = [
+            {"id": "GG-01", "prompt": "Prompt one"},
+            {"id": "GG-02", "prompt": "Prompt two"},
+            {"id": "GG-03", "prompt": "Prompt three"},
+            {"id": "GG-04", "prompt": "Prompt four"},
+            {"id": "GG-05", "prompt": "Prompt five"},
+        ]
+        dataset_path.write_text(json.dumps(rows), encoding="utf-8")
+        return dataset_path
+
+    def _config(self, extensions_block: object) -> Path:
+        dataset_path = self._dataset()
+        config_path = self.tmp_dir / "ext-config-payload.json"
+        payload = {
+            "schema_version": "2.0.0",
+            "id": "ext-hook-config",
+            "benchmark": "reasoning-benchmark",
+            "suite_id": "smoke",
+            "dataset": {"path": str(dataset_path)},
+            "models": ["gpt-5.4"],
+            "prompt_contract": run_baselines.build_prompt_contract(),
+            "execution": {"mode": "smoke", "skip_scoring": True},
+            "output": {"bundle_dir": str(self.tmp_dir / "ext-config-runs")},
+            "extensions": extensions_block,
+        }
+        config_path.write_text(json.dumps(payload), encoding="utf-8")
+        return config_path
+
+    def test_extensions_block_with_disabled_reserved_namespace_passes(self) -> None:
+        config_path = self._config(
+            {"tool_use": {"enabled": False, "notes": "reserved for future"}}
+        )
+        request = run_baselines.request_from_config(config_path)
+        self.assertEqual(request.mode, "smoke")
+
+    def test_extensions_block_with_unknown_namespace_is_rejected(self) -> None:
+        config_path = self._config({"browser_use": {"enabled": False}})
+        with self.assertRaisesRegex(ValueError, "unknown extension namespace"):
+            run_baselines.request_from_config(config_path)
+
+    def test_extensions_block_with_enabled_reserved_namespace_is_rejected(
+        self,
+    ) -> None:
+        config_path = self._config({"tool_use": {"enabled": True}})
+        with self.assertRaisesRegex(ValueError, "no implementation"):
+            run_baselines.request_from_config(config_path)
+
+
 if __name__ == "__main__":
     unittest.main()

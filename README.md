@@ -19,8 +19,10 @@ These are deliberately short prompts. The whole point is to catch models that so
 
 - `data/questions.json` — canonical machine-readable dataset
 - `data/questions.csv` — spreadsheet-friendly export
+- `data/suites/` — named suite manifests such as `starter` and `holdout`
 - `docs/benchmark.md` — human-readable benchmark overview
 - `scripts/run_benchmark.py` — minimal local runner scaffold
+- `scripts/suites.py` — suite manifest loader
 - `scripts/run_baselines.py` — baseline runner for first-class baseline models
 - `scripts/benchmark_contract.py` — shared prompt/JSON contract for adapters
 - `scripts/benchmark_adapters.py` — shared adapter library
@@ -65,6 +67,12 @@ Preview the dataset:
 python3 scripts/run_benchmark.py --list
 ```
 
+List available named suites:
+
+```bash
+python3 scripts/run_benchmark.py --list-suites
+```
+
 Export a light run template:
 
 ```bash
@@ -80,6 +88,8 @@ Create a JSONL prompt pack for another tool or model runner:
 ```bash
 python3 scripts/run_benchmark.py --emit-prompts runs/prompts.jsonl
 ```
+
+Add `--suite starter` or `--suite holdout` to `--list`, `--sample-run`, or `--emit-prompts` to restrict output to a calibrated manifest from `data/suites/`.
 
 ## Baselines
 
@@ -172,6 +182,7 @@ positive, configured `max_cases` values must be whole positive integers, and con
 `skip_scoring` values must be booleans. Configured execution modes and model adapter names must be exact, unpadded,
 non-empty strings, string seeds must be exact, unpadded, and non-empty, configured `suite.case_ids` entries must be exact, unique, unpadded case ids, and
 `adapter_command` and `execution.provider_command` string values and list entries must be exact, unpadded, and non-empty.
+Optional RunConfig `extensions` entries are limited to the reserved `tool_use` and `multi_agent` namespaces; each payload must be a JSON object with an explicit boolean `enabled`, and `enabled: true` is rejected until the matching implementation ships.
 Without `suite.case_ids` or `matrix.suites`, configured modes must be `smoke` or `full`; explicit
 `suite.case_ids` preserve their order and allow custom mode names, while matrix suites allow a custom
 top-level mode and control selection per suite. `seed` shuffles only mode-derived selections, and

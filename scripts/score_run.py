@@ -813,114 +813,77 @@ def build_summary(
     by_failure_mode: Dict[str, Dict[str, Any]] = {}
     by_ambiguity_type: Dict[str, Dict[str, Any]] = {}
     by_calibration_split: Dict[str, Dict[str, Any]] = {}
+    by_model_task_family: Dict[str, Dict[str, Dict[str, Any]]] = {}
+    by_model_failure_mode: Dict[str, Dict[str, Dict[str, Any]]] = {}
+    by_model_ambiguity_type: Dict[str, Dict[str, Dict[str, Any]]] = {}
+
+    def empty_bucket() -> Dict[str, Any]:
+        return {
+            "total": 0,
+            "auto_scored": 0,
+            "correct": 0,
+            "incorrect": 0,
+            "accuracy": 0.0,
+            "manual_review_required": 0,
+        }
+
     for item in scored:
         model = str(item.get("model") or "unknown").strip() or "unknown"
-        model_bucket = by_model.setdefault(
-            model,
-            {
-                "total": 0,
-                "auto_scored": 0,
-                "correct": 0,
-                "incorrect": 0,
-                "accuracy": 0.0,
-                "manual_review_required": 0,
-            },
-        )
+        model_bucket = by_model.setdefault(model, empty_bucket())
         model_bucket["total"] += 1
 
         mode = str(item.get("evaluation_mode") or "exact").strip() or "exact"
-        bucket = by_evaluation_mode.setdefault(
-            mode,
-            {
-                "total": 0,
-                "auto_scored": 0,
-                "correct": 0,
-                "incorrect": 0,
-                "accuracy": 0.0,
-                "manual_review_required": 0,
-            },
-        )
+        bucket = by_evaluation_mode.setdefault(mode, empty_bucket())
         bucket["total"] += 1
 
         task_family_id = str(item.get("task_family_id") or "unknown").strip() or "unknown"
-        task_family_bucket = by_task_family.setdefault(
-            task_family_id,
-            {
-                "total": 0,
-                "auto_scored": 0,
-                "correct": 0,
-                "incorrect": 0,
-                "accuracy": 0.0,
-                "manual_review_required": 0,
-            },
-        )
+        task_family_bucket = by_task_family.setdefault(task_family_id, empty_bucket())
         task_family_bucket["total"] += 1
 
         failure_mode = str(item.get("failure_mode") or "unknown").strip() or "unknown"
-        failure_mode_bucket = by_failure_mode.setdefault(
-            failure_mode,
-            {
-                "total": 0,
-                "auto_scored": 0,
-                "correct": 0,
-                "incorrect": 0,
-                "accuracy": 0.0,
-                "manual_review_required": 0,
-            },
-        )
+        failure_mode_bucket = by_failure_mode.setdefault(failure_mode, empty_bucket())
         failure_mode_bucket["total"] += 1
 
         ambiguity_type = str(item.get("ambiguity_type") or "unknown").strip() or "unknown"
-        ambiguity_type_bucket = by_ambiguity_type.setdefault(
-            ambiguity_type,
-            {
-                "total": 0,
-                "auto_scored": 0,
-                "correct": 0,
-                "incorrect": 0,
-                "accuracy": 0.0,
-                "manual_review_required": 0,
-            },
-        )
+        ambiguity_type_bucket = by_ambiguity_type.setdefault(ambiguity_type, empty_bucket())
         ambiguity_type_bucket["total"] += 1
 
         calibration_split = str(item.get("calibration_split") or "full").strip() or "full"
-        calibration_split_bucket = by_calibration_split.setdefault(
-            calibration_split,
-            {
-                "total": 0,
-                "auto_scored": 0,
-                "correct": 0,
-                "incorrect": 0,
-                "accuracy": 0.0,
-                "manual_review_required": 0,
-            },
-        )
+        calibration_split_bucket = by_calibration_split.setdefault(calibration_split, empty_bucket())
         calibration_split_bucket["total"] += 1
+
+        model_task_family_bucket = by_model_task_family.setdefault(model, {}).setdefault(
+            task_family_id, empty_bucket()
+        )
+        model_task_family_bucket["total"] += 1
+
+        model_failure_mode_bucket = by_model_failure_mode.setdefault(model, {}).setdefault(
+            failure_mode, empty_bucket()
+        )
+        model_failure_mode_bucket["total"] += 1
+
+        model_ambiguity_type_bucket = by_model_ambiguity_type.setdefault(model, {}).setdefault(
+            ambiguity_type, empty_bucket()
+        )
+        model_ambiguity_type_bucket["total"] += 1
 
         status = item.get("scoring_status", {})
         score = status.get("score") if isinstance(status, dict) else None
+        all_buckets = [
+            model_bucket,
+            bucket,
+            task_family_bucket,
+            failure_mode_bucket,
+            ambiguity_type_bucket,
+            calibration_split_bucket,
+            model_task_family_bucket,
+            model_failure_mode_bucket,
+            model_ambiguity_type_bucket,
+        ]
         if score in {0, 1}:
-            model_bucket["auto_scored"] += 1
-            bucket["auto_scored"] += 1
-            task_family_bucket["auto_scored"] += 1
-            failure_mode_bucket["auto_scored"] += 1
-            ambiguity_type_bucket["auto_scored"] += 1
-            calibration_split_bucket["auto_scored"] += 1
-            if score == 1:
-                model_bucket["correct"] += 1
-                bucket["correct"] += 1
-                task_family_bucket["correct"] += 1
-                failure_mode_bucket["correct"] += 1
-                ambiguity_type_bucket["correct"] += 1
-                calibration_split_bucket["correct"] += 1
-            else:
-                model_bucket["incorrect"] += 1
-                bucket["incorrect"] += 1
-                task_family_bucket["incorrect"] += 1
-                failure_mode_bucket["incorrect"] += 1
-                ambiguity_type_bucket["incorrect"] += 1
-                calibration_split_bucket["incorrect"] += 1
+            for entry in all_buckets:
+                entry["auto_scored"] += 1
+                entry["correct" if score == 1 else "incorrect"] += 1
 
         dimensions = status.get("dimensions", []) if isinstance(status, dict) else []
         has_manual_dimension = any(
@@ -928,13 +891,19 @@ def build_summary(
             for dimension in dimensions
         )
         if score is None or has_manual_dimension:
-            model_bucket["manual_review_required"] += 1
-            bucket["manual_review_required"] += 1
-            task_family_bucket["manual_review_required"] += 1
-            failure_mode_bucket["manual_review_required"] += 1
-            ambiguity_type_bucket["manual_review_required"] += 1
-            calibration_split_bucket["manual_review_required"] += 1
+            for entry in all_buckets:
+                entry["manual_review_required"] += 1
 
+    cross_tab_buckets = [
+        bucket
+        for cross_tab in (
+            by_model_task_family,
+            by_model_failure_mode,
+            by_model_ambiguity_type,
+        )
+        for nested in cross_tab.values()
+        for bucket in nested.values()
+    ]
     for bucket in [
         *by_model.values(),
         *by_evaluation_mode.values(),
@@ -942,6 +911,7 @@ def build_summary(
         *by_failure_mode.values(),
         *by_ambiguity_type.values(),
         *by_calibration_split.values(),
+        *cross_tab_buckets,
     ]:
         bucket["case_count"] = bucket["total"]
         bucket["accuracy"] = (
@@ -983,6 +953,9 @@ def build_summary(
         "by_failure_mode": by_failure_mode,
         "by_ambiguity_type": by_ambiguity_type,
         "by_calibration_split": by_calibration_split,
+        "by_model_task_family": by_model_task_family,
+        "by_model_failure_mode": by_model_failure_mode,
+        "by_model_ambiguity_type": by_model_ambiguity_type,
         "heuristic_flags": dict(heuristics),
     }
 

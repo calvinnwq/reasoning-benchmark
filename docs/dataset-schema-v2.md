@@ -192,7 +192,7 @@ Recommended fields:
 - `human_disagreement_risk`: `low`, `medium`, or `high`.
 - `review_status`: `draft`, `reviewed`, or `retired`.
 
-Holdout and calibration slices should be represented here first, then collected into suite manifests later.
+Named suite manifests in `data/suites/` are the source of truth for calibrated slices such as `starter` and `holdout`; per-case calibration metadata explains intended use in reports and future suite curation.
 
 ## Current-To-V2 Category Mapping
 

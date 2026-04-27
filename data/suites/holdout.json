@@ -1,0 +1,23 @@
+{
+  "schema_version": "2.0.0",
+  "suite_id": "holdout",
+  "name": "Holdout / Calibration Set",
+  "description": "Reserved subset for cleaner cross-model comparison and future public reporting. Disjoint from the starter slice; never used during iteration on prompt or scoring tweaks.",
+  "selection_rationale": "Picks the trailing two cases from each family so the starter slice can evolve at the head of the dataset without colliding with reserved evaluation cases. Goal-grounding (GG-07, GG-08), classic-riddle override (CR-07, CR-08), temporal-state (TW-07, TW-08), and pronoun-resolution (PR-06, PR-07) take their last two entries. Social-pragmatic uses SP-08, SP-09 and physical-commonsense uses MC-09, MC-10. Instruction-ambiguity reserves IA-49 and IA-50 to keep the largest family represented without overweighting it.",
+  "case_ids": [
+    "GG-07",
+    "GG-08",
+    "CR-07",
+    "CR-08",
+    "TW-07",
+    "TW-08",
+    "SP-08",
+    "SP-09",
+    "IA-49",
+    "IA-50",
+    "PR-06",
+    "PR-07",
+    "MC-09",
+    "MC-10"
+  ]
+}

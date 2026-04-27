@@ -20,6 +20,7 @@ if str(SCRIPT_DIR) not in sys.path:
     sys.path.insert(0, str(SCRIPT_DIR))
 
 from benchmark_contract import build_prompt_contract
+from extensions import validate_extensions_block
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 DEFAULT_DATASET_PATH = REPO_ROOT / "data" / "questions.json"
@@ -784,6 +785,12 @@ def validate_config_suite_id(config_payload: dict[str, Any]) -> None:
     validate_artifact_label(value, "RunConfig suite_id")
 
 
+def validate_config_extensions(config_payload: dict[str, Any]) -> None:
+    if "extensions" not in config_payload:
+        return
+    validate_extensions_block(config_payload["extensions"])
+
+
 def config_execution(config_payload: dict[str, Any]) -> dict[str, Any]:
     if "execution" not in config_payload:
         raise ValueError("RunConfig execution is required")
@@ -1125,6 +1132,7 @@ def request_from_config(config_path: Path) -> RunRequest:
     validate_config_id(config_payload)
     validate_config_benchmark(config_payload)
     validate_config_suite_id(config_payload)
+    validate_config_extensions(config_payload)
 
     dataset = config_payload.get("dataset")
     dataset_path = config_dataset_path(config_payload)
