@@ -435,7 +435,7 @@ Required fields:
 - `created_at`
 
 The initial implementation may store the bundle as a single JSON file beside existing raw and scored files. Later work can move to a directory layout without changing the manifest contract.
-Baseline runs write the `ReportSummary` as a sibling `*.summary.json` artifact copied from the scored output's embedded `summary` object.
+Baseline runs write the `ReportSummary` as a sibling `*.summary.json` artifact copied from the scored output's embedded `summary` object. When `execution.skip_scoring` is true, baseline runs write only the raw artifact, skip the scored artifact, summary sidecar, and bundle manifest, and remove any stale manifest for that model/mode.
 Report-summary regeneration requires bundle manifests to use exact, unpadded, non-empty `id`
 values so bundle identity is not silently normalized from malformed manifest metadata.
 Report-summary regeneration requires bundle manifests to use exact, unpadded, non-empty `suite_id`

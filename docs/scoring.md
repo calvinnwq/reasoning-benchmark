@@ -144,7 +144,7 @@ V1 summary separates automatic and manual-only metrics:
 python3 scripts/score_run.py --input runs/example-run.json --output runs/example-run.scored.json
 ```
 
-Use `--source-bundle path/to/manifest.json` when the scored output belongs to a known v2 `RunArtifactBundle` manifest. The option may be repeated for merged reports.
+Use `--source-bundle path/to/manifest.json` when the scored output belongs to a known v2 `RunArtifactBundle` manifest. The option may be repeated, but `score_run.py` records those paths only as provenance in `summary.source_bundles`; use `scripts/report_summary.py` with repeated `--input` or `--bundle` arguments to build merged reports.
 Baseline runs also copy the embedded scored-artifact `summary` object into a sibling `*.summary.json` sidecar and record that path in the bundle manifest as `artifacts.report_summary`.
 
 Build or refresh a report summary from saved scored artifacts or v2 bundle manifests without reopening raw runner outputs with:

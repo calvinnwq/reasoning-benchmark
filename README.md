@@ -108,7 +108,9 @@ python3 scripts/run_baselines.py --config runs/baseline/run-config.json
 ```
 
 Raw artifacts are written under `runs/baseline/` as one JSON per model, plus scored files with `.scored.json`
-and report summary sidecars with `.summary.json`.
+and report summary sidecars with `.summary.json`. When `--skip-scoring` or RunConfig
+`execution.skip_scoring` is set, baseline runs write only raw artifacts, suppress scored outputs,
+summary sidecars, and bundle manifests, and remove any stale manifest for that model/mode.
 Bundle manifests used for report-summary regeneration must include `artifacts` as a JSON object,
 point to raw and scored artifacts with exact, unpadded `artifacts.raw_results` and
 `artifacts.scored_results` paths, use exact, unpadded `schema_version: "2.0.0"`,
