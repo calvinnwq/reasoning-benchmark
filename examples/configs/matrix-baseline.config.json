@@ -32,20 +32,22 @@
         "mode": "smoke"
       },
       {
-        "suite_id": "starter-pragmatics",
+        "suite_id": "starter",
         "case_ids": [
           "GG-01",
           "GG-02",
-          "GG-05",
           "CR-01",
           "CR-02",
-          "CR-04",
+          "TW-01",
           "TW-02",
           "SP-01",
-          "SP-05",
-          "PR-03",
+          "SP-02",
+          "IA-01",
+          "IA-02",
+          "PR-01",
+          "PR-02",
           "MC-01",
-          "MC-03"
+          "MC-02"
         ]
       }
     ]
