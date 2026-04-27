@@ -287,6 +287,42 @@ class BaselineRunnerTests(unittest.TestCase):
         for row in payload["results"]:
             self.assertEqual(row["answer"], "cfg_gpt-5.4")
 
+    def test_config_commands_are_sanitized_in_raw_artifact(self) -> None:
+        config_payload = {
+            "schema_version": "2.0.0",
+            "id": "unit-config-secrets",
+            "benchmark": "reasoning-benchmark",
+            "suite_id": "smoke",
+            "dataset": {"path": "data/questions.json"},
+            "models": [
+                {
+                    "id": "gpt-5.4",
+                    "adapter_command": ["provider", "--api-key", "model-secret"],
+                }
+            ],
+            "prompt_contract": run_baselines.build_prompt_contract(),
+            "execution": {
+                "mode": "smoke",
+                "provider_command": "provider --authorization execution-secret",
+            },
+            "output": {"bundle_dir": "runs/baseline"},
+        }
+
+        sanitized = run_baselines.sanitize_run_config_for_artifact(config_payload)
+        serialized = json.dumps(sanitized)
+
+        self.assertEqual(
+            sanitized["models"][0]["adapter_command"],
+            "provider '[arguments omitted]'",
+        )
+        self.assertEqual(
+            sanitized["execution"]["provider_command"],
+            "provider '[arguments omitted]'",
+        )
+        self.assertNotIn("model-secret", serialized)
+        self.assertNotIn("execution-secret", serialized)
+        self.assertEqual(config_payload["models"][0]["adapter_command"][2], "model-secret")
+
     def test_config_file_preserves_prompt_contract_metadata(self) -> None:
         dataset_path = self._dataset()
         run_dir = self.tmp_dir / "prompt-contract-runs"

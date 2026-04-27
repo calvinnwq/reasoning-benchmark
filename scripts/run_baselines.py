@@ -100,6 +100,30 @@ def format_adapter_command(command: list[str]) -> str:
     return shlex.join([command[0], "[arguments omitted]"])
 
 
+def format_command_value(value: Any, field_name: str) -> str:
+    return format_adapter_command(parse_command_value(value, field_name))
+
+
+def sanitize_run_config_for_artifact(config_payload: dict[str, Any]) -> dict[str, Any]:
+    sanitized = copy.deepcopy(config_payload)
+    raw_models = sanitized.get("models")
+    if isinstance(raw_models, list):
+        for item in raw_models:
+            if isinstance(item, dict) and "adapter_command" in item:
+                item["adapter_command"] = format_command_value(
+                    item.get("adapter_command"),
+                    "RunConfig model adapter_command",
+                )
+
+    execution = sanitized.get("execution")
+    if isinstance(execution, dict) and "provider_command" in execution:
+        execution["provider_command"] = format_command_value(
+            execution.get("provider_command"),
+            "RunConfig execution.provider_command",
+        )
+    return sanitized
+
+
 def run_paths(run_dir: Path, model: str, mode: str) -> tuple[Path, Path]:
     model_slug = normalize_model_id(model)
     raw = run_dir / f"{model_slug}.{mode}.raw.json"
@@ -897,7 +921,7 @@ def cmd_run(args: argparse.Namespace) -> int:
             prompt_contract=request.prompt_contract,
         )
         if request.config_payload:
-            payload["run_config"] = request.config_payload
+            payload["run_config"] = sanitize_run_config_for_artifact(request.config_payload)
 
         if provider_command:
             for index, row in enumerate(selected):
