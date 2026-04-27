@@ -247,10 +247,11 @@ It requires `execution.mode` to be an exact, unpadded, non-empty string without 
 or artifact labels.
 Without an embedded `suite.case_ids` list, `execution.mode` must be `smoke` or `full`; with
 `suite.case_ids`, custom mode names are allowed and the listed cases run in the supplied order.
-When `matrix.suites` is supplied, the runner executes every suite/model cell. Each matrix suite must
-declare a unique exact `suite_id` without path separators or `.`/`..` traversal segments, may declare
-an exact `mode`, and may declare non-empty unique exact `case_ids`. Matrix suites without `case_ids`
-must use `smoke` or `full` as their mode; if `mode` is omitted, the suite id is used as the mode.
+When `matrix` is supplied, it must be an object with a non-empty `suites` list, and the runner
+executes every suite/model cell. Each matrix suite must declare a unique exact `suite_id` without
+path separators or `.`/`..` traversal segments, may declare an exact `mode`, and may declare
+non-empty unique exact `case_ids`. Matrix suites without `case_ids` must use `smoke` or `full` as
+their mode; if `mode` is omitted, the suite id is used as the mode.
 Top-level `suite.case_ids` cannot be combined with `matrix.suites`; set `case_ids` per matrix suite
 instead.
 `execution.seed` shuffles only `smoke` or `full` selections, and `execution.max_cases` truncates the
