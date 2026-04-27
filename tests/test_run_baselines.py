@@ -60,6 +60,49 @@ class BaselineSelectionTests(unittest.TestCase):
         self.assertEqual(command, "provider '[arguments omitted]'")
         self.assertNotIn("secret", command)
 
+    def test_matrix_run_paths_are_scoped_under_suite_directory(self) -> None:
+        run_dir = Path("/tmp/baselines")
+        raw, scored = run_baselines.matrix_run_paths(
+            run_dir, "starter-pragmatics", "sonnet-4.6", "full"
+        )
+        self.assertEqual(
+            str(raw),
+            "/tmp/baselines/starter-pragmatics/sonnet-4-6.full.raw.json",
+        )
+        self.assertEqual(
+            str(scored),
+            "/tmp/baselines/starter-pragmatics/sonnet-4-6.full.scored.json",
+        )
+
+    def test_matrix_summary_path_is_scoped_under_suite_directory(self) -> None:
+        run_dir = Path("/tmp/baselines")
+        summary = run_baselines.matrix_summary_path(
+            run_dir, "starter-pragmatics", "sonnet-4.6", "full"
+        )
+        self.assertEqual(
+            str(summary),
+            "/tmp/baselines/starter-pragmatics/sonnet-4-6.full.summary.json",
+        )
+
+    def test_matrix_manifest_path_is_scoped_under_suite_directory(self) -> None:
+        run_dir = Path("/tmp/baselines")
+        manifest = run_baselines.matrix_manifest_path(
+            run_dir, "starter-pragmatics", "sonnet-4.6", "full"
+        )
+        self.assertEqual(
+            str(manifest),
+            "/tmp/baselines/starter-pragmatics/sonnet-4-6.full.manifest.json",
+        )
+
+    def test_matrix_paths_reject_suite_id_with_traversal(self) -> None:
+        run_dir = Path("/tmp/baselines")
+        with self.assertRaisesRegex(ValueError, "path separators or traversal"):
+            run_baselines.matrix_run_paths(run_dir, "../escape", "sonnet-4.6", "full")
+        with self.assertRaisesRegex(ValueError, "path separators or traversal"):
+            run_baselines.matrix_summary_path(run_dir, "..", "sonnet-4.6", "full")
+        with self.assertRaisesRegex(ValueError, "path separators or traversal"):
+            run_baselines.matrix_manifest_path(run_dir, "a/b", "sonnet-4.6", "full")
+
 
 class BaselineRunnerTests(unittest.TestCase):
     def setUp(self) -> None:
@@ -2957,6 +3000,127 @@ class BaselineRunnerTests(unittest.TestCase):
         self.assertIn("created_at", manifest)
         self.assertIn("completed_at", manifest)
         score_mock.assert_called_once()
+
+
+class MatrixSuiteParsingTests(unittest.TestCase):
+    def _payload_with_matrix(self, suites: list) -> dict:
+        return {
+            "schema_version": "2.0.0",
+            "id": "unit-matrix",
+            "benchmark": "reasoning-benchmark",
+            "matrix": {"suites": suites},
+        }
+
+    def test_returns_none_when_matrix_absent(self) -> None:
+        self.assertIsNone(run_baselines.config_matrix_suites({"id": "no-matrix"}))
+
+    def test_parses_mode_only_suite(self) -> None:
+        payload = self._payload_with_matrix(
+            [{"suite_id": "smoke-only", "mode": "smoke"}]
+        )
+        suites = run_baselines.config_matrix_suites(payload)
+        self.assertIsNotNone(suites)
+        self.assertEqual(len(suites), 1)
+        self.assertEqual(suites[0].suite_id, "smoke-only")
+        self.assertEqual(suites[0].mode, "smoke")
+        self.assertIsNone(suites[0].case_ids)
+
+    def test_parses_multiple_suites_preserving_order(self) -> None:
+        payload = self._payload_with_matrix(
+            [
+                {"suite_id": "starter-pragmatics", "mode": "full"},
+                {"suite_id": "instruction-ambiguity", "mode": "smoke"},
+            ]
+        )
+        suites = run_baselines.config_matrix_suites(payload)
+        self.assertEqual(
+            [s.suite_id for s in suites],
+            ["starter-pragmatics", "instruction-ambiguity"],
+        )
+        self.assertEqual([s.mode for s in suites], ["full", "smoke"])
+
+    def test_parses_case_ids_suite(self) -> None:
+        payload = self._payload_with_matrix(
+            [{"suite_id": "custom", "case_ids": ["GG-01", "GG-02"]}]
+        )
+        suites = run_baselines.config_matrix_suites(payload)
+        self.assertEqual(suites[0].suite_id, "custom")
+        self.assertEqual(suites[0].case_ids, ("GG-01", "GG-02"))
+        self.assertEqual(suites[0].mode, "custom")
+
+    def test_rejects_empty_suites_list(self) -> None:
+        payload = self._payload_with_matrix([])
+        with self.assertRaisesRegex(ValueError, "non-empty"):
+            run_baselines.config_matrix_suites(payload)
+
+    def test_rejects_non_list_suites(self) -> None:
+        payload = {"matrix": {"suites": "not-a-list"}}
+        with self.assertRaisesRegex(ValueError, "must be a list"):
+            run_baselines.config_matrix_suites(payload)
+
+    def test_rejects_non_object_matrix(self) -> None:
+        payload = {"matrix": "oops"}
+        with self.assertRaisesRegex(ValueError, "must be an object"):
+            run_baselines.config_matrix_suites(payload)
+
+    def test_rejects_missing_suite_id(self) -> None:
+        payload = self._payload_with_matrix([{"mode": "smoke"}])
+        with self.assertRaisesRegex(ValueError, "suite_id"):
+            run_baselines.config_matrix_suites(payload)
+
+    def test_rejects_blank_suite_id(self) -> None:
+        payload = self._payload_with_matrix([{"suite_id": "   ", "mode": "smoke"}])
+        with self.assertRaisesRegex(ValueError, "suite_id"):
+            run_baselines.config_matrix_suites(payload)
+
+    def test_rejects_padded_suite_id(self) -> None:
+        payload = self._payload_with_matrix([{"suite_id": " smoke ", "mode": "smoke"}])
+        with self.assertRaisesRegex(ValueError, "exact"):
+            run_baselines.config_matrix_suites(payload)
+
+    def test_rejects_traversal_in_suite_id(self) -> None:
+        payload = self._payload_with_matrix([{"suite_id": "../escape", "mode": "smoke"}])
+        with self.assertRaisesRegex(ValueError, "path separators or traversal"):
+            run_baselines.config_matrix_suites(payload)
+
+    def test_rejects_duplicate_suite_ids(self) -> None:
+        payload = self._payload_with_matrix(
+            [
+                {"suite_id": "smoke", "mode": "smoke"},
+                {"suite_id": "smoke", "mode": "full"},
+            ]
+        )
+        with self.assertRaisesRegex(ValueError, "unique"):
+            run_baselines.config_matrix_suites(payload)
+
+    def test_rejects_padded_mode(self) -> None:
+        payload = self._payload_with_matrix([{"suite_id": "smoke", "mode": " smoke "}])
+        with self.assertRaisesRegex(ValueError, "exact"):
+            run_baselines.config_matrix_suites(payload)
+
+    def test_rejects_unsupported_mode_without_case_ids(self) -> None:
+        payload = self._payload_with_matrix([{"suite_id": "smoke", "mode": "wat"}])
+        with self.assertRaisesRegex(ValueError, "Unsupported"):
+            run_baselines.config_matrix_suites(payload)
+
+    def test_rejects_blank_case_ids(self) -> None:
+        payload = self._payload_with_matrix([{"suite_id": "custom", "case_ids": []}])
+        with self.assertRaisesRegex(ValueError, "non-empty"):
+            run_baselines.config_matrix_suites(payload)
+
+    def test_rejects_duplicate_case_ids(self) -> None:
+        payload = self._payload_with_matrix(
+            [{"suite_id": "custom", "case_ids": ["GG-01", "GG-01"]}]
+        )
+        with self.assertRaisesRegex(ValueError, "unique"):
+            run_baselines.config_matrix_suites(payload)
+
+    def test_rejects_non_string_case_id(self) -> None:
+        payload = self._payload_with_matrix(
+            [{"suite_id": "custom", "case_ids": ["GG-01", 7]}]
+        )
+        with self.assertRaisesRegex(ValueError, "case_ids"):
+            run_baselines.config_matrix_suites(payload)
 
 
 if __name__ == "__main__":

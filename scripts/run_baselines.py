@@ -52,6 +52,13 @@ class ProviderResult:
 
 
 @dataclass(frozen=True)
+class MatrixSuite:
+    suite_id: str
+    mode: str
+    case_ids: tuple[str, ...] | None = None
+
+
+@dataclass(frozen=True)
 class RunRequest:
     mode: str
     dataset_path: Path
@@ -139,6 +146,29 @@ def manifest_path(run_dir: Path, model: str, mode: str) -> Path:
 def summary_path(run_dir: Path, model: str, mode: str) -> Path:
     model_slug = normalize_model_id(model)
     return run_dir / f"{model_slug}.{mode}.summary.json"
+
+
+def matrix_run_paths(
+    run_dir: Path, suite_id: str, model: str, mode: str
+) -> tuple[Path, Path]:
+    validate_artifact_label(suite_id, "matrix suite_id")
+    suite_dir = run_dir / suite_id
+    raw, scored = run_paths(suite_dir, model, mode)
+    return raw, scored
+
+
+def matrix_summary_path(
+    run_dir: Path, suite_id: str, model: str, mode: str
+) -> Path:
+    validate_artifact_label(suite_id, "matrix suite_id")
+    return summary_path(run_dir / suite_id, model, mode)
+
+
+def matrix_manifest_path(
+    run_dir: Path, suite_id: str, model: str, mode: str
+) -> Path:
+    validate_artifact_label(suite_id, "matrix suite_id")
+    return manifest_path(run_dir / suite_id, model, mode)
 
 
 def dataset_fingerprint(dataset_path: Path) -> str:
@@ -735,6 +765,73 @@ def config_suite_case_ids(config_payload: dict[str, Any]) -> tuple[str, ...] | N
         seen_case_ids.add(case_id)
         case_ids.append(case_id)
     return tuple(case_ids)
+
+
+def config_matrix_suites(
+    config_payload: dict[str, Any],
+) -> tuple[MatrixSuite, ...] | None:
+    if "matrix" not in config_payload:
+        return None
+    matrix = config_payload.get("matrix")
+    if not isinstance(matrix, dict):
+        raise ValueError("RunConfig matrix must be an object")
+
+    raw_suites = matrix.get("suites")
+    if not isinstance(raw_suites, list):
+        raise ValueError("RunConfig matrix.suites must be a list")
+    if not raw_suites:
+        raise ValueError("RunConfig matrix.suites must be a non-empty list")
+
+    parsed: list[MatrixSuite] = []
+    seen_suite_ids: set[str] = set()
+    for entry in raw_suites:
+        if not isinstance(entry, dict):
+            raise ValueError("RunConfig matrix.suites entries must be objects")
+
+        suite_id = entry.get("suite_id")
+        if not isinstance(suite_id, str) or not suite_id.strip():
+            raise ValueError("RunConfig matrix.suites entry suite_id must be a non-empty string")
+        if suite_id != suite_id.strip():
+            raise ValueError("RunConfig matrix.suites entry suite_id must be an exact string")
+        validate_artifact_label(suite_id, "RunConfig matrix.suites suite_id")
+        if suite_id in seen_suite_ids:
+            raise ValueError("RunConfig matrix.suites suite_ids must be unique")
+        seen_suite_ids.add(suite_id)
+
+        case_ids: tuple[str, ...] | None = None
+        if "case_ids" in entry:
+            raw_case_ids = entry.get("case_ids")
+            if not isinstance(raw_case_ids, list) or not raw_case_ids:
+                raise ValueError("RunConfig matrix.suites case_ids must be a non-empty list")
+            collected: list[str] = []
+            seen_case_ids: set[str] = set()
+            for case_id in raw_case_ids:
+                if not isinstance(case_id, str) or not case_id.strip():
+                    raise ValueError("RunConfig matrix.suites case_ids entries must be non-empty strings")
+                if case_id != case_id.strip():
+                    raise ValueError("RunConfig matrix.suites case_ids entries must be exact case ids")
+                if case_id in seen_case_ids:
+                    raise ValueError("RunConfig matrix.suites case_ids entries must be unique")
+                seen_case_ids.add(case_id)
+                collected.append(case_id)
+            case_ids = tuple(collected)
+
+        if "mode" in entry:
+            mode = entry.get("mode")
+            if not isinstance(mode, str) or not mode.strip():
+                raise ValueError("RunConfig matrix.suites entry mode must be a non-empty string")
+            if mode != mode.strip():
+                raise ValueError("RunConfig matrix.suites entry mode must be an exact string")
+            validate_artifact_label(mode, "RunConfig matrix.suites mode")
+        else:
+            mode = suite_id
+
+        if mode not in SUPPORTED_MODES and case_ids is None:
+            raise ValueError(f"Unsupported suite or mode in RunConfig matrix.suites: {mode}")
+
+        parsed.append(MatrixSuite(suite_id=suite_id, mode=mode, case_ids=case_ids))
+
+    return tuple(parsed)
 
 
 def config_prompt_contract(config_payload: dict[str, Any]) -> dict[str, Any]:
