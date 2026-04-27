@@ -714,6 +714,45 @@ so `suite_count`, `model_count`, and `cell_count` can be lower than the configur
       "case_count": 5
     }
   },
+  "by_model_task_family": {
+    "gpt-5.4": {
+      "goal-grounding": {
+        "total": 5,
+        "auto_scored": 5,
+        "correct": 4,
+        "incorrect": 1,
+        "accuracy": 0.8,
+        "manual_review_required": 0,
+        "case_count": 5
+      }
+    }
+  },
+  "by_model_failure_mode": {
+    "gpt-5.4": {
+      "optimizes for distance while ignoring the task object": {
+        "total": 1,
+        "auto_scored": 1,
+        "correct": 1,
+        "incorrect": 0,
+        "accuracy": 1.0,
+        "manual_review_required": 0,
+        "case_count": 1
+      }
+    }
+  },
+  "by_model_ambiguity_type": {
+    "gpt-5.4": {
+      "none": {
+        "total": 5,
+        "auto_scored": 5,
+        "correct": 4,
+        "incorrect": 1,
+        "accuracy": 0.8,
+        "manual_review_required": 0,
+        "case_count": 5
+      }
+    }
+  },
   "manual_review": {
     "reasoning_scores_present": 0,
     "constraint_scores_present": 0,
@@ -740,10 +779,15 @@ Required fields:
 - `by_failure_mode`
 - `by_ambiguity_type`
 - `by_calibration_split`
+- `by_model_task_family`
+- `by_model_failure_mode`
+- `by_model_ambiguity_type`
 - `manual_review`
 - `heuristic_flags`
 
 Per-bucket summaries in `by_model`, `by_evaluation_mode`, `by_task_family`, `by_failure_mode`, `by_ambiguity_type`, and `by_calibration_split` use the same shape: `total`, `auto_scored`, `correct`, `incorrect`, `accuracy`, `manual_review_required`, and `case_count`.
+
+Cross-tab summaries in `by_model_task_family`, `by_model_failure_mode`, and `by_model_ambiguity_type` are nested two-level objects keyed by model id then by the secondary dimension. Each leaf bucket uses the same shape as the single-dimension breakdowns. Cases with missing metadata fall under the `unknown` key at either level. These cross-tabs let reports compare models within the same task family, ambiguity class, or failure mode without rebuilding from scored records.
 
 ## Current-To-V2 Mapping
 
@@ -756,7 +800,7 @@ Per-bucket summaries in `by_model`, `by_evaluation_mode`, `by_task_family`, `by_
 | `runs/baseline/matrix.index.json` | `MatrixIndex` |
 | raw run `results[]` | `ModelResult[]` |
 | scored run `results[]` | `ScoreRecord[]` |
-| scored run `summary` | `ReportSummary.overall`, `auto_scored`, `manual_only`, `by_model`, `by_evaluation_mode`, `by_task_family`, `by_failure_mode`, `by_ambiguity_type`, `by_calibration_split`, `manual_review`, and `heuristic_flags` |
+| scored run `summary` | `ReportSummary.overall`, `auto_scored`, `manual_only`, `by_model`, `by_evaluation_mode`, `by_task_family`, `by_failure_mode`, `by_ambiguity_type`, `by_calibration_split`, `by_model_task_family`, `by_model_failure_mode`, `by_model_ambiguity_type`, `manual_review`, and `heuristic_flags` |
 | `runs/example-run.json` | v1-compatible raw result artifact |
 | `runs/example-run.scored.json` | v1-compatible scored result artifact |
 
