@@ -456,9 +456,11 @@ def build_matrix_index(
     *,
     request: RunRequest,
     created_at: str,
+    cell_summaries: Dict[tuple[str, str], Dict[str, Any]] | None = None,
 ) -> Dict[str, Any]:
     suites = request.matrix_suites or ()
     run_dir = request.run_dir
+    summaries = cell_summaries or {}
     cells: list[Dict[str, Any]] = []
     for suite in suites:
         for model in request.models:
@@ -491,6 +493,11 @@ def build_matrix_index(
                         None
                         if request.skip_scoring
                         else manifest.relative_to(run_dir).as_posix()
+                    ),
+                    "summary_metrics": (
+                        None
+                        if request.skip_scoring
+                        else summaries.get((suite.suite_id, model))
                     ),
                 }
             )
@@ -1154,6 +1161,7 @@ def cmd_run(args: argparse.Namespace) -> int:
 
     if request.matrix_suites:
         matrix_started_at = datetime.now(timezone.utc).isoformat()
+        cell_summaries: Dict[tuple[str, str], Dict[str, Any]] = {}
         for suite in request.matrix_suites:
             for model in request.models:
                 raw_path, scored_path = matrix_run_paths(
@@ -1176,9 +1184,14 @@ def cmd_run(args: argparse.Namespace) -> int:
                     report_summary_path=report_summary_path,
                     bundle_path=bundle_path,
                 )
+                if not request.skip_scoring and report_summary_path.is_file():
+                    with report_summary_path.open("r", encoding="utf-8") as stream:
+                        cell_summaries[(suite.suite_id, model)] = json.load(stream)
         index_path = matrix_index_path(request.run_dir)
         index_payload = build_matrix_index(
-            request=request, created_at=matrix_started_at
+            request=request,
+            created_at=matrix_started_at,
+            cell_summaries=cell_summaries or None,
         )
         write_json(index_path, index_payload)
         print(f"wrote matrix index: {index_path}")
