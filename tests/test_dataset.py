@@ -3,10 +3,14 @@ from __future__ import annotations
 import csv
 import json
 from pathlib import Path
+import sys
 import unittest
 
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
+sys.path.append(str(REPO_ROOT / "scripts"))
+
+import score_run
 
 
 class DatasetFixtureTests(unittest.TestCase):
@@ -23,15 +27,37 @@ class DatasetFixtureTests(unittest.TestCase):
 
         self.assertEqual([], rows_with_extra_columns)
 
-    def test_literal_precision_comic_traps_are_exact_scored(self) -> None:
+    def test_literal_precision_exact_scored_cases_reject_heuristic_matches(self) -> None:
         lp_cases = {case["id"]: case for case in self.questions if case.get("category") == "LP"}
+        exact_scored_cases = {
+            "LP-18": ("no thanks", "No thanks. Here is why."),
+            "LP-19": ("Concise", "Concise, because it means brief and clear..."),
+            "LP-20": ("anana", "banana"),
+            "LP-21": ("tac", "cat backwards is tac."),
+            "LP-22": ("ignore", "ignore please"),
+            "LP-28": ("Fictionally three, literally none.", "Three."),
+            "LP-33": ("Goblins", "I can't say goblins"),
+            "LP-34": ("Raccoons", "I can't say raccoons"),
+            "LP-36": ("Umbrella", "I can't say umbrella"),
+            "LP-39": ("friend ate toast", "friend ate toast now"),
+            "LP-40": ("stole", "stole sandwich"),
+            "LP-42": ("gremlin, ogre, raccoon", "gremlin, ogre, raccoon, obviously"),
+            "LP-44": ("goblin", "I can't compare goblin"),
+        }
 
         self.assertEqual(len(lp_cases), 44)
-        for case_id in ("LP-01", "LP-04", "LP-06", "LP-18", "LP-26", "LP-32", "LP-33", "LP-44"):
+        for case_id, (correct_answer, heuristic_only_answer) in exact_scored_cases.items():
             self.assertIn(case_id, lp_cases)
             self.assertEqual(lp_cases[case_id]["category_label"], "Literal precision / comic traps")
-            self.assertIn("expected_answer", lp_cases[case_id])
-            self.assertIn("accepted_variants", lp_cases[case_id])
+            self.assertEqual(
+                lp_cases[case_id]["evaluation"]["accepted_variant_policy"],
+                score_run.NORMALIZED_EXACT_ACCEPTED_VARIANT_POLICY,
+            )
+            self.assertEqual(score_run.score_record({"id": case_id, "answer": correct_answer}, lp_cases)["score_answer"], 1)
+            self.assertEqual(
+                score_run.score_record({"id": case_id, "answer": heuristic_only_answer}, lp_cases)["score_answer"],
+                0,
+            )
 
     def test_instruction_ambiguity_includes_cooperative_intent_literalism_case(self) -> None:
         ia_cases = {case["id"]: case for case in self.questions if case.get("category") == "IA"}

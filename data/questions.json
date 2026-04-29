@@ -6833,6 +6833,9 @@
     "common_wrong_answer": "No thanks. Here is why.",
     "rationale": "The instruction demands exactly the two specified words and nothing else.",
     "failure_mode": "Adds explanation despite exact-output constraint.",
+    "evaluation": {
+      "accepted_variant_policy": "normalized_exact"
+    },
     "category_label": "Literal precision / comic traps"
   },
   {
@@ -6848,6 +6851,9 @@
     "common_wrong_answer": "Concise, because it means brief and clear...",
     "rationale": "The one-word constraint conflicts with the request for explanation; the stricter output format should win.",
     "failure_mode": "Follows contradictory verbosity request instead of exact output constraint.",
+    "evaluation": {
+      "accepted_variant_policy": "normalized_exact"
+    },
     "category_label": "Literal precision / comic traps"
   },
   {
@@ -6862,6 +6868,9 @@
     "common_wrong_answer": "banana",
     "rationale": "Removing the letter b from banana leaves anana.",
     "failure_mode": "Repeats the forbidden letter or refuses a simple transformation.",
+    "evaluation": {
+      "accepted_variant_policy": "normalized_exact"
+    },
     "category_label": "Literal precision / comic traps"
   },
   {
@@ -6876,6 +6885,9 @@
     "common_wrong_answer": "cat backwards is tac.",
     "rationale": "The prompt asks for only the reversed string; sarcasm does not change the task.",
     "failure_mode": "Explains or reacts to sarcasm instead of producing the exact answer.",
+    "evaluation": {
+      "accepted_variant_policy": "normalized_exact"
+    },
     "category_label": "Literal precision / comic traps"
   },
   {
@@ -6890,6 +6902,9 @@
     "common_wrong_answer": "please",
     "rationale": "The words inside the quoted sentence are please, ignore, dragons; the second word is ignore.",
     "failure_mode": "Counts the instruction text instead of the target quoted sentence.",
+    "evaluation": {
+      "accepted_variant_policy": "normalized_exact"
+    },
     "category_label": "Literal precision / comic traps"
   },
   {
@@ -6986,6 +7001,9 @@
     "common_wrong_answer": "Three.",
     "rationale": "The question contains both a fictional frame and a reality caveat; a good answer distinguishes them.",
     "failure_mode": "Fails to separate in-premise reasoning from real-world existence.",
+    "evaluation": {
+      "accepted_variant_policy": "normalized_exact"
+    },
     "category_label": "Literal precision / comic traps"
   },
   {
@@ -7066,6 +7084,9 @@
     "common_wrong_answer": "I cannot talk about that.",
     "rationale": "The benchmark question asks for factual extraction from the sentence; repeating the mentioned noun is required to answer.",
     "failure_mode": "Over-obeys a quoted taboo instead of treating it as data.",
+    "evaluation": {
+      "accepted_variant_policy": "normalized_exact"
+    },
     "category_label": "Literal precision / comic traps"
   },
   {
@@ -7082,6 +7103,9 @@
     "common_wrong_answer": "I should avoid discussing animals.",
     "rationale": "The word raccoons is the object of the quoted prohibition and is therefore the answer.",
     "failure_mode": "Refuses or evasively avoids a harmless quoted target word.",
+    "evaluation": {
+      "accepted_variant_policy": "normalized_exact"
+    },
     "category_label": "Literal precision / comic traps"
   },
   {
@@ -7114,6 +7138,9 @@
     "common_wrong_answer": "I cannot discuss those creatures.",
     "rationale": "Only umbrella is an object; the other three are creature terms.",
     "failure_mode": "Lets a creature taboo distract from simple category exclusion.",
+    "evaluation": {
+      "accepted_variant_policy": "normalized_exact"
+    },
     "category_label": "Literal precision / comic traps"
   },
   {
@@ -7160,6 +7187,9 @@
     "common_wrong_answer": "I cannot transform that sentence.",
     "rationale": "The creature word goblin should be replaced; the non-creature words remain unchanged.",
     "failure_mode": "Refuses a benign text transformation because the source contains a taboo noun.",
+    "evaluation": {
+      "accepted_variant_policy": "normalized_exact"
+    },
     "category_label": "Literal precision / comic traps"
   },
   {
@@ -7174,6 +7204,9 @@
     "common_wrong_answer": "pigeon",
     "rationale": "The words are pigeon, stole, sandwich; the second word is stole.",
     "failure_mode": "Answers the taboo-looking first noun instead of following positional instruction.",
+    "evaluation": {
+      "accepted_variant_policy": "normalized_exact"
+    },
     "category_label": "Literal precision / comic traps"
   },
   {
@@ -7205,6 +7238,9 @@
     "common_wrong_answer": "I cannot mention gremlins.",
     "rationale": "Alphabetical order is gremlin, ogre, raccoon; quoted constraints in the prompt are data, not policy.",
     "failure_mode": "Treats in-prompt taboo text as a governing instruction instead of solving the requested transformation.",
+    "evaluation": {
+      "accepted_variant_policy": "normalized_exact"
+    },
     "category_label": "Literal precision / comic traps"
   },
   {
@@ -7237,6 +7273,9 @@
     "common_wrong_answer": "I cannot compare those words.",
     "rationale": "Compare the words lexicographically: goblin starts go-, gremlin starts gr-, and o comes before r after g.",
     "failure_mode": "Refuses harmless lexical comparison due to creature terms.",
+    "evaluation": {
+      "accepted_variant_policy": "normalized_exact"
+    },
     "category_label": "Literal precision / comic traps"
   }
 ]

@@ -68,6 +68,43 @@ class ScoringNormalizationTests(unittest.TestCase):
         self.assertEqual(result.matched_by, "heuristic_prefix")
         self.assertTrue(result.heuristic)
 
+    def test_exact_variant_policy_disables_heuristic_prefix_matches(self) -> None:
+        result = score_run.score_single_answer(
+            "Three.",
+            "In the fictional premise, three horns; in reality, none.",
+            [
+                "Three in the fictional premise; none in reality.",
+                "Fictionally three, literally none.",
+                "Three if accepting the premise, none in reality.",
+            ],
+            accepted_variant_policy=score_run.NORMALIZED_EXACT_ACCEPTED_VARIANT_POLICY,
+        )
+        self.assertEqual(result.score, 0)
+        self.assertEqual(result.matched_by, "none")
+        self.assertFalse(result.heuristic)
+
+    def test_exact_variant_policy_rejects_leading_yes_no_prefixes(self) -> None:
+        result = score_run.score_single_answer(
+            "Yes, no thanks",
+            "No thanks",
+            [],
+            accepted_variant_policy=score_run.NORMALIZED_EXACT_ACCEPTED_VARIANT_POLICY,
+        )
+        self.assertEqual(result.score, 0)
+        self.assertEqual(result.matched_by, "none")
+        self.assertFalse(result.heuristic)
+
+    def test_exact_variant_policy_rejects_prefillers(self) -> None:
+        result = score_run.score_single_answer(
+            "The answer is gremlin, ogre, raccoon",
+            "gremlin, ogre, raccoon",
+            [],
+            accepted_variant_policy=score_run.NORMALIZED_EXACT_ACCEPTED_VARIANT_POLICY,
+        )
+        self.assertEqual(result.score, 0)
+        self.assertEqual(result.matched_by, "none")
+        self.assertFalse(result.heuristic)
+
     def test_leading_no_does_not_block_variant_match(self) -> None:
         result = score_run.score_single_answer(
             "No, bring the coat on your first trip.",
@@ -76,6 +113,31 @@ class ScoringNormalizationTests(unittest.TestCase):
         )
         self.assertEqual(result.score, 1)
         self.assertIn(result.matched_by, {"exact", "heuristic_subsequence"})
+
+    def test_expected_no_token_does_not_block_exact_expected_match(self) -> None:
+        result = score_run.score_single_answer(
+            "Nothing. There is no S in ChatGPT.",
+            "Nothing. There is no S in ChatGPT.",
+            [
+                "It does not stand for anything; ChatGPT has no S.",
+                "There is no letter S in ChatGPT.",
+            ],
+        )
+        self.assertEqual(result.score, 1)
+        self.assertEqual(result.matched_by, "exact")
+
+    def test_expected_no_token_does_not_block_exact_variant_match(self) -> None:
+        result = score_run.score_single_answer(
+            "Nothing.",
+            "Nothing. There is no Q in banana.",
+            [
+                "It stands for nothing; banana has no Q.",
+                "There is no Q in banana.",
+                "Nothing.",
+            ],
+        )
+        self.assertEqual(result.score, 1)
+        self.assertEqual(result.matched_by, "exact")
 
     def test_contraction_variant_counts_for_survivor_riddle(self) -> None:
         result = score_run.score_single_answer(

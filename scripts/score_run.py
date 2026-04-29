@@ -18,6 +18,7 @@ DEFAULT_DATASET_PATH = REPO_ROOT / "data" / "questions.json"
 SUPPORTED_EVALUATION_MODES = {"exact", "rubric", "hybrid"}
 ANSWER_CORRECTNESS_DIMENSION_IDS = {"answer_correctness", "score_answer", "final_answer_correctness"}
 DEFAULT_ACCEPTED_VARIANT_POLICY = "normalized_exact_or_configured_heuristic"
+NORMALIZED_EXACT_ACCEPTED_VARIANT_POLICY = "normalized_exact"
 CATEGORY_TASK_FAMILY_IDS = {
     "GG": "goal-grounding",
     "CR": "classic-riddle-override",
@@ -210,15 +211,21 @@ def build_answer_norms(answer_text: str) -> List[str]:
     return candidates
 
 
-def score_single_answer(answer: Any, expected_text: str, accepted_variants: Iterable[Any]) -> MatchResult:
+def score_single_answer(
+    answer: Any,
+    expected_text: str,
+    accepted_variants: Iterable[Any],
+    accepted_variant_policy: str = DEFAULT_ACCEPTED_VARIANT_POLICY,
+) -> MatchResult:
     raw_answer = "" if answer is None else str(answer).strip()
+    raw_answer_norm = normalize_text(raw_answer)
     answer_norms = build_answer_norms(raw_answer)
-    answer_norm = answer_norms[0] if answer_norms else ""
+    answer_norm = answer_norms[0] if answer_norms else raw_answer_norm
     expected_norm = normalize_text(expected_text)
     candidate_norms = build_candidate_norms(expected_text, accepted_variants)
 
     expected_binary = extract_binary_token(expected_text)
-    if not answer_norm:
+    if not raw_answer_norm:
         return MatchResult(
             score=0,
             matched=False,
@@ -231,7 +238,46 @@ def score_single_answer(answer: Any, expected_text: str, accepted_variants: Iter
             answer_normalized=answer_norm,
         )
 
-    if expected_binary in {"yes", "no"}:
+    if accepted_variant_policy == NORMALIZED_EXACT_ACCEPTED_VARIANT_POLICY:
+        if raw_answer_norm in candidate_norms:
+            return MatchResult(
+                score=1,
+                matched=True,
+                reason="exact_normalized_match",
+                matched_by="exact",
+                heuristic=False,
+                expected=expected_text,
+                expected_normalized=expected_norm,
+                answer=raw_answer,
+                answer_normalized=raw_answer_norm,
+            )
+        return MatchResult(
+            score=0,
+            matched=False,
+            reason="no_match_after_normalization",
+            matched_by="none",
+            heuristic=False,
+            expected=expected_text,
+            expected_normalized=expected_norm,
+            answer=raw_answer,
+            answer_normalized=raw_answer_norm,
+        )
+
+    for normalized_answer in answer_norms:
+        if normalized_answer in candidate_norms:
+            return MatchResult(
+                score=1,
+                matched=True,
+                reason="exact_normalized_match",
+                matched_by="exact",
+                heuristic=False,
+                expected=expected_text,
+                expected_normalized=expected_norm,
+                answer=raw_answer,
+                answer_normalized=normalized_answer,
+            )
+
+    if expected_binary in {"yes", "no"} and accepted_variant_policy != NORMALIZED_EXACT_ACCEPTED_VARIANT_POLICY:
         answer_binary = extract_binary_token(raw_answer)
         if answer_binary is None:
             return MatchResult(
@@ -265,22 +311,8 @@ def score_single_answer(answer: Any, expected_text: str, accepted_variants: Iter
             heuristic=False,
             expected=expected_text,
             expected_normalized=expected_norm,
-            answer=raw_answer,
-            answer_normalized=answer_norm,
-        )
-
-    for normalized_answer in answer_norms:
-        if normalized_answer in candidate_norms:
-            return MatchResult(
-                score=1,
-                matched=True,
-                reason="exact_normalized_match",
-                matched_by="exact",
-                heuristic=False,
-                expected=expected_text,
-                expected_normalized=expected_norm,
                 answer=raw_answer,
-                answer_normalized=normalized_answer,
+                answer_normalized=answer_norm,
             )
 
     for normalized_answer in answer_norms:
@@ -725,6 +757,7 @@ def score_record(result: Dict[str, Any], dataset: Dict[str, Dict[str, Any]]) -> 
         answer=answer,
         expected_text=str(question.get("expected_answer", "")),
         accepted_variants=question.get("accepted_variants", []),
+        accepted_variant_policy=accepted_variant_policy,
     )
     status = {
         "matched": bool(match.matched),
