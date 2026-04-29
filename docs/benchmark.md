@@ -24,8 +24,9 @@ This benchmark is intentionally **short, natural-language, and deceptively simpl
 
 - `data/questions.json` — canonical source for runs and scoring
 - `data/questions.csv` — spreadsheet-friendly export view
-- `data/suites/starter.json` — calibrated 14-case starter slice, two cases per task family
-- `data/suites/holdout.json` — disjoint 14-case holdout slice, two cases per task family
+- `data/suites/starter.json` — calibrated 12-case default starter slice, two cases per default task family
+- `data/suites/holdout.json` — disjoint 12-case default holdout slice, two cases per default task family
+- `data/suites/instruction-ambiguity.json` — optional instruction-ambiguity pack kept outside the default auto-scored set
 
 This markdown note is the human-readable overview. The JSON file is the machine-readable scoring source; the CSV export omits some v2 metadata such as `evaluation`, `ambiguity`, `cooperative_intent`, and `calibration`.
 
@@ -67,7 +68,7 @@ Did it explicitly notice the key thing that matters, such as object location, cu
 
 ## Named suites
 
-Use the `starter` suite for a small frequent-run slice and `holdout` for a disjoint reserved comparison slice. Both manifests live under `data/suites/` and can be selected with `scripts/run_benchmark.py --suite NAME`.
+Use the `starter` suite for a small frequent-run default slice and `holdout` for a disjoint reserved default comparison slice. Both manifests live under `data/suites/` and can be selected with `scripts/run_benchmark.py --suite NAME`. Use `instruction-ambiguity` separately when you want the optional ambiguity/manual-review pack.
 
 ---
 

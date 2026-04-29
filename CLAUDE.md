@@ -40,7 +40,7 @@ This is a pure-Python reasoning benchmark with no framework, package manager, or
 ### Data flow
 
 1. **Dataset** lives in `data/questions.json` — 100 questions, each with `id`, `category`, `prompt`, `expected_answer`, `accepted_variants`, `common_wrong_answer`, `rationale`, and `failure_mode`.
-2. **Suite manifests** live in `data/suites/<name>.json`. `starter.json` is a 14-case high-signal slice (2 cases per family) used for frequent runs; `holdout.json` is a disjoint 14-case reserved set for cleaner cross-model comparison. The loader is `scripts/suites.py` (`load_suite_manifest`, `resolve_suite_case_ids`, `list_available_suites`).
+2. **Suite manifests** live in `data/suites/<name>.json`. `starter.json` is a 12-case high-signal default slice (2 cases per default task family) used for frequent runs; `holdout.json` is a disjoint 12-case default reserved set for cleaner cross-model comparison; `instruction-ambiguity.json` is the optional ambiguity/manual-review pack. The loader is `scripts/suites.py` (`load_suite_manifest`, `resolve_suite_case_ids`, `list_available_suites`).
 3. **Run files** (`runs/*.json`) contain model answers against the dataset. The canonical input shape has a top-level `results` list (also accepted: `runs`, `items`, `answers`, or a bare list).
 4. **Scorer** (`scripts/score_run.py`) reads a run file + the dataset and writes a scored artifact.
 

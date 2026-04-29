@@ -233,8 +233,6 @@ Compatibility fields preserved from v1:
           "TW-02",
           "SP-01",
           "SP-02",
-          "IA-01",
-          "IA-02",
           "PR-01",
           "PR-02",
           "MC-01",
