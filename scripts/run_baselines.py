@@ -1019,8 +1019,10 @@ def config_matrix_suites(
             if mode != mode.strip():
                 raise ValueError("RunConfig matrix.suites entry mode must be an exact string")
             validate_artifact_label(mode, "RunConfig matrix.suites mode")
+            resolved_suite_id = suite_id
         else:
             mode = suite_id
+            resolved_suite_id = artifact_suite_id(canonical_mode(mode, case_ids), case_ids=case_ids)
 
         validate_default_alias_usage(suite_id, case_ids, "RunConfig matrix.suites suite_id")
         validate_default_alias_usage(mode, case_ids, "RunConfig matrix.suites mode")
@@ -1029,7 +1031,7 @@ def config_matrix_suites(
         if mode not in SUPPORTED_MODES and case_ids is None:
             raise ValueError(f"Unsupported suite or mode in RunConfig matrix.suites: {mode}")
 
-        parsed.append(MatrixSuite(suite_id=suite_id, mode=mode, case_ids=case_ids))
+        parsed.append(MatrixSuite(suite_id=resolved_suite_id, mode=mode, case_ids=case_ids))
 
     return tuple(parsed)
 
