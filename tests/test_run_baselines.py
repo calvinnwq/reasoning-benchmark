@@ -259,8 +259,9 @@ class BaselineRunnerTests(unittest.TestCase):
         )
         run_baselines.cmd_run(args)
 
-        raw_path = run_dir / "sonnet-4-6.full.raw.json"
+        raw_path = run_dir / "sonnet-4-6.default.raw.json"
         payload = json.loads(raw_path.read_text(encoding="utf-8"))
+        self.assertEqual(payload["suite_id"], "default")
         self.assertEqual(len(payload["results"]), 6)
         for row in payload["results"]:
             self.assertEqual(row["answer"], "ans_sonnet-4.6")
@@ -2728,10 +2729,11 @@ class BaselineRunnerTests(unittest.TestCase):
         )
         run_baselines.cmd_run(args)
 
-        payload = json.loads((run_dir / "gpt-5-4.full.raw.json").read_text(encoding="utf-8"))
+        payload = json.loads((run_dir / "gpt-5-4.default.raw.json").read_text(encoding="utf-8"))
+        self.assertEqual(payload["suite_id"], "default")
         self.assertEqual([item["id"] for item in payload["results"]], ["GG-01", "GG-02", "GG-03"])
         self.assertEqual(payload["execution"]["max_cases"], 3)
-        self.assertFalse((run_dir / "gpt-5-4.full.manifest.json").exists())
+        self.assertFalse((run_dir / "gpt-5-4.default.manifest.json").exists())
 
     def test_config_file_seed_makes_budgeted_selection_reproducible(self) -> None:
         dataset_path = self._dataset()
@@ -2772,7 +2774,8 @@ class BaselineRunnerTests(unittest.TestCase):
         )
         run_baselines.cmd_run(args)
 
-        payload = json.loads((run_dir / "gpt-5-4.full.raw.json").read_text(encoding="utf-8"))
+        payload = json.loads((run_dir / "gpt-5-4.default.raw.json").read_text(encoding="utf-8"))
+        self.assertEqual(payload["suite_id"], "default")
         self.assertEqual([item["id"] for item in payload["results"]], ["GG-05", "GG-01", "GG-06"])
         self.assertEqual(payload["execution"]["seed"], 7)
 

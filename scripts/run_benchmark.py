@@ -20,6 +20,7 @@ from suites import (
 REPO_ROOT = Path(__file__).resolve().parent.parent
 DATA_PATH = REPO_ROOT / "data" / "questions.json"
 SUITES_DIR = _DEFAULT_SUITES_DIR
+DEFAULT_SUITE_ID = "default"
 OPTIONAL_TASK_FAMILY_IDS: frozenset[str] = frozenset({"instruction-ambiguity"})
 OPTIONAL_CATEGORIES: frozenset[str] = frozenset({"IA"})
 
@@ -44,7 +45,7 @@ def load_questions() -> list[dict]:
 def _select_questions(suite: str | None) -> tuple[list[dict], str]:
     questions = load_questions()
     if suite is None:
-        return default_questions(questions), "full"
+        return default_questions(questions), DEFAULT_SUITE_ID
 
     case_ids = resolve_suite_case_ids(suite, suites_dir=SUITES_DIR)
     by_id = {q["id"]: q for q in questions}

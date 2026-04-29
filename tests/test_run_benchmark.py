@@ -46,7 +46,7 @@ class RunBenchmarkHelperTests(unittest.TestCase):
 
         payload = json.loads(output.getvalue())
         self.assertEqual(payload["schema_version"], "2.0.0")
-        self.assertEqual(payload["suite_id"], "full")
+        self.assertEqual(payload["suite_id"], "default")
         self.assertEqual(payload["case_count"], 2)
         self.assertEqual(payload["question_count"], 2)
         self.assertEqual([item["case_id"] for item in payload["results"]], ["GG-01", "GG-02"])
@@ -76,6 +76,7 @@ class RunBenchmarkHelperTests(unittest.TestCase):
                 run_benchmark.cmd_sample_run()
 
         payload = json.loads(output.getvalue())
+        self.assertEqual(payload["suite_id"], "default")
         self.assertEqual(payload["case_count"], 1)
         self.assertEqual([item["id"] for item in payload["results"]], ["GG-01"])
 

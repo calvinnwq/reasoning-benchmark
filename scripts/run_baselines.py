@@ -31,6 +31,7 @@ BENCHMARK_ID = "reasoning-benchmark"
 SUPPORTED_MODELS: tuple[str, ...] = ("gpt-5.4", "sonnet-4.6", "qwen3.5-9b")
 SUPPORTED_MODES: tuple[str, ...] = ("smoke", "full")
 SMOKE_COUNT = 5
+DEFAULT_SUITE_ID = "default"
 OPTIONAL_TASK_FAMILY_IDS: frozenset[str] = frozenset({"instruction-ambiguity"})
 OPTIONAL_CATEGORIES: frozenset[str] = frozenset({"IA"})
 
@@ -45,6 +46,12 @@ def is_optional_question(row: dict[str, Any]) -> bool:
 
 def default_questions(questions: list[dict[str, Any]]) -> list[dict[str, Any]]:
     return [row for row in questions if not is_optional_question(row)]
+
+
+def default_suite_id(mode: str, case_ids: tuple[str, ...] | None = None) -> str | None:
+    if mode == "full" and case_ids is None:
+        return DEFAULT_SUITE_ID
+    return None
 
 
 RAW_ARTIFACT_SCHEMA_VERSION = "2.0.0"
@@ -1181,6 +1188,7 @@ def _execute_run_pass(
     report_summary_path: Path,
     bundle_path: Path,
 ) -> None:
+    artifact_suite_id = suite_id if suite_id is not None else default_suite_id(mode, suite_case_ids)
     selected = select_questions(
         questions,
         mode,
@@ -1197,7 +1205,7 @@ def _execute_run_pass(
         max_cases=request.max_cases,
         seed=request.seed,
         prompt_contract=request.prompt_contract,
-        suite_id=suite_id,
+        suite_id=artifact_suite_id,
     )
     if request.config_payload:
         payload["run_config"] = sanitize_run_config_for_artifact(request.config_payload)
@@ -1230,7 +1238,7 @@ def _execute_run_pass(
     manifest = build_run_artifact_bundle(
         model=model,
         mode=mode,
-        suite_id=suite_id,
+        suite_id=artifact_suite_id,
         raw_path=raw_path,
         scored_path=scored_path,
         report_summary_path=report_summary_path,
@@ -1300,9 +1308,10 @@ def cmd_run(args: argparse.Namespace) -> int:
         return 1 if cell_errors else 0
 
     for model in request.models:
-        raw_path, scored_path = run_paths(request.run_dir, model, request.mode)
-        report_summary_path = summary_path(request.run_dir, model, request.mode)
-        bundle_path = manifest_path(request.run_dir, model, request.mode)
+        artifact_mode = default_suite_id(request.mode, request.suite_case_ids) or request.mode
+        raw_path, scored_path = run_paths(request.run_dir, model, artifact_mode)
+        report_summary_path = summary_path(request.run_dir, model, artifact_mode)
+        bundle_path = manifest_path(request.run_dir, model, artifact_mode)
         _execute_run_pass(
             request=request,
             questions=questions,
