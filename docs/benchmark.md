@@ -68,7 +68,7 @@ Did it explicitly notice the key thing that matters, such as object location, cu
 
 ## Named suites
 
-Use the `starter` suite for a small frequent-run default slice and `holdout` for a disjoint reserved default comparison slice. Both manifests live under `data/suites/` and can be selected with `scripts/run_benchmark.py --suite NAME`. Use `instruction-ambiguity` separately when you want the optional ambiguity/manual-review pack.
+Use the `starter` suite for a small frequent-run default slice and `holdout` for a disjoint reserved default comparison slice. Both manifests live under `data/suites/` and can be selected with `scripts/run_benchmark.py --suite NAME`. The helper also accepts `--suite default` for the 50-question default auto-scored slice, even though that selector is not backed by a manifest file. Use `instruction-ambiguity` separately when you want the optional ambiguity/manual-review pack.
 
 ---
 

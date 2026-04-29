@@ -89,7 +89,7 @@ These are deliberately short prompts. The whole point is to catch models that so
 | `report_summary.py --input <scored>` | Build a report summary from a scored artifact |
 | `report_summary.py --bundle <manifest>` | Build a report summary from a v2 bundle manifest |
 
-Add `--suite starter` or `--suite holdout` to any `run_benchmark.py` command to restrict it to a calibrated default manifest. Use `--suite instruction-ambiguity` to inspect the optional ambiguity pack separately.
+Add `--suite default` to any `run_benchmark.py` command to select the 50-question default auto-scored slice explicitly. You can also use `--suite starter` or `--suite holdout` for calibrated default manifests, or `--suite instruction-ambiguity` for the optional ambiguity pack.
 
 Instruction-ambiguity cases (`IA-*`) are intentionally excluded from default baseline modes for now because they use hybrid/manual-review scoring. To opt in, either run the optional suite directly for inspection:
 

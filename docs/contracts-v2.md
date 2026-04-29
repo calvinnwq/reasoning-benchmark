@@ -41,7 +41,7 @@ A suite is an ordered case selection. The current `smoke` and `full` baseline mo
   "schema_version": "2.0.0",
   "id": "smoke",
   "name": "Smoke",
-  "description": "Fast sanity-check slice over the first five cases.",
+  "description": "Fast sanity-check slice over the first five default auto-scored cases.",
   "case_ids": ["GG-01", "GG-02", "GG-03", "GG-04", "GG-05"],
   "selection": {
     "mode": "explicit",
@@ -284,15 +284,20 @@ or artifact labels.
 Without an embedded `suite.case_ids` list or `matrix.suites`, `execution.mode` must be `smoke`,
 `full`, or the `default` alias. The runner canonicalizes `default` to `full` for selection while
 persisting `suite_id: "default"` on artifacts for the default auto-scored slice. With `suite.case_ids`
-or `matrix.suites`, custom top-level mode names are allowed. Explicit `suite.case_ids` run in the
-supplied order; matrix suite entries control each cell's selection.
+or `matrix.suites`, custom top-level mode names are allowed, but top-level `suite_id: "default"` and
+`execution.mode: "default"`/`"full"` are invalid when explicit `suite.case_ids` are supplied because
+that selection is no longer the default slice. Explicit `suite.case_ids` run in the supplied order;
+matrix suite entries control each cell's selection.
 When `matrix` is supplied, it must be an object with a non-empty `suites` list, and the runner
 executes every suite/model cell. Each matrix suite must declare a unique exact `suite_id` without
 path separators or `.`/`..` traversal segments, may declare an exact `mode` without path separators
-or `.`/`..` traversal segments, and may declare
-non-empty unique exact `case_ids`. Matrix suites without `case_ids` must use `smoke`, `full`, or the
-`default` alias as their mode; if `mode` is omitted, the suite id is used as the mode. Matrix cells
-that target the default auto-scored slice persist `suite_id: "default"` in artifacts.
+or `.`/`..` traversal segments, and may declare non-empty unique exact `case_ids`. Matrix suites
+without `case_ids` must use `smoke`, `full`, or the `default` alias as their mode; if `mode` is
+omitted, the suite id is used as the mode. Matrix entries also reject `suite_id: "default"` and
+`mode: "default"` when explicit `case_ids` are supplied. Matrix suite-id uniqueness is enforced after
+canonicalizing `full` and `default` selectors for the default slice, so `full` and `default` cannot
+appear as separate cells for the same matrix. Matrix cells that target the default auto-scored slice
+persist `suite_id: "default"` in artifacts.
 Top-level `suite.case_ids` cannot be combined with `matrix.suites`; set `case_ids` per matrix suite
 instead.
 `execution.seed` shuffles only `smoke` or `full` selections, and `execution.max_cases` truncates the
