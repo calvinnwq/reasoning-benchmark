@@ -230,7 +230,7 @@ Most of the set is currently **drafted benchmark material** in the same style, w
 
 Use the baseline runner with either the CLI adapter layer or the direct/provider adapter layer.
 
-Dry-run payloads only:
+Dry-run payloads only. `full` intentionally excludes optional instruction-ambiguity cases for now; opt into those through an explicit RunConfig `suite.case_ids` list when manual review is desired.
 
 ```bash
 python3 scripts/run_baselines.py --mode smoke

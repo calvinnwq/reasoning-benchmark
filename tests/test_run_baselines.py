@@ -28,9 +28,36 @@ class BaselineSelectionTests(unittest.TestCase):
         self.assertEqual(len(selected), 5)
         self.assertEqual([item["id"] for item in selected], ["Q01", "Q02", "Q03", "Q04", "Q05"])
 
-    def test_full_mode_returns_all_questions(self) -> None:
+    def test_full_mode_returns_default_questions(self) -> None:
         selected = run_baselines.select_questions(self.questions, "full")
         self.assertEqual(len(selected), 7)
+
+    def test_full_mode_excludes_optional_instruction_ambiguity_questions(self) -> None:
+        questions = self.questions + [
+            {"id": "IA-01", "category": "IA", "prompt": "Ambiguous prompt"},
+            {
+                "id": "IA-02",
+                "task_family_id": "instruction-ambiguity",
+                "prompt": "Another ambiguous prompt",
+            },
+        ]
+
+        selected = run_baselines.select_questions(questions, "full")
+
+        self.assertEqual([item["id"] for item in selected], [f"Q{i:02d}" for i in range(1, 8)])
+
+    def test_explicit_case_ids_can_opt_into_instruction_ambiguity_questions(self) -> None:
+        questions = self.questions + [
+            {"id": "IA-01", "category": "IA", "prompt": "Ambiguous prompt"},
+        ]
+
+        selected = run_baselines.select_questions(
+            questions,
+            "full",
+            case_ids=("Q02", "IA-01"),
+        )
+
+        self.assertEqual([item["id"] for item in selected], ["Q02", "IA-01"])
 
     def test_unsupported_mode_raises(self) -> None:
         with self.assertRaises(ValueError):

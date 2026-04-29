@@ -86,8 +86,9 @@ Calibrated suites are stored as plain JSON files under `data/suites/<suite_id>.j
 
 The current calibrated manifests are:
 
-- `data/suites/starter.json` — high-signal subset for frequent runs (2 cases per family, 14 total).
-- `data/suites/holdout.json` — disjoint reserved set for cross-model comparison and future public reporting (2 cases per family, 14 total).
+- `data/suites/starter.json` — high-signal default subset for frequent runs (2 cases per default family, 12 total).
+- `data/suites/holdout.json` — disjoint default reserved set for cross-model comparison and future public reporting (2 cases per default family, 12 total).
+- `data/suites/instruction-ambiguity.json` — optional hybrid/manual-review ambiguity pack, kept outside default suites until manual review scoring is mature enough for headline comparisons.
 
 Required fields for persisted manifests: `schema_version`, `suite_id`, `name`, `description`, `selection_rationale`, `case_ids`. The suite loader rejects manifests whose `suite_id` does not match the filename, whose `case_ids` list is empty, or which contain duplicate or whitespace-padded ids.
 

@@ -52,6 +52,33 @@ class RunBenchmarkHelperTests(unittest.TestCase):
         self.assertEqual([item["case_id"] for item in payload["results"]], ["GG-01", "GG-02"])
         self.assertEqual([item["id"] for item in payload["results"]], ["GG-01", "GG-02"])
 
+    def test_sample_run_without_suite_excludes_optional_instruction_ambiguity(self) -> None:
+        dataset_path = self.tmp_dir / "run-benchmark-default-questions.json"
+        dataset_path.write_text(
+            json.dumps(
+                [
+                    {"id": "GG-01", "category": "GG", "prompt": "Prompt one"},
+                    {"id": "IA-01", "category": "IA", "prompt": "Ambiguous prompt"},
+                    {
+                        "id": "IA-02",
+                        "task_family_id": "instruction-ambiguity",
+                        "category": "IA",
+                        "prompt": "Another ambiguous prompt",
+                    },
+                ]
+            ),
+            encoding="utf-8",
+        )
+        output = io.StringIO()
+
+        with patch.object(run_benchmark, "DATA_PATH", dataset_path):
+            with contextlib.redirect_stdout(output):
+                run_benchmark.cmd_sample_run()
+
+        payload = json.loads(output.getvalue())
+        self.assertEqual(payload["case_count"], 1)
+        self.assertEqual([item["id"] for item in payload["results"]], ["GG-01"])
+
     def _suited_dataset(self) -> Path:
         dataset_path = self.tmp_dir / "run-benchmark-suited-questions.json"
         dataset_path.write_text(

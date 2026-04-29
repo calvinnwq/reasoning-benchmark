@@ -4,11 +4,11 @@
 
 A small benchmark of short natural-language prompts that look easy but expose weak reasoning — goal grounding, world-state tracking, social pragmatics, modified-riddle templates, and instruction ambiguity.
 
-The point is to catch models that sound fluent while missing simple real-world constraints. 100 questions, no dependencies, pure stdlib Python.
+The point is to catch models that sound fluent while missing simple real-world constraints. 100 questions in the dataset, with the default benchmark set focused on 50 auto-scored questions. Instruction-ambiguity cases are kept as opt-in/manual-review cases. No dependencies, pure stdlib Python.
 
 - **Short by design** — most prompts are one or two sentences. The failure isn't comprehension, it's reasoning.
 - **Failure-mode labelled** — every case carries a `failure_mode` tag so you can see *where* a model breaks, not just *that* it broke.
-- **Calibrated suites** — `starter` (14 cases, two per family) for fast iteration, `holdout` (14 disjoint cases) for clean cross-model comparison.
+- **Calibrated suites** — `starter` (12 cases, two per default family) for fast iteration, `holdout` (12 disjoint cases) for clean cross-model comparison, plus an optional `instruction-ambiguity` pack.
 - **Conservative scoring** — automatic answer scoring only; reasoning quality and constraint extraction stay human-review fields.
 
 ## Quick Start
@@ -78,18 +78,26 @@ These are deliberately short prompts. The whole point is to catch models that so
 
 | Command | Description |
 |---------|-------------|
-| `run_benchmark.py --list` | Print all questions |
+| `run_benchmark.py --list` | Print default questions |
 | `run_benchmark.py --list-suites` | Show available suite manifests |
 | `run_benchmark.py --sample-run` | Emit a blank run template |
 | `run_benchmark.py --emit-prompts <file>` | Write a JSONL prompt pack for an external runner |
 | `run_baselines.py --mode smoke` | Dry-run baseline against the first 5 cases |
-| `run_baselines.py --mode full` | Dry-run baseline against all 100 cases |
+| `run_baselines.py --mode full` | Dry-run baseline against the 50 default auto-scored cases |
 | `run_baselines.py --config <file>` | Run from a v2 RunConfig (supports matrix) |
 | `score_run.py --input <run> --output <scored>` | Score a run artifact |
 | `report_summary.py --input <scored>` | Build a report summary from a scored artifact |
 | `report_summary.py --bundle <manifest>` | Build a report summary from a v2 bundle manifest |
 
-Add `--suite starter` or `--suite holdout` to any `run_benchmark.py` command to restrict it to a calibrated manifest.
+Add `--suite starter` or `--suite holdout` to any `run_benchmark.py` command to restrict it to a calibrated default manifest. Use `--suite instruction-ambiguity` to inspect the optional ambiguity pack separately.
+
+Instruction-ambiguity cases (`IA-*`) are intentionally excluded from default baseline modes for now because they use hybrid/manual-review scoring. To opt in, either run the optional suite directly for inspection:
+
+```bash
+python3 scripts/run_benchmark.py --suite instruction-ambiguity --sample-run
+```
+
+or copy selected `IA-*` ids into a RunConfig `suite.case_ids` list on top of the default starter/holdout ids. See `examples/configs/starter-with-instruction-ambiguity.config.json` for that pattern.
 
 ## Dataset schema
 
@@ -170,7 +178,7 @@ See [`docs/scoring.md`](docs/scoring.md) for the full normalization and matching
 data/
   questions.json        canonical dataset (100 cases)
   questions.csv         spreadsheet export
-  suites/               named suite manifests (starter, holdout)
+  suites/               named suite manifests (starter, holdout, optional instruction-ambiguity)
 docs/
   benchmark.md          human-readable benchmark overview
   framework-v2.md       v2 framework spec

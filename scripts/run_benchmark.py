@@ -20,6 +20,20 @@ from suites import (
 REPO_ROOT = Path(__file__).resolve().parent.parent
 DATA_PATH = REPO_ROOT / "data" / "questions.json"
 SUITES_DIR = _DEFAULT_SUITES_DIR
+OPTIONAL_TASK_FAMILY_IDS: frozenset[str] = frozenset({"instruction-ambiguity"})
+OPTIONAL_CATEGORIES: frozenset[str] = frozenset({"IA"})
+
+
+def is_optional_question(row: dict) -> bool:
+    task_family_id = row.get("task_family_id")
+    if isinstance(task_family_id, str) and task_family_id in OPTIONAL_TASK_FAMILY_IDS:
+        return True
+    category = row.get("category")
+    return isinstance(category, str) and category in OPTIONAL_CATEGORIES
+
+
+def default_questions(questions: list[dict]) -> list[dict]:
+    return [row for row in questions if not is_optional_question(row)]
 
 
 def load_questions() -> list[dict]:
@@ -30,7 +44,7 @@ def load_questions() -> list[dict]:
 def _select_questions(suite: str | None) -> tuple[list[dict], str]:
     questions = load_questions()
     if suite is None:
-        return questions, "full"
+        return default_questions(questions), "full"
 
     case_ids = resolve_suite_case_ids(suite, suites_dir=SUITES_DIR)
     by_id = {q["id"]: q for q in questions}

@@ -31,6 +31,22 @@ BENCHMARK_ID = "reasoning-benchmark"
 SUPPORTED_MODELS: tuple[str, ...] = ("gpt-5.4", "sonnet-4.6", "qwen3.5-9b")
 SUPPORTED_MODES: tuple[str, ...] = ("smoke", "full")
 SMOKE_COUNT = 5
+OPTIONAL_TASK_FAMILY_IDS: frozenset[str] = frozenset({"instruction-ambiguity"})
+OPTIONAL_CATEGORIES: frozenset[str] = frozenset({"IA"})
+
+
+def is_optional_question(row: dict[str, Any]) -> bool:
+    task_family_id = row.get("task_family_id")
+    if isinstance(task_family_id, str) and task_family_id in OPTIONAL_TASK_FAMILY_IDS:
+        return True
+    category = row.get("category")
+    return isinstance(category, str) and category in OPTIONAL_CATEGORIES
+
+
+def default_questions(questions: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    return [row for row in questions if not is_optional_question(row)]
+
+
 RAW_ARTIFACT_SCHEMA_VERSION = "2.0.0"
 RUNNER_VERSION = "1.0.0"
 BUILTIN_ADAPTER_COMMANDS: dict[str, list[str]] = {
@@ -203,9 +219,9 @@ def select_questions(
             raise ValueError(f"Suite case_ids not found in dataset: {', '.join(missing)}")
         selected = [by_id[case_id] for case_id in case_ids]
     elif mode == "smoke":
-        selected = questions[:SMOKE_COUNT]
+        selected = default_questions(questions)[:SMOKE_COUNT]
     elif mode == "full":
-        selected = questions
+        selected = default_questions(questions)
     else:
         raise ValueError(f"Unsupported mode: {mode}")
 
@@ -634,7 +650,7 @@ def build_parser() -> argparse.ArgumentParser:
         "--mode",
         choices=SUPPORTED_MODES,
         default="smoke",
-        help="Smoke runs first 5 questions; full runs the full dataset",
+        help="Smoke runs first 5 default questions; full runs the default auto-scored dataset",
     )
     parser.add_argument(
         "--dataset",
