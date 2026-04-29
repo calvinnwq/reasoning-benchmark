@@ -66,23 +66,34 @@ class SuiteManifestLayoutTests(unittest.TestCase):
         missing = [cid for cid in case_ids if cid not in self.dataset_ids]
         self.assertEqual([], missing)
 
-    def test_starter_covers_every_task_family(self) -> None:
+    def test_starter_covers_every_default_task_family(self) -> None:
         manifest = self._load("starter")
         categories = {self._category(cid) for cid in manifest["case_ids"]}
 
         self.assertEqual(
             categories,
-            {"GG", "CR", "TW", "SP", "IA", "PR", "MC"},
+            {"GG", "CR", "TW", "SP", "PR", "MC"},
         )
+        self.assertNotIn("IA", categories)
 
-    def test_holdout_covers_every_task_family(self) -> None:
+    def test_holdout_covers_every_default_task_family(self) -> None:
         manifest = self._load("holdout")
         categories = {self._category(cid) for cid in manifest["case_ids"]}
 
         self.assertEqual(
             categories,
-            {"GG", "CR", "TW", "SP", "IA", "PR", "MC"},
+            {"GG", "CR", "TW", "SP", "PR", "MC"},
         )
+        self.assertNotIn("IA", categories)
+
+    def test_instruction_ambiguity_optional_manifest_contains_all_ia_cases(self) -> None:
+        manifest = self._load("instruction-ambiguity")
+        case_ids = manifest["case_ids"]
+
+        self.assertEqual(len(case_ids), 50)
+        self.assertEqual(case_ids[0], "IA-01")
+        self.assertEqual(case_ids[-1], "IA-50")
+        self.assertTrue(all(self._category(cid) == "IA" for cid in case_ids))
 
     def test_starter_and_holdout_do_not_overlap(self) -> None:
         starter = set(self._load("starter")["case_ids"])
@@ -136,11 +147,12 @@ class SuiteLoaderTests(unittest.TestCase):
         self.assertIsInstance(case_ids, tuple)
         self.assertGreater(len(case_ids), 0)
 
-    def test_list_available_suites_includes_starter_and_holdout(self) -> None:
+    def test_list_available_suites_includes_default_and_optional_suites(self) -> None:
         names = self.suites.list_available_suites()
 
         self.assertIn("starter", names)
         self.assertIn("holdout", names)
+        self.assertIn("instruction-ambiguity", names)
         self.assertEqual(sorted(names), list(names))
 
 

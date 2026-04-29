@@ -1,0 +1,48 @@
+{
+  "schema_version": "2.0.0",
+  "id": "starter-with-instruction-ambiguity-example",
+  "benchmark": "reasoning-benchmark",
+  "suite_id": "starter-with-instruction-ambiguity",
+  "dataset": {
+    "path": "data/questions.json"
+  },
+  "models": [
+    "gpt-5.4"
+  ],
+  "prompt_contract": {
+    "version": "1.0.0",
+    "response_format": "json_object",
+    "required_fields": [
+      "answer",
+      "reasoning"
+    ],
+    "instruction": "Answer the question with a concise final answer.\nUse this exact JSON shape in the model-facing response:\n{\"answer\": \"<short final answer>\", \"reasoning\": \"<brief reason>\"}\nIf unsure, provide your best short answer and reasoning."
+  },
+  "suite": {
+    "id": "starter-with-instruction-ambiguity",
+    "name": "Starter plus optional instruction ambiguity cases",
+    "case_ids": [
+      "GG-01",
+      "GG-02",
+      "CR-01",
+      "CR-02",
+      "TW-01",
+      "TW-02",
+      "SP-01",
+      "SP-02",
+      "PR-01",
+      "PR-02",
+      "MC-01",
+      "MC-02",
+      "IA-01",
+      "IA-02"
+    ]
+  },
+  "execution": {
+    "mode": "starter-with-instruction-ambiguity",
+    "skip_scoring": true
+  },
+  "output": {
+    "bundle_dir": "runs/starter-with-instruction-ambiguity"
+  }
+}

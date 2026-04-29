@@ -16,9 +16,9 @@ The scorer accepts JSON that is close to `scripts/run_benchmark.py --sample-run`
   "schema_version": "2.0.0",
   "benchmark": "reasoning-benchmark",
   "created_at": "2026-04-21T00:00:00Z",
-  "suite_id": "full",
-  "case_count": 100,
-  "question_count": 100,
+  "suite_id": "default",
+  "case_count": 50,
+  "question_count": 50,
   "results": [
     {
       "id": "GG-01",

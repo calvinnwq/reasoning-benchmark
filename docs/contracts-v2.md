@@ -41,7 +41,7 @@ A suite is an ordered case selection. The current `smoke` and `full` baseline mo
   "schema_version": "2.0.0",
   "id": "smoke",
   "name": "Smoke",
-  "description": "Fast sanity-check slice over the first five cases.",
+  "description": "Fast sanity-check slice over the first five default auto-scored cases.",
   "case_ids": ["GG-01", "GG-02", "GG-03", "GG-04", "GG-05"],
   "selection": {
     "mode": "explicit",
@@ -86,8 +86,9 @@ Calibrated suites are stored as plain JSON files under `data/suites/<suite_id>.j
 
 The current calibrated manifests are:
 
-- `data/suites/starter.json` — high-signal subset for frequent runs (2 cases per family, 14 total).
-- `data/suites/holdout.json` — disjoint reserved set for cross-model comparison and future public reporting (2 cases per family, 14 total).
+- `data/suites/starter.json` — high-signal default subset for frequent runs (2 cases per default family, 12 total).
+- `data/suites/holdout.json` — disjoint default reserved set for cross-model comparison and future public reporting (2 cases per default family, 12 total).
+- `data/suites/instruction-ambiguity.json` — optional hybrid/manual-review ambiguity pack, kept outside default suites until manual review scoring is mature enough for headline comparisons.
 
 Required fields for persisted manifests: `schema_version`, `suite_id`, `name`, `description`, `selection_rationale`, `case_ids`. The suite loader rejects manifests whose `suite_id` does not match the filename, whose `case_ids` list is empty, or which contain duplicate or whitespace-padded ids.
 
@@ -232,8 +233,6 @@ Compatibility fields preserved from v1:
           "TW-02",
           "SP-01",
           "SP-02",
-          "IA-01",
-          "IA-02",
           "PR-01",
           "PR-02",
           "MC-01",
@@ -282,15 +281,23 @@ non-empty strings from the current baseline runner set: `gpt-5.4`, `sonnet-4.6`,
 It requires `execution.mode` to be an exact, unpadded, non-empty string without path separators or
 `.`/`..` traversal segments when present so configs do not preserve ambiguous suite mode selections
 or artifact labels.
-Without an embedded `suite.case_ids` list or `matrix.suites`, `execution.mode` must be `smoke` or
-`full`; with `suite.case_ids` or `matrix.suites`, custom top-level mode names are allowed. Explicit
-`suite.case_ids` run in the supplied order; matrix suite entries control each cell's selection.
+Without an embedded `suite.case_ids` list or `matrix.suites`, `execution.mode` must be `smoke`,
+`full`, or the `default` alias. The runner canonicalizes `default` to `full` for selection while
+persisting `suite_id: "default"` on artifacts for the default auto-scored slice. With `suite.case_ids`
+or `matrix.suites`, custom top-level mode names are allowed, but top-level `suite_id: "default"` and
+`execution.mode: "default"`/`"full"` are invalid when explicit `suite.case_ids` are supplied because
+that selection is no longer the default slice. Explicit `suite.case_ids` run in the supplied order;
+matrix suite entries control each cell's selection.
 When `matrix` is supplied, it must be an object with a non-empty `suites` list, and the runner
 executes every suite/model cell. Each matrix suite must declare a unique exact `suite_id` without
 path separators or `.`/`..` traversal segments, may declare an exact `mode` without path separators
-or `.`/`..` traversal segments, and may declare
-non-empty unique exact `case_ids`. Matrix suites without `case_ids` must use `smoke` or `full` as
-their mode; if `mode` is omitted, the suite id is used as the mode.
+or `.`/`..` traversal segments, and may declare non-empty unique exact `case_ids`. Matrix suites
+without `case_ids` must use `smoke`, `full`, or the `default` alias as their mode; if `mode` is
+omitted, the suite id is used as the mode. Matrix entries also reject `suite_id: "default"` and
+`mode: "default"` when explicit `case_ids` are supplied. Matrix suite-id uniqueness is enforced after
+canonicalizing `full` and `default` selectors for the default slice, so `full` and `default` cannot
+appear as separate cells for the same matrix. Matrix cells that target the default auto-scored slice
+persist `suite_id: "default"` in artifacts.
 Top-level `suite.case_ids` cannot be combined with `matrix.suites`; set `case_ids` per matrix suite
 instead.
 `execution.seed` shuffles only `smoke` or `full` selections, and `execution.max_cases` truncates the

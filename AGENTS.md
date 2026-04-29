@@ -11,19 +11,19 @@ python3 -m unittest discover tests
 # Run a single test file
 python3 -m unittest tests.test_scoring
 
-# List all benchmark questions
+# List benchmark questions from the default 50-question auto-scored slice
 python3 scripts/run_benchmark.py --list
 
 # List available suite manifests
 python3 scripts/run_benchmark.py --list-suites
 
-# Generate a blank run template (fill in answers, then score)
+# Generate a blank run template for the default slice (use --suite for other slices)
 python3 scripts/run_benchmark.py --sample-run
 
-# Export a JSONL prompt pack for external model runners
+# Export a JSONL prompt pack for the default slice
 python3 scripts/run_benchmark.py --emit-prompts runs/prompts.jsonl
 
-# Restrict list/sample/export commands to a named suite
+# Restrict list/sample/export commands to a suite selector
 python3 scripts/run_benchmark.py --list --suite starter
 
 # Score a completed run
