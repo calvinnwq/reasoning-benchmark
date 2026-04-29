@@ -3159,6 +3159,15 @@ class MatrixSuiteParsingTests(unittest.TestCase):
         self.assertEqual(suites[0].case_ids, ("GG-01", "GG-02"))
         self.assertEqual(suites[0].mode, "custom")
 
+    def test_parses_default_suite_id_without_explicit_mode(self) -> None:
+        payload = self._payload_with_matrix([{"suite_id": "default"}])
+        suites = run_baselines.config_matrix_suites(payload)
+        self.assertIsNotNone(suites)
+        self.assertEqual(len(suites), 1)
+        self.assertEqual(suites[0].suite_id, "default")
+        self.assertEqual(suites[0].mode, "full")
+        self.assertIsNone(suites[0].case_ids)
+
     def test_rejects_empty_suites_list(self) -> None:
         payload = self._payload_with_matrix([])
         with self.assertRaisesRegex(ValueError, "non-empty"):

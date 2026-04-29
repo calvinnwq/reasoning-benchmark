@@ -1013,6 +1013,8 @@ def config_matrix_suites(
         else:
             mode = suite_id
 
+        mode = canonical_mode(mode, case_ids)
+
         if mode not in SUPPORTED_MODES and case_ids is None:
             raise ValueError(f"Unsupported suite or mode in RunConfig matrix.suites: {mode}")
 
