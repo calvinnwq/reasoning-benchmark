@@ -46,6 +46,8 @@ def _select_questions(suite: str | None) -> tuple[list[dict], str]:
     questions = load_questions()
     if suite is None:
         return default_questions(questions), DEFAULT_SUITE_ID
+    if suite == DEFAULT_SUITE_ID:
+        return default_questions(questions), DEFAULT_SUITE_ID
 
     case_ids = resolve_suite_case_ids(suite, suites_dir=SUITES_DIR)
     by_id = {q["id"]: q for q in questions}
