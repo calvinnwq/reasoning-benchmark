@@ -11,7 +11,7 @@ python3 -m unittest discover tests
 # Run a single test file
 python3 -m unittest tests.test_scoring
 
-# List benchmark questions from the default 50-question auto-scored slice
+# List benchmark questions from the default 94-question auto-scored slice
 python3 scripts/run_benchmark.py --list
 
 # Generate a blank run template for the default slice (use --suite for other slices)
@@ -39,8 +39,8 @@ This is a pure-Python reasoning benchmark with no framework, package manager, or
 
 ### Data flow
 
-1. **Dataset** lives in `data/questions.json` — 100 questions, each with `id`, `category`, `prompt`, `expected_answer`, `accepted_variants`, `common_wrong_answer`, `rationale`, and `failure_mode`.
-2. **Suite manifests** live in `data/suites/<name>.json`. `starter.json` is a 12-case high-signal default slice (2 cases per default task family) used for frequent runs; `holdout.json` is a disjoint 12-case default reserved set for cleaner cross-model comparison; `instruction-ambiguity.json` is the optional ambiguity/manual-review pack. The loader is `scripts/suites.py` (`load_suite_manifest`, `resolve_suite_case_ids`, `list_available_suites`).
+1. **Dataset** lives in `data/questions.json` — 144 questions, each with `id`, `category`, `prompt`, `expected_answer`, `accepted_variants`, `common_wrong_answer`, `rationale`, and `failure_mode`.
+2. **Suite manifests** live in `data/suites/<name>.json`. `starter.json` is a 14-case high-signal default slice (2 cases per default task family) used for frequent runs; `holdout.json` is a disjoint 14-case default reserved set for cleaner cross-model comparison; `instruction-ambiguity.json` is the optional ambiguity/manual-review pack. The loader is `scripts/suites.py` (`load_suite_manifest`, `resolve_suite_case_ids`, `list_available_suites`).
 3. **Run files** (`runs/*.json`) contain model answers against the dataset. The canonical input shape has a top-level `results` list (also accepted: `runs`, `items`, `answers`, or a bare list).
 4. **Scorer** (`scripts/score_run.py`) reads a run file + the dataset and writes a scored artifact.
 
@@ -54,8 +54,8 @@ The scorer is **V1 conservative**: automatic scoring only handles final answer c
 Scoring logic in `score_run.py`:
 - `normalize_text` → NFKC + lowercase + punctuation-to-space + whitespace collapse
 - `trim_prefillers` strips leading hedges ("the answer is", "i think", etc.)
-- Binary (yes/no) questions use `extract_binary_token` — strict, first 6 tokens only
-- Fallback heuristic: exact token sequence of `expected` must appear as a contiguous span inside a short answer (≤ 10 tokens); flagged with `is_heuristic: true`
+- Binary (yes/no) questions accept concise binary replies or longer replies whose explanation substantially overlaps an accepted answer; `normalized_exact` cases skip binary fallback
+- Fallback heuristic: exact token sequence of `expected` or an accepted variant must appear as a contiguous span inside a short answer (≤ 10 tokens), but only for multi-token candidates; flagged with `is_heuristic: true`
 
 Scored output shape: `{ schema_version, scoring_contract, scored_at, source_input, dataset_path, input_meta, summary, results }`. Summary separates `auto_scored` (accuracy metrics) from `manual_only` (counts of populated manual fields).
 

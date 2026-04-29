@@ -11,7 +11,7 @@ python3 -m unittest discover tests
 # Run a single test file
 python3 -m unittest tests.test_scoring
 
-# List benchmark questions from the default 50-question auto-scored slice
+# List benchmark questions from the default 94-question auto-scored slice
 python3 scripts/run_benchmark.py --list
 
 # List available suite manifests
@@ -38,8 +38,8 @@ Pure-Python reasoning benchmark. No framework, package manager, or external depe
 
 ### Data flow
 
-1. **Dataset** — `data/questions.json`, 100 questions with `id`, `category`, `prompt`, `expected_answer`, `accepted_variants`, `common_wrong_answer`, `rationale`, `failure_mode`.
-2. **Suite manifests** — `data/suites/<name>.json`, ordered case selections loaded by `scripts/suites.py`.
+1. **Dataset** — `data/questions.json`, 144 questions with `id`, `category`, `prompt`, `expected_answer`, `accepted_variants`, `common_wrong_answer`, `rationale`, `failure_mode`.
+2. **Suite manifests** — `data/suites/<name>.json`, ordered case selections loaded by `scripts/suites.py`. `starter.json` and `holdout.json` are calibrated 14-case default slices spanning the seven auto-scored task families.
 3. **Run files** — `runs/*.json`, model answers against the dataset. Canonical shape: top-level `results` list (also accepted: `runs`, `items`, `answers`, or a bare list).
 4. **Scorer** — `scripts/score_run.py` reads a run file + dataset, writes a scored artifact.
 

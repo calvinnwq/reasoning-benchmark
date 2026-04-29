@@ -18,6 +18,7 @@ DEFAULT_DATASET_PATH = REPO_ROOT / "data" / "questions.json"
 SUPPORTED_EVALUATION_MODES = {"exact", "rubric", "hybrid"}
 ANSWER_CORRECTNESS_DIMENSION_IDS = {"answer_correctness", "score_answer", "final_answer_correctness"}
 DEFAULT_ACCEPTED_VARIANT_POLICY = "normalized_exact_or_configured_heuristic"
+NORMALIZED_EXACT_ACCEPTED_VARIANT_POLICY = "normalized_exact"
 CATEGORY_TASK_FAMILY_IDS = {
     "GG": "goal-grounding",
     "CR": "classic-riddle-override",
@@ -26,6 +27,7 @@ CATEGORY_TASK_FAMILY_IDS = {
     "IA": "instruction-ambiguity",
     "PR": "reference-resolution",
     "MC": "physical-commonsense",
+    "LP": "literal-precision",
 }
 CATEGORY_AMBIGUITY_TYPES = {
     "GG": "none",
@@ -35,9 +37,13 @@ CATEGORY_AMBIGUITY_TYPES = {
     "IA": "underspecified",
     "PR": "referential",
     "MC": "test-condition",
+    "LP": "literal-trap",
 }
 
 BINARY_TOKEN_LOOKAHEAD = 6
+BINARY_ANSWER_MAX_TOKENS = 4
+BINARY_EXPLANATION_SHARED_SPAN_MIN_TOKENS = 4
+BINARY_EXPLANATION_LONG_SHARED_SPAN_MIN_TOKENS = 6
 HEURISTIC_SPAN_MAX_TOKENS = 10
 CONCISE_PREFIX_MAX_TOKENS = 3
 
@@ -208,15 +214,190 @@ def build_answer_norms(answer_text: str) -> List[str]:
     return candidates
 
 
-def score_single_answer(answer: Any, expected_text: str, accepted_variants: Iterable[Any]) -> MatchResult:
+def is_concise_binary_answer(answer_text: str) -> bool:
+    tokens = normalize_text(trim_prefillers(answer_text)).split()
+    if not tokens:
+        return False
+    if tokens[0] not in {"yes", "no", "true", "false"}:
+        return False
+    return len(tokens) == 1
+
+
+def binary_explanation_tokens(text: str) -> List[str]:
+    tokens = normalize_text(trim_prefillers(text)).split()
+    if tokens and tokens[0] in {"yes", "no", "true", "false"}:
+        return tokens[1:]
+    return tokens
+
+
+def longest_shared_contiguous_span(left: Sequence[str], right: Sequence[str]) -> int:
+    if not left or not right:
+        return 0
+
+    longest = 0
+    for left_index in range(len(left)):
+        for right_index in range(len(right)):
+            span = 0
+            while (
+                left_index + span < len(left)
+                and right_index + span < len(right)
+                and left[left_index + span] == right[right_index + span]
+            ):
+                span += 1
+            if span > longest:
+                longest = span
+    return longest
+
+
+def shared_contiguous_spans(left: Sequence[str], right: Sequence[str]) -> List[Tuple[int, int, int]]:
+    spans: List[Tuple[int, int, int]] = []
+    if not left or not right:
+        return spans
+
+    for left_index in range(len(left)):
+        for right_index in range(len(right)):
+            span = 0
+            while (
+                left_index + span < len(left)
+                and right_index + span < len(right)
+                and left[left_index + span] == right[right_index + span]
+            ):
+                span += 1
+            if span >= BINARY_EXPLANATION_SHARED_SPAN_MIN_TOKENS:
+                spans.append((left_index, right_index, span))
+    return spans
+
+
+def starts_with_contrastive_tail(tokens: Sequence[str]) -> bool:
+    if not tokens:
+        return False
+    return tokens[0] in {
+        "actually",
+        "although",
+        "but",
+        "except",
+        "however",
+        "instead",
+        "though",
+        "yet",
+    }
+
+
+def allows_binary_tail_substitution(
+    answer_index: int,
+    candidate_index: int,
+    span_length: int,
+    answer_remaining: int,
+    candidate_remaining: int,
+) -> bool:
+    if answer_index != candidate_index:
+        return False
+    if answer_index > 1:
+        return False
+    if span_length != BINARY_EXPLANATION_LONG_SHARED_SPAN_MIN_TOKENS:
+        return False
+    return 0 < answer_remaining <= 3 and 0 < candidate_remaining <= 3
+
+
+def has_anchored_binary_explanation_overlap(answer_tokens: Sequence[str], candidate_tokens: Sequence[str]) -> bool:
+    generic_tokens = {
+        "a",
+        "an",
+        "are",
+        "asking",
+        "be",
+        "being",
+        "can",
+        "do",
+        "for",
+        "how",
+        "i",
+        "if",
+        "in",
+        "is",
+        "it",
+        "of",
+        "on",
+        "or",
+        "should",
+        "still",
+        "that",
+        "the",
+        "they",
+        "this",
+        "to",
+        "was",
+        "what",
+        "when",
+        "where",
+        "which",
+        "why",
+        "you",
+        "your",
+    }
+
+    for answer_index, candidate_index, span_length in shared_contiguous_spans(answer_tokens, candidate_tokens):
+        span_tokens = answer_tokens[answer_index : answer_index + span_length]
+        if not any(token not in generic_tokens for token in span_tokens):
+            continue
+        if answer_index != candidate_index and (answer_index == 0 or candidate_index == 0):
+            continue
+        answer_remaining = len(answer_tokens) - (answer_index + span_length)
+        candidate_remaining = len(candidate_tokens) - (candidate_index + span_length)
+        answer_tail = answer_tokens[answer_index + span_length :]
+        candidate_tail = candidate_tokens[candidate_index + span_length :]
+        if answer_index == candidate_index and (answer_remaining == 0) != (candidate_remaining == 0):
+            continue
+        if starts_with_contrastive_tail(answer_tail) or starts_with_contrastive_tail(candidate_tail):
+            continue
+        if span_length >= BINARY_EXPLANATION_LONG_SHARED_SPAN_MIN_TOKENS and (
+            answer_remaining > 2 or candidate_remaining > 2
+        ):
+            if allows_binary_tail_substitution(
+                answer_index,
+                candidate_index,
+                span_length,
+                answer_remaining,
+                candidate_remaining,
+            ):
+                return True
+            continue
+        if answer_remaining == 0 and candidate_remaining == 0:
+            if max(answer_index, candidate_index) > 4:
+                continue
+            return True
+    return False
+
+
+def has_binary_explanation_overlap(answer_text: str, candidate_text: str) -> bool:
+    answer_tokens = binary_explanation_tokens(answer_text)
+    candidate_tokens = binary_explanation_tokens(candidate_text)
+    if not answer_tokens or not candidate_tokens:
+        return False
+
+    if has_anchored_binary_explanation_overlap(answer_tokens, candidate_tokens):
+        return True
+
+    stripped_answer_tokens = strip_soft_determiners(answer_tokens)
+    stripped_candidate_tokens = strip_soft_determiners(candidate_tokens)
+    return has_anchored_binary_explanation_overlap(stripped_answer_tokens, stripped_candidate_tokens)
+
+
+def score_single_answer(
+    answer: Any,
+    expected_text: str,
+    accepted_variants: Iterable[Any],
+    accepted_variant_policy: str = DEFAULT_ACCEPTED_VARIANT_POLICY,
+) -> MatchResult:
     raw_answer = "" if answer is None else str(answer).strip()
+    raw_answer_norm = normalize_text(raw_answer)
     answer_norms = build_answer_norms(raw_answer)
-    answer_norm = answer_norms[0] if answer_norms else ""
+    answer_norm = answer_norms[0] if answer_norms else raw_answer_norm
     expected_norm = normalize_text(expected_text)
     candidate_norms = build_candidate_norms(expected_text, accepted_variants)
 
     expected_binary = extract_binary_token(expected_text)
-    if not answer_norm:
+    if not raw_answer_norm:
         return MatchResult(
             score=0,
             matched=False,
@@ -229,42 +410,29 @@ def score_single_answer(answer: Any, expected_text: str, accepted_variants: Iter
             answer_normalized=answer_norm,
         )
 
-    if expected_binary in {"yes", "no"}:
-        answer_binary = extract_binary_token(raw_answer)
-        if answer_binary is None:
-            return MatchResult(
-                score=0,
-                matched=False,
-                reason="expected_binary_not_detected",
-                matched_by="binary_missing",
-                heuristic=False,
-                expected=expected_text,
-                expected_normalized=expected_norm,
-                answer=raw_answer,
-                answer_normalized=answer_norm,
-            )
-        if answer_binary == expected_binary:
+    if accepted_variant_policy == NORMALIZED_EXACT_ACCEPTED_VARIANT_POLICY:
+        if raw_answer_norm in candidate_norms:
             return MatchResult(
                 score=1,
                 matched=True,
-                reason="expected_binary_answer_detected",
-                matched_by="binary_match",
+                reason="exact_normalized_match",
+                matched_by="exact",
                 heuristic=False,
                 expected=expected_text,
                 expected_normalized=expected_norm,
                 answer=raw_answer,
-                answer_normalized=answer_norm,
+                answer_normalized=raw_answer_norm,
             )
         return MatchResult(
             score=0,
             matched=False,
-            reason="binary_mismatch",
-            matched_by="binary_mismatch",
+            reason="no_match_after_normalization",
+            matched_by="none",
             heuristic=False,
             expected=expected_text,
             expected_normalized=expected_norm,
             answer=raw_answer,
-            answer_normalized=answer_norm,
+            answer_normalized=raw_answer_norm,
         )
 
     for normalized_answer in answer_norms:
@@ -281,12 +449,64 @@ def score_single_answer(answer: Any, expected_text: str, accepted_variants: Iter
                 answer_normalized=normalized_answer,
             )
 
+    if expected_binary in {"yes", "no"} and accepted_variant_policy != NORMALIZED_EXACT_ACCEPTED_VARIANT_POLICY:
+        answer_binary = extract_binary_token(raw_answer)
+        if answer_binary is None:
+            return MatchResult(
+                score=0,
+                matched=False,
+                reason="expected_binary_not_detected",
+                matched_by="binary_missing",
+                heuristic=False,
+                expected=expected_text,
+                expected_normalized=expected_norm,
+                answer=raw_answer,
+                answer_normalized=answer_norm,
+            )
+        if answer_binary != expected_binary:
+            return MatchResult(
+                score=0,
+                matched=False,
+                reason="binary_mismatch",
+                matched_by="binary_mismatch",
+                heuristic=False,
+                expected=expected_text,
+                expected_normalized=expected_norm,
+                answer=raw_answer,
+                answer_normalized=answer_norm,
+            )
+        if is_concise_binary_answer(raw_answer):
+            return MatchResult(
+                score=1,
+                matched=True,
+                reason="expected_binary_answer_detected",
+                matched_by="binary_match",
+                heuristic=False,
+                expected=expected_text,
+                expected_normalized=expected_norm,
+                answer=raw_answer,
+                answer_normalized=answer_norm,
+            )
+        for candidate_text in [expected_text, *accepted_variants]:
+            if isinstance(candidate_text, str) and has_binary_explanation_overlap(raw_answer, candidate_text):
+                return MatchResult(
+                    score=1,
+                    matched=True,
+                    reason="expected_binary_explanation_overlap",
+                    matched_by="binary_overlap",
+                    heuristic=True,
+                    expected=expected_text,
+                    expected_normalized=expected_norm,
+                    answer=raw_answer,
+                    answer_normalized=answer_norm,
+                )
+
     for normalized_answer in answer_norms:
         answer_tokens = token_sequence(normalized_answer)
         if len(answer_tokens) <= HEURISTIC_SPAN_MAX_TOKENS:
             for candidate_norm in candidate_norms:
                 candidate_tokens = token_sequence(candidate_norm)
-                if contains_expected_as_contiguous_span(answer_tokens, candidate_tokens):
+                if len(candidate_tokens) > 1 and contains_expected_as_contiguous_span(answer_tokens, candidate_tokens):
                     return MatchResult(
                         score=1,
                         matched=True,
@@ -301,7 +521,7 @@ def score_single_answer(answer: Any, expected_text: str, accepted_variants: Iter
 
                 stripped_answer_tokens = strip_soft_determiners(answer_tokens)
                 stripped_candidate_tokens = strip_soft_determiners(candidate_tokens)
-                if contains_expected_as_contiguous_span(stripped_answer_tokens, stripped_candidate_tokens):
+                if len(stripped_candidate_tokens) > 1 and contains_expected_as_contiguous_span(stripped_answer_tokens, stripped_candidate_tokens):
                     return MatchResult(
                         score=1,
                         matched=True,
@@ -723,6 +943,7 @@ def score_record(result: Dict[str, Any], dataset: Dict[str, Dict[str, Any]]) -> 
         answer=answer,
         expected_text=str(question.get("expected_answer", "")),
         accepted_variants=question.get("accepted_variants", []),
+        accepted_variant_policy=accepted_variant_policy,
     )
     status = {
         "matched": bool(match.matched),

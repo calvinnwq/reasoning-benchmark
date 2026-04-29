@@ -123,7 +123,7 @@ The fields below are optional by case type, but required when their concept appl
 
 ### `task_family_id`
 
-Stable reporting group such as `goal-grounding`, `social-pragmatics`, `instruction-ambiguity`, `temporal-state`, `reference-resolution`, `physical-commonsense`, or `classic-riddle-override`.
+Stable reporting group such as `goal-grounding`, `social-pragmatics`, `instruction-ambiguity`, `temporal-state`, `reference-resolution`, `physical-commonsense`, `literal-precision`, or `classic-riddle-override`.
 
 The legacy `category` field remains for compatibility, but v2 reporting should group by `task_family_id`.
 
@@ -156,6 +156,11 @@ Supported `mode` values:
 - `score_reasoning` to `reasoning_quality`
 - `score_constraint_extraction` to `constraint_extraction`
 
+Supported `accepted_variant_policy` values:
+
+- `normalized_exact_or_configured_heuristic`: default behavior; allows normalized exact matching plus the scorer's conservative binary and short-span heuristics.
+- `normalized_exact`: normalized exact matching only; compares the raw normalized answer text directly against allowed answers and disables prefill stripping, leading binary-wrapper removal, binary fallback, and heuristic span/prefix matching.
+
 ### `ambiguity`
 
 Captures whether the prompt has an intended ambiguity and how the benchmark expects it to be resolved.
@@ -169,6 +174,7 @@ Common broad values:
 - `referential`
 - `pragmatic`
 - `underspecified`
+- `literal-trap`
 - `classic-template`
 - `test-condition`
 
@@ -205,6 +211,7 @@ Named suite manifests in `data/suites/` are the source of truth for calibrated s
 | `IA` | `instruction-ambiguity` | `hybrid` | `underspecified` |
 | `PR` | `reference-resolution` | `exact` | `referential` |
 | `MC` | `physical-commonsense` | `exact` | `test-condition` |
+| `LP` | `literal-precision` | `exact` | `literal-trap` |
 
 These defaults are migration helpers, not hard rules. Individual cases may override them when the prompt structure demands it.
 

@@ -17,8 +17,8 @@ The scorer accepts JSON that is close to `scripts/run_benchmark.py --sample-run`
   "benchmark": "reasoning-benchmark",
   "created_at": "2026-04-21T00:00:00Z",
   "suite_id": "default",
-  "case_count": 50,
-  "question_count": 50,
+  "case_count": 94,
+  "question_count": 94,
   "results": [
     {
       "id": "GG-01",
@@ -80,23 +80,28 @@ The automatic answer matcher applies deterministic normalisation before comparis
 - Apply short prefill stripping (at most once per phrase block):
   - `the answer is`, `i think`, `i believe`, `i guess`, `it is`, `probably`, ...
 - Compare against expected and `accepted_variants` as normalized exact matches.
-- Also strip a leading `yes`/`no` wrapper from otherwise non-binary answers before retrying exact/heuristic matching (for answers like `No, bring the key with you.`).
+- Also strip a leading `yes`/`no` wrapper from otherwise non-binary answers before retrying exact/heuristic matching (for answers like `No, bring the key with you.`), unless the case opts into `accepted_variant_policy: normalized_exact`.
+- Cases that use `accepted_variant_policy: normalized_exact` compare only the raw normalized answer text against the normalized `expected_answer` and `accepted_variants`; they skip prefill stripping and other answer rewrites before matching.
 - If exact match fails, allow conservative heuristics only when one of these holds:
-  - normalized answer token length `<= 10`, and a full expected/accepted token sequence appears as a contiguous span inside the answer, or
-  - after stripping a small set of soft determiners/pronouns (`the`, `your`, `you`, `now`, etc.), the answer and candidate still contain the same short contiguous phrase, or
+  - normalized answer token length `<= 10`, and a full multi-token expected/accepted token sequence appears as a contiguous span inside the answer, or
+  - after stripping a small set of soft determiners/pronouns (`the`, `your`, `you`, `now`, etc.), the answer and candidate still contain the same short multi-token contiguous phrase, or
   - the answer is a very short non-binary prefix (`<= 3` tokens) of an accepted answer such as `Drive` for `Drive there.`
 - Heuristic matches are explicitly marked with `is_heuristic: true`.
 
+Single-token candidates do not use the contiguous-span heuristic. Answers like `Three, ...` or `None, ...` must still match exactly or via another allowed path.
+
 ## Yes/No handling
 
-If the expected answer begins with a binary form, the matcher uses binary mode:
+If the expected answer begins with a binary form, the matcher uses binary mode unless the case opts into `accepted_variant_policy: normalized_exact`:
 
 - `yes`/`no`
 - `true`/`false` are mapped to `yes`/`no`
-- expected `No...` and answer forms like `No, ...` are accepted
-- `expected_binary_missing` / `binary_mismatch` is scored as incorrect
+- a bare concise binary answer such as `No.` is accepted when it matches the expected polarity
+- a longer binary answer such as `No, ...` is accepted only when its explanation substantially overlaps the expected answer or an accepted variant
+- exact-output cases that use `accepted_variant_policy: normalized_exact` skip binary fallback and require a normalized exact match against `expected_answer` or `accepted_variants`
+- `expected_binary_not_detected` (with `matched_by: binary_missing`) or `binary_mismatch` is scored as incorrect
 
-This is deliberately strict; if no binary token appears near the start of a short answer, it is marked incorrect.
+This is deliberately strict; a matching `yes`/`no` token by itself is no longer enough for longer explanations, and if no binary token appears near the start of a short answer, it is marked incorrect.
 
 ## Missing/blank answer handling
 

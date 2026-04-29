@@ -6,7 +6,7 @@
 
 ## Why v2 Exists
 
-The repository already has a useful core: a 100-question dataset, prompt contract, runner scaffolding, adapter layer, and conservative answer scorer. V2 should make those pieces easier to extend and audit while preserving the current benchmark's main value: short natural-language prompts that expose shallow reasoning failures.
+The repository already has a useful core: a 144-question dataset, prompt contract, runner scaffolding, adapter layer, and conservative answer scorer. V2 should make those pieces easier to extend and audit while preserving the current benchmark's main value: short natural-language prompts that expose shallow reasoning failures.
 
 The framework should not become a broad agent benchmark, a task harness for arbitrary tools, or a heavy platform. It should make the existing benchmark more reproducible, make future task families fit cleanly, and keep scored artifacts comparable over time.
 

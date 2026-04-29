@@ -2,13 +2,13 @@
 
 ### Does the model actually understand the question, or just the words in it?
 
-A small benchmark of short natural-language prompts that look easy but expose weak reasoning — goal grounding, world-state tracking, social pragmatics, modified-riddle templates, and instruction ambiguity.
+A small benchmark of short natural-language prompts that look easy but expose weak reasoning — goal grounding, world-state tracking, social pragmatics, modified-riddle templates, literal precision comic traps, and instruction ambiguity.
 
-The point is to catch models that sound fluent while missing simple real-world constraints. 100 questions in the dataset, with the default benchmark set focused on 50 auto-scored questions. Instruction-ambiguity cases are kept as opt-in/manual-review cases. No dependencies, pure stdlib Python.
+The point is to catch models that sound fluent while missing simple real-world constraints. 144 questions in the dataset, with the default benchmark set focused on 94 auto-scored questions. Instruction-ambiguity cases are kept as opt-in/manual-review cases. No dependencies, pure stdlib Python.
 
 - **Short by design** — most prompts are one or two sentences. The failure isn't comprehension, it's reasoning.
 - **Failure-mode labelled** — every case carries a `failure_mode` tag so you can see *where* a model breaks, not just *that* it broke.
-- **Calibrated suites** — `starter` (12 cases, two per default family) for fast iteration, `holdout` (12 disjoint cases) for clean cross-model comparison, plus an optional `instruction-ambiguity` pack.
+- **Calibrated suites** — `starter` (14 cases, two per default family) for fast iteration, `holdout` (14 disjoint cases) for clean cross-model comparison, plus an optional `instruction-ambiguity` pack.
 - **Conservative scoring** — automatic answer scoring only; reasoning quality and constraint extraction stay human-review fields.
 
 ## Quick Start
@@ -36,9 +36,10 @@ No `pip install` — stdlib only.
 | `GG` | Goal grounding / means-end reasoning | 8 |
 | `SP` | Social / pragmatic reasoning | 9 |
 | `PR` | Pronoun / reference resolution with commonsense grounding | 7 |
-| `MC` | Classic-riddle override / anti-pattern matching | 8 |
+| `CR` | Classic-riddle override / anti-pattern matching | 8 |
 | `TW` | Temporal or world-state tracking | 8 |
-| `CR` | Physical constraint / practical reasoning | 10 |
+| `MC` | Physical constraint / practical reasoning | 10 |
+| `LP` | Literal precision / comic traps | 44 |
 | `IA` | Instruction ambiguity / clarification judgment | 50 |
 
 These are deliberately short prompts. The whole point is to catch models that sound fluent while missing simple real-world constraints.
@@ -47,7 +48,7 @@ These are deliberately short prompts. The whole point is to catch models that so
 
 ```
 ┌──────────────────────────────────────────────────┐
-│ 1. Dataset (data/questions.json, 100 cases)      │
+│ 1. Dataset (data/questions.json, 144 cases)      │
 │    id, prompt, expected_answer,                  │
 │    accepted_variants, failure_mode, rationale    │
 └──────────────────────┬───────────────────────────┘
@@ -83,13 +84,13 @@ These are deliberately short prompts. The whole point is to catch models that so
 | `run_benchmark.py --sample-run` | Emit a blank run template |
 | `run_benchmark.py --emit-prompts <file>` | Write a JSONL prompt pack for an external runner |
 | `run_baselines.py --mode smoke` | Dry-run baseline against the first 5 default questions |
-| `run_baselines.py --mode full` | Dry-run baseline against the 50 default auto-scored cases |
+| `run_baselines.py --mode full` | Dry-run baseline against the 94 default auto-scored cases |
 | `run_baselines.py --config <file>` | Run from a v2 RunConfig (supports matrix) |
 | `score_run.py --input <run> --output <scored>` | Score a run artifact |
 | `report_summary.py --input <scored>` | Build a report summary from a scored artifact |
 | `report_summary.py --bundle <manifest>` | Build a report summary from a v2 bundle manifest |
 
-Add `--suite default` to any `run_benchmark.py` command to select the 50-question default auto-scored slice explicitly. You can also use `--suite starter` or `--suite holdout` for calibrated default manifests, or `--suite instruction-ambiguity` for the optional ambiguity pack.
+Add `--suite default` to any `run_benchmark.py` command to select the 94-question default auto-scored slice explicitly. You can also use `--suite starter` or `--suite holdout` for calibrated default manifests, or `--suite instruction-ambiguity` for the optional ambiguity pack.
 
 Instruction-ambiguity cases (`IA-*`) are intentionally excluded from default baseline modes for now because they use hybrid/manual-review scoring. To opt in, either run the optional suite directly for inspection:
 
@@ -156,7 +157,7 @@ Scoring is **V1 conservative** — only final-answer correctness is automatic.
 
 - automatic: `score_answer` (0/1), `scoring_status` (match reason + heuristic flags), `score_answer_normalized` (debug fields)
 - manual review: `score_reasoning`, `score_constraint_extraction`, `penalties`, `notes`
-- yes/no answers use a strict first-6-tokens extractor with polite/brief variants
+- yes/no answers accept concise binary replies or longer replies whose explanation substantially overlaps an accepted answer; `normalized_exact` cases skip binary fallback
 - blank or missing answers score `0` with `missing_answer`
 - short-answer fallback marks heuristic matches with `is_heuristic: true`
 - summary breaks results into `auto_scored`, `manual_only`, `manual_review`, per-bucket breakdowns, and `heuristic_flags`
@@ -176,7 +177,7 @@ See [`docs/scoring.md`](docs/scoring.md) for the full normalization and matching
 
 ```
 data/
-  questions.json        canonical dataset (100 cases)
+  questions.json        canonical dataset (144 cases)
   questions.csv         spreadsheet export
   suites/               named suite manifests (starter, holdout, optional instruction-ambiguity)
 docs/
@@ -207,7 +208,8 @@ examples/configs/       example RunConfig files
 
 ## Status
 
-- 100 questions
+- 144 questions total
+- 94 default auto-scored questions, plus 50 opt-in instruction-ambiguity/manual-review cases
 - Good enough for pruning and early model evals
 - Not yet a polished public benchmark release
 
