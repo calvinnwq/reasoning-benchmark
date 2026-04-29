@@ -3244,6 +3244,15 @@ class MatrixSuiteParsingTests(unittest.TestCase):
         self.assertEqual(suites[0].mode, "full")
         self.assertIsNone(suites[0].case_ids)
 
+    def test_canonicalizes_full_suite_id_with_explicit_full_mode(self) -> None:
+        payload = self._payload_with_matrix([{"suite_id": "full", "mode": "full"}])
+        suites = run_baselines.config_matrix_suites(payload)
+        self.assertIsNotNone(suites)
+        self.assertEqual(len(suites), 1)
+        self.assertEqual(suites[0].suite_id, "default")
+        self.assertEqual(suites[0].mode, "full")
+        self.assertIsNone(suites[0].case_ids)
+
     def test_rejects_empty_suites_list(self) -> None:
         payload = self._payload_with_matrix([])
         with self.assertRaisesRegex(ValueError, "non-empty"):
@@ -3284,6 +3293,16 @@ class MatrixSuiteParsingTests(unittest.TestCase):
             [
                 {"suite_id": "smoke", "mode": "smoke"},
                 {"suite_id": "smoke", "mode": "full"},
+            ]
+        )
+        with self.assertRaisesRegex(ValueError, "unique"):
+            run_baselines.config_matrix_suites(payload)
+
+    def test_rejects_duplicate_canonical_default_suite_ids(self) -> None:
+        payload = self._payload_with_matrix(
+            [
+                {"suite_id": "full"},
+                {"suite_id": "default"},
             ]
         )
         with self.assertRaisesRegex(ValueError, "unique"):

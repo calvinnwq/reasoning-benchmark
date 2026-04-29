@@ -75,6 +75,16 @@ def artifact_suite_id(
     return default_suite_id(mode, case_ids) or mode
 
 
+def canonical_matrix_suite_id(
+    suite_id: str,
+    mode: str,
+    case_ids: tuple[str, ...] | None = None,
+) -> str:
+    if suite_id in {"full", DEFAULT_SUITE_ID} and mode == "full" and case_ids is None:
+        return DEFAULT_SUITE_ID
+    return suite_id
+
+
 RAW_ARTIFACT_SCHEMA_VERSION = "2.0.0"
 RUNNER_VERSION = "1.0.0"
 BUILTIN_ADAPTER_COMMANDS: dict[str, list[str]] = {
@@ -990,9 +1000,6 @@ def config_matrix_suites(
         if suite_id != suite_id.strip():
             raise ValueError("RunConfig matrix.suites entry suite_id must be an exact string")
         validate_artifact_label(suite_id, "RunConfig matrix.suites suite_id")
-        if suite_id in seen_suite_ids:
-            raise ValueError("RunConfig matrix.suites suite_ids must be unique")
-        seen_suite_ids.add(suite_id)
 
         case_ids: tuple[str, ...] | None = None
         if "case_ids" in entry:
@@ -1019,14 +1026,17 @@ def config_matrix_suites(
             if mode != mode.strip():
                 raise ValueError("RunConfig matrix.suites entry mode must be an exact string")
             validate_artifact_label(mode, "RunConfig matrix.suites mode")
-            resolved_suite_id = suite_id
         else:
             mode = suite_id
-            resolved_suite_id = artifact_suite_id(canonical_mode(mode, case_ids), case_ids=case_ids)
 
         validate_default_alias_usage(suite_id, case_ids, "RunConfig matrix.suites suite_id")
         validate_default_alias_usage(mode, case_ids, "RunConfig matrix.suites mode")
         mode = canonical_mode(mode, case_ids)
+        resolved_suite_id = canonical_matrix_suite_id(suite_id, mode, case_ids)
+
+        if resolved_suite_id in seen_suite_ids:
+            raise ValueError("RunConfig matrix.suites suite_ids must be unique")
+        seen_suite_ids.add(resolved_suite_id)
 
         if mode not in SUPPORTED_MODES and case_ids is None:
             raise ValueError(f"Unsupported suite or mode in RunConfig matrix.suites: {mode}")
