@@ -157,7 +157,7 @@ Scoring is **V1 conservative** — only final-answer correctness is automatic.
 
 - automatic: `score_answer` (0/1), `scoring_status` (match reason + heuristic flags), `score_answer_normalized` (debug fields)
 - manual review: `score_reasoning`, `score_constraint_extraction`, `penalties`, `notes`
-- yes/no answers use a strict first-6-tokens extractor with polite/brief variants
+- yes/no answers accept concise binary replies or longer replies whose explanation substantially overlaps an accepted answer; `normalized_exact` cases skip binary fallback
 - blank or missing answers score `0` with `missing_answer`
 - short-answer fallback marks heuristic matches with `is_heuristic: true`
 - summary breaks results into `auto_scored`, `manual_only`, `manual_review`, per-bucket breakdowns, and `heuristic_flags`
@@ -177,7 +177,7 @@ See [`docs/scoring.md`](docs/scoring.md) for the full normalization and matching
 
 ```
 data/
-  questions.json        canonical dataset (100 cases)
+  questions.json        canonical dataset (144 cases)
   questions.csv         spreadsheet export
   suites/               named suite manifests (starter, holdout, optional instruction-ambiguity)
 docs/

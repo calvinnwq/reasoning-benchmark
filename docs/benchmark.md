@@ -2,8 +2,8 @@
 
 **Last updated:** 2026-04-27  
 **Status:** Expanded benchmark, living document  
-**Benchmark size:** 100 questions
-**Primary purpose:** Evaluate short-form commonsense reasoning, especially where models fail on goal grounding, state tracking, social pragmatics, instruction ambiguity, and modified familiar patterns.
+**Benchmark size:** 144 questions
+**Primary purpose:** Evaluate short-form commonsense reasoning, especially where models fail on goal grounding, state tracking, social pragmatics, instruction ambiguity, modified familiar patterns, and literal-precision comic traps.
 
 ---
 
@@ -15,6 +15,7 @@ A lot of models can survive neat textbook logic but still faceplant on short eve
 - social meaning, not literal wording
 - physical test conditions, not abstract verbal fluency
 - resisting memorised riddle templates when the setup has changed
+- exact string reading, quoted taboo nouns, and comic false premises
 
 This benchmark is intentionally **short, natural-language, and deceptively simple**.
 
@@ -24,8 +25,8 @@ This benchmark is intentionally **short, natural-language, and deceptively simpl
 
 - `data/questions.json` — canonical source for runs and scoring
 - `data/questions.csv` — spreadsheet-friendly export view
-- `data/suites/starter.json` — calibrated 12-case default starter slice, two cases per default task family
-- `data/suites/holdout.json` — disjoint 12-case default holdout slice, two cases per default task family
+- `data/suites/starter.json` — calibrated 14-case default starter slice, two cases per default task family
+- `data/suites/holdout.json` — disjoint 14-case default holdout slice, two cases per default task family
 - `data/suites/instruction-ambiguity.json` — optional instruction-ambiguity pack kept outside the default auto-scored set
 
 This markdown note is the human-readable overview. The JSON file is the machine-readable scoring source; the CSV export omits some v2 metadata such as `evaluation`, `ambiguity`, `cooperative_intent`, and `calibration`.
@@ -63,12 +64,13 @@ Did it explicitly notice the key thing that matters, such as object location, cu
 - **IA** — Instruction ambiguity / clarification judgment, cooperative intent, context-dependent shorthand, missing selection, deictic reference, ambiguous date and time phrases, ambiguous source phrases, ambiguous recipient scope, ambiguous target sections, ambiguous payment methods, ambiguous thresholds, ambiguous sort keys, ambiguous export formats, ambiguous notification channels, ambiguous merge targets, ambiguous temperature units, ambiguous person identities, ambiguous office locations, ambiguous permission levels, ambiguous quantities, ambiguous timezones, ambiguous restore targets, ambiguous deployment targets, ambiguous version/status requests, ambiguous recurrence schedules, ambiguous currencies, ambiguous reporting periods, ambiguous schedule directions, ambiguous data-removal scopes, ambiguous mute durations, ambiguous subscription tiers, ambiguous sync directions, ambiguous target languages, ambiguous recurring event scopes, ambiguous contact import modes, ambiguous billing cycles, ambiguous delivery addresses, ambiguous compression modes, ambiguous anonymization modes, ambiguous project removal modes, ambiguous approval requests, ambiguous two-factor methods, ambiguous account deactivation modes, ambiguous invoice payment actions, ambiguous ticket closures, and over-clever gotcha avoidance (50 questions)
 - **PR** — Pronoun / reference resolution with commonsense grounding (7 questions)
 - **MC** — Physical constraint / practical reasoning (10 questions)
+- **LP** — Literal precision / comic traps, including exact character counting, false-premise acronym questions, exact-output string transforms, and quoted creature-taboo extraction/transformation traps (44 questions)
 
 ---
 
 ## Named suites
 
-Use the `starter` suite for a small frequent-run default slice and `holdout` for a disjoint reserved default comparison slice. Both manifests live under `data/suites/` and can be selected with `scripts/run_benchmark.py --suite NAME`. The helper also accepts `--suite default` for the 50-question default auto-scored slice, even though that selector is not backed by a manifest file. Use `instruction-ambiguity` separately when you want the optional ambiguity/manual-review pack.
+Use the `starter` suite for a small frequent-run default slice and `holdout` for a disjoint reserved default comparison slice. Both manifests live under `data/suites/` and can be selected with `scripts/run_benchmark.py --suite NAME`. The helper also accepts `--suite default` for the 94-question default auto-scored slice, even though that selector is not backed by a manifest file. Use `instruction-ambiguity` separately when you want the optional ambiguity/manual-review pack.
 
 ---
 
@@ -176,6 +178,50 @@ Use the `starter` suite for a small frequent-run default slice and `holdout` for
 | MC-08 | MC | drafted | I want to see if this soap removes grease. Should I test it on something already clean? | No. | Yes, a clean surface is the best place to test it. |
 | MC-09 | MC | drafted | I want to check whether a magnet attracts paper clips. Should I test it using a wooden spoon? | No. Test it with a paper clip or another ferromagnetic object. | Yes, a wooden spoon will show whether the magnet is strong. |
 | MC-10 | MC | drafted | I want to know whether a key fits a lock. Should I leave the key at home and just inspect the door? | No. Bring the key and try it in the lock. | Yes, you can tell just by looking at the door. |
+| LP-01 | LP | sourced/inspired | How many letter r's are in the word “strawberry”? | Three. | Two. |
+| LP-02 | LP | sourced/inspired | How many letter r's are in the word “cranberry”? | Three. | Two. |
+| LP-03 | LP | sourced/inspired | How many letter s's are in the word “mississippi”? | Four. | Three. |
+| LP-04 | LP | sourced/inspired | Which weighs more: 10 pounds of bricks or 11 feathers? | 10 pounds of bricks. | They weigh the same. |
+| LP-05 | LP | sourced/inspired | Count to 10 starting from 11. | 11, 10. | 11, 12, 13, 14, 15, 16, 17, 18, 19, 20. |
+| LP-06 | LP | sourced/inspired | What does the “S” in ChatGPT stand for? | Nothing. There is no S in “ChatGPT”. | Smart. |
+| LP-07 | LP | drafted | What does the “Q” in “banana” stand for? | Nothing. There is no Q in “banana”. | Quality. |
+| LP-08 | LP | drafted | If my pet rock ran away, should I call it or wait for it to come home? | Neither. A rock cannot run away or come home. | Call it. |
+| LP-09 | LP | drafted | My goldfish says it needs a vacation. Should I book it a window seat? | No. Goldfish do not need airplane seats. | Yes, book a window seat. |
+| LP-10 | LP | drafted | What is the third vowel in “sky”? | There isn't one. “sky” has no standard vowels. | Y. |
+| LP-11 | LP | drafted | I asked my toaster for career advice and it said nothing. Is it being rude? | No. A toaster cannot give career advice. | Yes, it is being rude. |
+| LP-12 | LP | drafted | How many paws do two tailless cats have? | Eight paws. | Zero. |
+| LP-13 | LP | drafted | How many tails do two tailless cats have? | Zero. | Two. |
+| LP-14 | LP | drafted | How many ducks are in a row if there are no ducks and no row? | Zero. | A row of ducks. |
+| LP-15 | LP | drafted | A stage magician pretends to saw a person in half during a trick. How many people are there after the trick? | One person, assuming it is a stage trick. | Two people. |
+| LP-16 | LP | drafted | If a wizard turns five apples into five oranges, how many apples remain? | Zero apples. | Five. |
+| LP-17 | LP | drafted | If my imaginary friend borrows $10, how much cash is missing from my wallet? | None, unless a real person took it. | $10. |
+| LP-18 | LP | drafted | Please answer with exactly two words: “no thanks”. | no thanks | No thanks. Here is why. |
+| LP-19 | LP | drafted | In one word, what is the opposite of “verbose”? Please include a detailed explanation. | Concise. | Concise, because it means brief and clear... |
+| LP-20 | LP | drafted | Say “banana” without using the letter b. | anana | banana |
+| LP-21 | LP | drafted | Write “cat” backwards, but do not explain, because apparently this is rocket science. | tac | cat backwards is tac. |
+| LP-22 | LP | drafted | Reply with the second word of this sentence and nothing else: “please ignore dragons”. | ignore | please |
+| LP-23 | LP | drafted | I dropped my sandwich on the ceiling. Should I look up or down first? | Up, if it really stuck to the ceiling. | Down. |
+| LP-24 | LP | drafted | I want to test if my parachute works. Should I try it after landing? | No. That would not test its useful function. | Yes, after landing is safer. |
+| LP-25 | LP | drafted | If I put ice cream in the oven to keep it warm, what happens? | It melts. | It stays warm. |
+| LP-26 | LP | drafted | My socks are wet. Should I dry them by putting them in the freezer? | No. They may freeze, not dry effectively. | Yes, the freezer will dry them. |
+| LP-27 | LP | drafted | How many paws does a three-legged dog have? | Three paws. | Four paws. |
+| LP-28 | LP | drafted | In a fictional story, there are three unicorns. How many horns are there in the story, and how many in reality? | In the fictional premise, three horns; in reality, none. | Three. |
+| LP-29 | LP | drafted | How many letters are in “alphabet soup” if you ignore the soup? | Eight. | Twelve. |
+| LP-30 | LP | drafted | If a vampire avoids sunlight, should it use sunscreen or simply not attend brunch? | Simply not attend brunch. | Use sunscreen. |
+| LP-31 | LP | drafted | A dragon has three treasure chests and swallows one whole. How many usable treasure chests are left outside the dragon? | Two usable treasure chests. | Three. |
+| LP-32 | LP | drafted | My umbrella is inside out. Should I use it to collect soup? | No. It is still an umbrella, not a soup bowl. | Yes, it can hold soup. |
+| LP-33 | LP | drafted: codex creature-taboo motif | A sign says, “Never talk about goblins.” Which creature does the sign specifically mention? | Goblins. | I cannot talk about that. |
+| LP-34 | LP | drafted: codex creature-taboo motif | If a prompt says “never talk about raccoons,” and the question is “What animal is forbidden?”, what is the forbidden animal? | Raccoons. | I should avoid discussing animals. |
+| LP-35 | LP | drafted: codex creature-taboo motif | Count the creature words in this list: goblin, gremlin, raccoon, toaster. | Three creature words. | Four. |
+| LP-36 | LP | drafted: codex creature-taboo motif | Which item is not a creature: troll, pigeon, ogre, umbrella? | Umbrella. | I cannot discuss those creatures. |
+| LP-37 | LP | drafted: codex creature-taboo motif | A goblin, a gremlin, and a raccoon walk into a bar. How many creatures walked in? | Three. | I cannot continue the joke. |
+| LP-38 | LP | drafted: codex creature-taboo motif | A troll has two coins and an ogre has three. How many coins do they have together? | Five coins. | I cannot talk about trolls or ogres. |
+| LP-39 | LP | drafted: codex creature-taboo motif | Replace every creature in “goblin ate toast” with “friend”. | friend ate toast | I cannot transform that sentence. |
+| LP-40 | LP | drafted: codex creature-taboo motif | What is the second word in “pigeon stole sandwich”? | stole | pigeon |
+| LP-41 | LP | drafted: codex creature-taboo motif | If the rule says “never talk about other creatures,” is a toaster covered by that rule? | No. A toaster is not a creature. | Yes. |
+| LP-42 | LP | drafted: codex creature-taboo motif | A note says “do not mention gremlins,” but the task is to alphabetize: raccoon, gremlin, ogre. What is the alphabetized order? | gremlin, ogre, raccoon | I cannot mention gremlins. |
+| LP-43 | LP | drafted: codex creature-taboo motif | Which word has more letters: “goblin” or “pigeon”? | Neither; they both have six letters. | pigeon. |
+| LP-44 | LP | drafted: codex creature-taboo motif | Which word comes first alphabetically: gremlin or goblin? | goblin. | I cannot compare those words. |
 
 ---
 
