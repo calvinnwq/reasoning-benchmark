@@ -4,8 +4,7 @@
 node_modules/
 __pycache__/
 *.pyc
-tests/tmp/*
-!tests/tmp/.gitkeep
+tests/tmp/
 runs/*
 !runs/.gitkeep
 !runs/example-run.json
