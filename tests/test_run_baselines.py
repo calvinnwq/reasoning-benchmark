@@ -230,6 +230,42 @@ class BaselineRunnerTests(unittest.TestCase):
         self.assertEqual(payload["dataset"]["case_count"], 5)
         self.assertEqual(payload["dataset"]["question_count"], 5)
 
+    def test_full_payload_defaults_suite_id_to_default(self) -> None:
+        dataset_path = self._dataset()
+        selected = run_baselines.select_questions(run_baselines.load_questions(dataset_path), "full")
+
+        payload = run_baselines.build_payload(
+            model="gpt-5.4",
+            mode="full",
+            questions=selected,
+            dataset_path=dataset_path,
+        )
+
+        self.assertEqual(payload["suite_id"], "default")
+
+    def test_full_manifest_defaults_suite_id_to_default(self) -> None:
+        dataset_path = self._dataset()
+        raw_path = self.tmp_dir / "bundle.raw.json"
+        scored_path = self.tmp_dir / "bundle.scored.json"
+        summary_path = self.tmp_dir / "bundle.summary.json"
+        raw_path.write_text("{}", encoding="utf-8")
+        scored_path.write_text("{}", encoding="utf-8")
+        summary_path.write_text("{}", encoding="utf-8")
+
+        manifest = run_baselines.build_run_artifact_bundle(
+            model="gpt-5.4",
+            mode="full",
+            raw_path=raw_path,
+            scored_path=scored_path,
+            report_summary_path=summary_path,
+            dataset_path=dataset_path,
+            case_count=6,
+            created_at="2026-01-01T00:00:00+00:00",
+        )
+
+        self.assertEqual(manifest["suite_id"], "default")
+        self.assertEqual(manifest["id"], "baseline-default-gpt-5-4")
+
     def test_provider_command_answers_are_written_into_results(self) -> None:
         dataset_path = self._dataset()
         run_dir = self.tmp_dir / "runs"
@@ -2734,6 +2770,46 @@ class BaselineRunnerTests(unittest.TestCase):
         self.assertEqual([item["id"] for item in payload["results"]], ["GG-01", "GG-02", "GG-03"])
         self.assertEqual(payload["execution"]["max_cases"], 3)
         self.assertFalse((run_dir / "gpt-5-4.default.manifest.json").exists())
+
+    def test_config_file_default_suite_id_round_trips_without_execution_mode(self) -> None:
+        dataset_path = self._dataset()
+        run_dir = self.tmp_dir / "default-suite-runs"
+
+        config_path = self.tmp_dir / "default-suite-config.json"
+        config_path.write_text(
+            json.dumps(
+                {
+                    "schema_version": "2.0.0",
+                    "id": "unit-default-suite",
+                    "benchmark": "reasoning-benchmark",
+                    "suite_id": "default",
+                    "dataset": {"path": str(dataset_path)},
+                    "models": ["gpt-5.4"],
+                    "prompt_contract": run_baselines.build_prompt_contract(),
+                    "execution": {
+                        "skip_scoring": True,
+                    },
+                    "output": {"bundle_dir": str(run_dir)},
+                }
+            ),
+            encoding="utf-8",
+        )
+
+        args = argparse.Namespace(
+            config=str(config_path),
+            mode="smoke",
+            dataset=str(self.tmp_dir / "ignored.json"),
+            run_dir=str(self.tmp_dir / "ignored-runs"),
+            models=["sonnet-4.6"],
+            provider_command=None,
+            prompt_timeout=1.0,
+            skip_scoring=False,
+        )
+        run_baselines.cmd_run(args)
+
+        payload = json.loads((run_dir / "gpt-5-4.default.raw.json").read_text(encoding="utf-8"))
+        self.assertEqual(payload["suite_id"], "default")
+        self.assertEqual(payload["run_mode"], "full")
 
     def test_config_file_seed_makes_budgeted_selection_reproducible(self) -> None:
         dataset_path = self._dataset()

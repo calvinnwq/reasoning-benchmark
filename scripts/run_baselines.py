@@ -54,6 +54,22 @@ def default_suite_id(mode: str, case_ids: tuple[str, ...] | None = None) -> str 
     return None
 
 
+def canonical_mode(mode: str, case_ids: tuple[str, ...] | None = None) -> str:
+    if mode == DEFAULT_SUITE_ID and case_ids is None:
+        return "full"
+    return mode
+
+
+def artifact_suite_id(
+    mode: str,
+    suite_id: str | None = None,
+    case_ids: tuple[str, ...] | None = None,
+) -> str:
+    if suite_id is not None:
+        return suite_id
+    return default_suite_id(mode, case_ids) or mode
+
+
 RAW_ARTIFACT_SCHEMA_VERSION = "2.0.0"
 RUNNER_VERSION = "1.0.0"
 BUILTIN_ADAPTER_COMMANDS: dict[str, list[str]] = {
@@ -387,14 +403,14 @@ def build_payload(
     suite_id: str | None = None,
 ) -> Dict[str, Any]:
     contract = copy.deepcopy(prompt_contract) if prompt_contract is not None else build_prompt_contract()
-    artifact_suite_id = suite_id if suite_id is not None else mode
+    resolved_suite_id = artifact_suite_id(mode, suite_id)
     payload = {
         "schema_version": RAW_ARTIFACT_SCHEMA_VERSION,
         "benchmark": BENCHMARK_ID,
         "runner": "scripts/run_baselines.py",
         "runner_version": RUNNER_VERSION,
         "created_at": datetime.now(timezone.utc).isoformat(),
-        "suite_id": artifact_suite_id,
+        "suite_id": resolved_suite_id,
         "run_mode": mode,
         "case_count": len(questions),
         "question_count": len(questions),
@@ -439,7 +455,7 @@ def build_run_artifact_bundle(
     config_path: Path | None = None,
 ) -> Dict[str, Any]:
     model_slug = normalize_model_id(model)
-    artifact_suite_id = suite_id if suite_id is not None else mode
+    resolved_suite_id = artifact_suite_id(mode, suite_id)
     scored_results = scored_path.name if scored_path else None
     scored_fingerprint = (
         {"algorithm": "sha256", "value": file_fingerprint(scored_path)}
@@ -453,9 +469,9 @@ def build_run_artifact_bundle(
     )
     return {
         "schema_version": "2.0.0",
-        "id": f"baseline-{artifact_suite_id}-{model_slug}",
+        "id": f"baseline-{resolved_suite_id}-{model_slug}",
         "benchmark": BENCHMARK_ID,
-        "suite_id": artifact_suite_id,
+        "suite_id": resolved_suite_id,
         "run_config": str(config_path) if config_path else None,
         "artifacts": {
             "raw_results": raw_path.name,
@@ -903,14 +919,14 @@ def config_skip_scoring(execution: dict[str, Any]) -> bool:
 
 def config_execution_mode(config_payload: dict[str, Any], execution: dict[str, Any]) -> str:
     if "mode" not in execution:
-        return str(config_payload.get("suite_id"))
+        return canonical_mode(str(config_payload.get("suite_id")), config_suite_case_ids(config_payload))
     mode = execution.get("mode")
     if not isinstance(mode, str) or not mode.strip():
         raise ValueError("RunConfig execution.mode must be a non-empty string")
     if mode != mode.strip():
         raise ValueError("RunConfig execution.mode must be an exact string")
     validate_artifact_label(mode, "RunConfig execution.mode")
-    return mode
+    return canonical_mode(mode, config_suite_case_ids(config_payload))
 
 
 def config_suite_case_ids(config_payload: dict[str, Any]) -> tuple[str, ...] | None:
@@ -1188,7 +1204,7 @@ def _execute_run_pass(
     report_summary_path: Path,
     bundle_path: Path,
 ) -> None:
-    artifact_suite_id = suite_id if suite_id is not None else default_suite_id(mode, suite_case_ids)
+    resolved_suite_id = artifact_suite_id(mode, suite_id, suite_case_ids)
     selected = select_questions(
         questions,
         mode,
@@ -1205,7 +1221,7 @@ def _execute_run_pass(
         max_cases=request.max_cases,
         seed=request.seed,
         prompt_contract=request.prompt_contract,
-        suite_id=artifact_suite_id,
+        suite_id=resolved_suite_id,
     )
     if request.config_payload:
         payload["run_config"] = sanitize_run_config_for_artifact(request.config_payload)
@@ -1238,7 +1254,7 @@ def _execute_run_pass(
     manifest = build_run_artifact_bundle(
         model=model,
         mode=mode,
-        suite_id=artifact_suite_id,
+        suite_id=resolved_suite_id,
         raw_path=raw_path,
         scored_path=scored_path,
         report_summary_path=report_summary_path,
@@ -1308,7 +1324,7 @@ def cmd_run(args: argparse.Namespace) -> int:
         return 1 if cell_errors else 0
 
     for model in request.models:
-        artifact_mode = default_suite_id(request.mode, request.suite_case_ids) or request.mode
+        artifact_mode = artifact_suite_id(request.mode, case_ids=request.suite_case_ids)
         raw_path, scored_path = run_paths(request.run_dir, model, artifact_mode)
         report_summary_path = summary_path(request.run_dir, model, artifact_mode)
         bundle_path = manifest_path(request.run_dir, model, artifact_mode)
