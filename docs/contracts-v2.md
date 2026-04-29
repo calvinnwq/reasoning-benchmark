@@ -283,15 +283,18 @@ non-empty strings from the current baseline runner set: `gpt-5.4`, `sonnet-4.6`,
 It requires `execution.mode` to be an exact, unpadded, non-empty string without path separators or
 `.`/`..` traversal segments when present so configs do not preserve ambiguous suite mode selections
 or artifact labels.
-Without an embedded `suite.case_ids` list or `matrix.suites`, `execution.mode` must be `smoke` or
-`full`; with `suite.case_ids` or `matrix.suites`, custom top-level mode names are allowed. Explicit
-`suite.case_ids` run in the supplied order; matrix suite entries control each cell's selection.
+Without an embedded `suite.case_ids` list or `matrix.suites`, `execution.mode` must be `smoke`,
+`full`, or the `default` alias. The runner canonicalizes `default` to `full` for selection while
+persisting `suite_id: "default"` on artifacts for the default auto-scored slice. With `suite.case_ids`
+or `matrix.suites`, custom top-level mode names are allowed. Explicit `suite.case_ids` run in the
+supplied order; matrix suite entries control each cell's selection.
 When `matrix` is supplied, it must be an object with a non-empty `suites` list, and the runner
 executes every suite/model cell. Each matrix suite must declare a unique exact `suite_id` without
 path separators or `.`/`..` traversal segments, may declare an exact `mode` without path separators
 or `.`/`..` traversal segments, and may declare
-non-empty unique exact `case_ids`. Matrix suites without `case_ids` must use `smoke` or `full` as
-their mode; if `mode` is omitted, the suite id is used as the mode.
+non-empty unique exact `case_ids`. Matrix suites without `case_ids` must use `smoke`, `full`, or the
+`default` alias as their mode; if `mode` is omitted, the suite id is used as the mode. Matrix cells
+that target the default auto-scored slice persist `suite_id: "default"` in artifacts.
 Top-level `suite.case_ids` cannot be combined with `matrix.suites`; set `case_ids` per matrix suite
 instead.
 `execution.seed` shuffles only `smoke` or `full` selections, and `execution.max_cases` truncates the

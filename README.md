@@ -82,7 +82,7 @@ These are deliberately short prompts. The whole point is to catch models that so
 | `run_benchmark.py --list-suites` | Show available suite manifests |
 | `run_benchmark.py --sample-run` | Emit a blank run template |
 | `run_benchmark.py --emit-prompts <file>` | Write a JSONL prompt pack for an external runner |
-| `run_baselines.py --mode smoke` | Dry-run baseline against the first 5 cases |
+| `run_baselines.py --mode smoke` | Dry-run baseline against the first 5 default questions |
 | `run_baselines.py --mode full` | Dry-run baseline against the 50 default auto-scored cases |
 | `run_baselines.py --config <file>` | Run from a v2 RunConfig (supports matrix) |
 | `score_run.py --input <run> --output <scored>` | Score a run artifact |

@@ -133,7 +133,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--suite",
         metavar="NAME",
-        help="Restrict the command to a named suite manifest (e.g. starter, holdout)",
+        help="Restrict the command to a suite selector (e.g. default, starter, holdout, instruction-ambiguity)",
     )
     group = parser.add_mutually_exclusive_group(required=True)
     group.add_argument("--list", action="store_true", help="List benchmark questions")
