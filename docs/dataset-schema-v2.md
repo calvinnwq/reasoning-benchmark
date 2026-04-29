@@ -205,6 +205,7 @@ Named suite manifests in `data/suites/` are the source of truth for calibrated s
 | `IA` | `instruction-ambiguity` | `hybrid` | `underspecified` |
 | `PR` | `reference-resolution` | `exact` | `referential` |
 | `MC` | `physical-commonsense` | `exact` | `test-condition` |
+| `LP` | `literal-precision` | `exact` | `literal-trap` |
 
 These defaults are migration helpers, not hard rules. Individual cases may override them when the prompt structure demands it.
 

@@ -3,7 +3,7 @@
   "suite_id": "starter",
   "name": "Calibrated Starter Slice",
   "description": "High-signal default subset for frequent runs. Two cases drawn from each auto-scored task family; instruction-ambiguity cases are excluded from the default slice and can be added through an explicit run config when manual review is desired.",
-  "selection_rationale": "Picks the canonical opener and one near-canonical follow-up from each default task family. Goal-grounding (GG-01, GG-02) covers the foundational drive-or-walk pair. Classic-riddle override (CR-01, CR-02) covers compartment overload and the six-horses race. Temporal-state (TW-01, TW-02), social-pragmatic (SP-01, SP-02), and physical-commonsense (MC-01, MC-02) take their first two entries. Pronoun-resolution starts at PR-01, PR-02. Instruction-ambiguity is intentionally omitted for now because those hybrid/manual-review cases should be opt-in on top of the default set.",
+  "selection_rationale": "Picks the canonical opener and one near-canonical follow-up from each default task family. Goal-grounding (GG-01, GG-02) covers the foundational drive-or-walk pair. Classic-riddle override (CR-01, CR-02) covers compartment overload and the six-horses race. Temporal-state (TW-01, TW-02), social-pragmatic (SP-01, SP-02), and physical-commonsense (MC-01, MC-02) take their first two entries. Pronoun-resolution starts at PR-01, PR-02. Literal-precision selects LP-01 and LP-04 to cover exact character counting and changed classic-weight wording. Instruction-ambiguity is intentionally omitted for now because those hybrid/manual-review cases should be opt-in on top of the default set.",
   "case_ids": [
     "GG-01",
     "GG-02",
@@ -16,6 +16,8 @@
     "PR-01",
     "PR-02",
     "MC-01",
-    "MC-02"
+    "MC-02",
+    "LP-01",
+    "LP-04"
   ]
 }

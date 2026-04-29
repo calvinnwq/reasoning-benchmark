@@ -72,7 +72,7 @@ class SuiteManifestLayoutTests(unittest.TestCase):
 
         self.assertEqual(
             categories,
-            {"GG", "CR", "TW", "SP", "PR", "MC"},
+            {"GG", "CR", "TW", "SP", "PR", "MC", "LP"},
         )
         self.assertNotIn("IA", categories)
 
@@ -82,7 +82,7 @@ class SuiteManifestLayoutTests(unittest.TestCase):
 
         self.assertEqual(
             categories,
-            {"GG", "CR", "TW", "SP", "PR", "MC"},
+            {"GG", "CR", "TW", "SP", "PR", "MC", "LP"},
         )
         self.assertNotIn("IA", categories)
 

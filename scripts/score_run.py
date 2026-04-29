@@ -26,6 +26,7 @@ CATEGORY_TASK_FAMILY_IDS = {
     "IA": "instruction-ambiguity",
     "PR": "reference-resolution",
     "MC": "physical-commonsense",
+    "LP": "literal-precision",
 }
 CATEGORY_AMBIGUITY_TYPES = {
     "GG": "none",
@@ -35,6 +36,7 @@ CATEGORY_AMBIGUITY_TYPES = {
     "IA": "underspecified",
     "PR": "referential",
     "MC": "test-condition",
+    "LP": "literal-trap",
 }
 
 BINARY_TOKEN_LOOKAHEAD = 6

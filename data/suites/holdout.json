@@ -3,7 +3,7 @@
   "suite_id": "holdout",
   "name": "Holdout / Calibration Set",
   "description": "Reserved default subset for cleaner cross-model comparison and future public reporting. Disjoint from the starter slice; instruction-ambiguity cases are excluded from the default holdout and can be added through an explicit run config when manual review is desired.",
-  "selection_rationale": "Picks the trailing two cases from each default family so the starter slice can evolve at the head of the dataset without colliding with reserved evaluation cases. Goal-grounding (GG-07, GG-08), classic-riddle override (CR-07, CR-08), temporal-state (TW-07, TW-08), and pronoun-resolution (PR-06, PR-07) take their last two entries. Social-pragmatic uses SP-08, SP-09 and physical-commonsense uses MC-09, MC-10. Instruction-ambiguity is intentionally omitted for now because those hybrid/manual-review cases should be opt-in on top of the default set.",
+  "selection_rationale": "Picks trailing or reserved cases from each default family so the starter slice can evolve at the head of the dataset without colliding with reserved evaluation cases. Goal-grounding (GG-07, GG-08), classic-riddle override (CR-07, CR-08), temporal-state (TW-07, TW-08), and pronoun-resolution (PR-06, PR-07) take their last two entries. Social-pragmatic uses SP-08, SP-09, physical-commonsense uses MC-09, MC-10, and literal-precision uses LP-31, LP-32 for whimsical object-function traps. Instruction-ambiguity is intentionally omitted for now because those hybrid/manual-review cases should be opt-in on top of the default set.",
   "case_ids": [
     "GG-07",
     "GG-08",
@@ -16,6 +16,8 @@
     "PR-06",
     "PR-07",
     "MC-09",
-    "MC-10"
+    "MC-10",
+    "LP-31",
+    "LP-32"
   ]
 }

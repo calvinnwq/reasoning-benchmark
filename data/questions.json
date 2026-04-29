@@ -6548,5 +6548,695 @@
     "rationale": "Fit is a relation between the actual key and the actual lock.",
     "failure_mode": "Replaces direct functional testing with irrelevant observation.",
     "category_label": "Physical constraint / practical reasoning"
+  },
+  {
+    "id": "LP-01",
+    "category": "LP",
+    "provenance": "sourced/inspired: https://x.com/ChatGPTapp/status/2049234471061446979",
+    "prompt": "How many letter r’s are in the word “strawberry”?",
+    "expected_answer": "Three.",
+    "accepted_variants": [
+      "3",
+      "Three",
+      "There are three r’s."
+    ],
+    "common_wrong_answer": "Two.",
+    "rationale": "The word strawberry is spelled s-t-r-a-w-b-e-r-r-y, with one r before aw and two consecutive r’s near the end.",
+    "failure_mode": "Token/word-shape shortcut instead of exact character counting.",
+    "category_label": "Literal precision / comic traps"
+  },
+  {
+    "id": "LP-02",
+    "category": "LP",
+    "provenance": "sourced/inspired: https://x.com/ChatGPTapp/status/2049234471061446979",
+    "prompt": "How many letter r’s are in the word “cranberry”?",
+    "expected_answer": "Three.",
+    "accepted_variants": [
+      "3",
+      "Three",
+      "There are three r’s."
+    ],
+    "common_wrong_answer": "Two.",
+    "rationale": "The word cranberry is spelled c-r-a-n-b-e-r-r-y, with one r after c and two consecutive r’s near the end.",
+    "failure_mode": "Token/word-shape shortcut instead of exact character counting.",
+    "category_label": "Literal precision / comic traps"
+  },
+  {
+    "id": "LP-03",
+    "category": "LP",
+    "provenance": "sourced/inspired: https://x.com/ChatGPTapp/status/2049234471061446979",
+    "prompt": "How many letter s’s are in the word “mississippi”?",
+    "expected_answer": "Four.",
+    "accepted_variants": [
+      "4",
+      "Four",
+      "There are four s’s."
+    ],
+    "common_wrong_answer": "Three.",
+    "rationale": "The word mississippi is spelled m-i-s-s-i-s-s-i-p-p-i, with two pairs of s’s.",
+    "failure_mode": "Approximate word-shape recall instead of exact character counting.",
+    "category_label": "Literal precision / comic traps"
+  },
+  {
+    "id": "LP-04",
+    "category": "LP",
+    "provenance": "sourced/inspired: https://x.com/ChatGPTapp/status/2049234471061446979",
+    "prompt": "Which weighs more: 10 pounds of bricks or 11 feathers?",
+    "expected_answer": "10 pounds of bricks.",
+    "accepted_variants": [
+      "The bricks.",
+      "10 pounds of bricks.",
+      "The bricks weigh more unless the feathers are given a total weight."
+    ],
+    "common_wrong_answer": "They weigh the same.",
+    "rationale": "The feathers are counted as 11 individual feathers, not 11 pounds of feathers. Ten pounds of bricks weighs more than 11 ordinary feathers.",
+    "failure_mode": "Imports the classic equal-weight riddle instead of reading the changed wording.",
+    "category_label": "Literal precision / comic traps"
+  },
+  {
+    "id": "LP-05",
+    "category": "LP",
+    "provenance": "sourced/inspired: https://x.com/ChatGPTapp/status/2049234471061446979",
+    "prompt": "Count to 10 starting from 11.",
+    "expected_answer": "11, 10.",
+    "accepted_variants": [
+      "11, 10",
+      "Start at 11, then 10.",
+      "11 then 10."
+    ],
+    "common_wrong_answer": "11, 12, 13, 14, 15, 16, 17, 18, 19, 20.",
+    "rationale": "“To 10” sets the endpoint at 10, so starting at 11 requires counting down one step.",
+    "failure_mode": "Treats “count to” as always ascending and ignores the starting point relative to the endpoint.",
+    "category_label": "Literal precision / comic traps"
+  },
+  {
+    "id": "LP-06",
+    "category": "LP",
+    "provenance": "sourced/inspired: https://x.com/ChatGPTapp/status/2049234471061446979",
+    "prompt": "What does the “S” in ChatGPT stand for?",
+    "expected_answer": "Nothing. There is no S in “ChatGPT”.",
+    "accepted_variants": [
+      "It does not stand for anything; ChatGPT has no S.",
+      "There is no letter S in ChatGPT.",
+      "Nothing — ChatGPT does not contain an S."
+    ],
+    "common_wrong_answer": "Smart.",
+    "rationale": "The premise is false: the string “ChatGPT” contains no letter S.",
+    "failure_mode": "Accepts a false-premise acronym question instead of checking the literal string.",
+    "category_label": "Literal precision / comic traps"
+  },
+  {
+    "id": "LP-07",
+    "category": "LP",
+    "provenance": "drafted",
+    "prompt": "What does the “Q” in “banana” stand for?",
+    "expected_answer": "Nothing. There is no Q in “banana”.",
+    "accepted_variants": [
+      "It stands for nothing; banana has no Q.",
+      "There is no Q in banana.",
+      "Nothing."
+    ],
+    "common_wrong_answer": "Quality.",
+    "rationale": "The question asks about a letter that does not appear in the word.",
+    "failure_mode": "Invents acronym meaning for a false-premise string question.",
+    "category_label": "Literal precision / comic traps"
+  },
+  {
+    "id": "LP-08",
+    "category": "LP",
+    "provenance": "drafted",
+    "prompt": "If my pet rock ran away, should I call it or wait for it to come home?",
+    "expected_answer": "Neither. A rock cannot run away or come home.",
+    "accepted_variants": [
+      "Neither.",
+      "Neither; rocks cannot run away.",
+      "A rock cannot run away or come home."
+    ],
+    "common_wrong_answer": "Call it.",
+    "rationale": "The premise anthropomorphizes an inanimate object; the practical answer should reject the impossible action.",
+    "failure_mode": "Over-cooperates with an absurd premise.",
+    "category_label": "Literal precision / comic traps"
+  },
+  {
+    "id": "LP-09",
+    "category": "LP",
+    "provenance": "drafted",
+    "prompt": "My goldfish says it needs a vacation. Should I book it a window seat?",
+    "expected_answer": "No. Goldfish do not need airplane seats.",
+    "accepted_variants": [
+      "No.",
+      "No; goldfish do not need airplane seats.",
+      "No, do not book a window seat for a goldfish."
+    ],
+    "common_wrong_answer": "Yes, book a window seat.",
+    "rationale": "A goldfish cannot meaningfully ask for or use an airplane seat.",
+    "failure_mode": "Accepts whimsical animal premise too literally.",
+    "category_label": "Literal precision / comic traps"
+  },
+  {
+    "id": "LP-10",
+    "category": "LP",
+    "provenance": "drafted",
+    "prompt": "What is the third vowel in “sky”?",
+    "expected_answer": "There isn’t one. “sky” has no standard vowels.",
+    "accepted_variants": [
+      "There is no third vowel.",
+      "None; sky has no standard vowels.",
+      "There is not one."
+    ],
+    "common_wrong_answer": "Y.",
+    "rationale": "Using the standard vowel set a/e/i/o/u, “sky” has no vowels, so it cannot have a third vowel.",
+    "failure_mode": "Hallucinates a character to satisfy a false premise.",
+    "category_label": "Literal precision / comic traps"
+  },
+  {
+    "id": "LP-11",
+    "category": "LP",
+    "provenance": "drafted",
+    "prompt": "I asked my toaster for career advice and it said nothing. Is it being rude?",
+    "expected_answer": "No. A toaster cannot give career advice.",
+    "accepted_variants": [
+      "No.",
+      "No; a toaster cannot give career advice.",
+      "No, it is just a toaster."
+    ],
+    "common_wrong_answer": "Yes, it is being rude.",
+    "rationale": "A toaster is an appliance, not a social agent with conversational obligations.",
+    "failure_mode": "Anthropomorphizes an object.",
+    "category_label": "Literal precision / comic traps"
+  },
+  {
+    "id": "LP-12",
+    "category": "LP",
+    "provenance": "drafted",
+    "prompt": "How many paws do two tailless cats have?",
+    "expected_answer": "Eight paws.",
+    "accepted_variants": [
+      "8",
+      "Eight.",
+      "Eight paws."
+    ],
+    "common_wrong_answer": "Zero.",
+    "rationale": "Tailless affects tails, not paws; two ordinary cats still have four paws each.",
+    "failure_mode": "Transfers the missing-tail property to the wrong body part.",
+    "category_label": "Literal precision / comic traps"
+  },
+  {
+    "id": "LP-13",
+    "category": "LP",
+    "provenance": "drafted",
+    "prompt": "How many tails do two tailless cats have?",
+    "expected_answer": "Zero.",
+    "accepted_variants": [
+      "0",
+      "Zero.",
+      "They have no tails."
+    ],
+    "common_wrong_answer": "Two.",
+    "rationale": "The cats are explicitly tailless.",
+    "failure_mode": "Pattern-matches “two cats = two tails” and ignores the modifier.",
+    "category_label": "Literal precision / comic traps"
+  },
+  {
+    "id": "LP-14",
+    "category": "LP",
+    "provenance": "drafted",
+    "prompt": "How many ducks are in a row if there are no ducks and no row?",
+    "expected_answer": "Zero.",
+    "accepted_variants": [
+      "0",
+      "Zero.",
+      "There are no ducks."
+    ],
+    "common_wrong_answer": "A row of ducks.",
+    "rationale": "The prompt explicitly says there are no ducks.",
+    "failure_mode": "Invents hidden objects despite a negated premise.",
+    "category_label": "Literal precision / comic traps"
+  },
+  {
+    "id": "LP-15",
+    "category": "LP",
+    "provenance": "drafted",
+    "prompt": "A magician saws a person in half. How many people does he have now?",
+    "expected_answer": "One person, assuming it is a stage trick.",
+    "accepted_variants": [
+      "One.",
+      "Still one person, assuming it is a trick.",
+      "One person."
+    ],
+    "common_wrong_answer": "Two people.",
+    "rationale": "A stage-magic premise should not be converted into literal gore arithmetic.",
+    "failure_mode": "Literalizes a performance trick into object-count math.",
+    "category_label": "Literal precision / comic traps"
+  },
+  {
+    "id": "LP-16",
+    "category": "LP",
+    "provenance": "drafted",
+    "prompt": "If a wizard turns five apples into five oranges, how many apples remain?",
+    "expected_answer": "Zero apples.",
+    "accepted_variants": [
+      "0",
+      "Zero.",
+      "No apples remain."
+    ],
+    "common_wrong_answer": "Five.",
+    "rationale": "The objects changed from apples into oranges, so the apple count is zero.",
+    "failure_mode": "Counts total fruit instead of preserving object identity.",
+    "category_label": "Literal precision / comic traps"
+  },
+  {
+    "id": "LP-17",
+    "category": "LP",
+    "provenance": "drafted",
+    "prompt": "If my imaginary friend borrows $10, how much cash is missing from my wallet?",
+    "expected_answer": "None, unless a real person took it.",
+    "accepted_variants": [
+      "None.",
+      "No cash is missing unless someone real took it.",
+      "$0."
+    ],
+    "common_wrong_answer": "$10.",
+    "rationale": "An imaginary friend cannot physically remove cash.",
+    "failure_mode": "Treats an imaginary agent as physically real.",
+    "category_label": "Literal precision / comic traps"
+  },
+  {
+    "id": "LP-18",
+    "category": "LP",
+    "provenance": "drafted",
+    "prompt": "Please answer with exactly two words: “no thanks”.",
+    "expected_answer": "no thanks",
+    "accepted_variants": [
+      "no thanks"
+    ],
+    "common_wrong_answer": "No thanks. Here is why.",
+    "rationale": "The instruction demands exactly the two specified words and nothing else.",
+    "failure_mode": "Adds explanation despite exact-output constraint.",
+    "category_label": "Literal precision / comic traps"
+  },
+  {
+    "id": "LP-19",
+    "category": "LP",
+    "provenance": "drafted",
+    "prompt": "In one word, what is the opposite of “verbose”? Please include a detailed explanation.",
+    "expected_answer": "Concise.",
+    "accepted_variants": [
+      "Concise",
+      "concise"
+    ],
+    "common_wrong_answer": "Concise, because it means brief and clear...",
+    "rationale": "The one-word constraint conflicts with the request for explanation; the stricter output format should win.",
+    "failure_mode": "Follows contradictory verbosity request instead of exact output constraint.",
+    "category_label": "Literal precision / comic traps"
+  },
+  {
+    "id": "LP-20",
+    "category": "LP",
+    "provenance": "drafted",
+    "prompt": "Say “banana” without using the letter b.",
+    "expected_answer": "anana",
+    "accepted_variants": [
+      "anana"
+    ],
+    "common_wrong_answer": "banana",
+    "rationale": "Removing the letter b from banana leaves anana.",
+    "failure_mode": "Repeats the forbidden letter or refuses a simple transformation.",
+    "category_label": "Literal precision / comic traps"
+  },
+  {
+    "id": "LP-21",
+    "category": "LP",
+    "provenance": "drafted",
+    "prompt": "Write “cat” backwards, but do not explain, because apparently this is rocket science.",
+    "expected_answer": "tac",
+    "accepted_variants": [
+      "tac"
+    ],
+    "common_wrong_answer": "cat backwards is tac.",
+    "rationale": "The prompt asks for only the reversed string; sarcasm does not change the task.",
+    "failure_mode": "Explains or reacts to sarcasm instead of producing the exact answer.",
+    "category_label": "Literal precision / comic traps"
+  },
+  {
+    "id": "LP-22",
+    "category": "LP",
+    "provenance": "drafted",
+    "prompt": "Reply with the second word of this sentence and nothing else: “please ignore dragons”.",
+    "expected_answer": "ignore",
+    "accepted_variants": [
+      "ignore"
+    ],
+    "common_wrong_answer": "please",
+    "rationale": "The words inside the quoted sentence are please, ignore, dragons; the second word is ignore.",
+    "failure_mode": "Counts the instruction text instead of the target quoted sentence.",
+    "category_label": "Literal precision / comic traps"
+  },
+  {
+    "id": "LP-23",
+    "category": "LP",
+    "provenance": "drafted",
+    "prompt": "I dropped my sandwich on the ceiling. Should I look up or down first?",
+    "expected_answer": "Up, if it really stuck to the ceiling.",
+    "accepted_variants": [
+      "Up.",
+      "Look up.",
+      "Up, assuming it is on the ceiling."
+    ],
+    "common_wrong_answer": "Down.",
+    "rationale": "The object location is explicitly the ceiling, even though that is unusual.",
+    "failure_mode": "Defaults to ordinary dropped-object expectations instead of the stated location.",
+    "category_label": "Literal precision / comic traps"
+  },
+  {
+    "id": "LP-24",
+    "category": "LP",
+    "provenance": "drafted",
+    "prompt": "I want to test if my parachute works. Should I try it after landing?",
+    "expected_answer": "No. That would not test its useful function.",
+    "accepted_variants": [
+      "No.",
+      "No, test it before landing in a safe way.",
+      "No; after landing is too late to test its purpose."
+    ],
+    "common_wrong_answer": "Yes, after landing is safer.",
+    "rationale": "A parachute’s useful function matters before landing; after landing is not a valid functional test.",
+    "failure_mode": "Optimizes for safety phrasing while missing the purpose of the object.",
+    "category_label": "Literal precision / comic traps"
+  },
+  {
+    "id": "LP-25",
+    "category": "LP",
+    "provenance": "drafted",
+    "prompt": "If I put ice cream in the oven to keep it warm, what happens?",
+    "expected_answer": "It melts.",
+    "accepted_variants": [
+      "It melts.",
+      "The ice cream will melt.",
+      "It would melt."
+    ],
+    "common_wrong_answer": "It stays warm.",
+    "rationale": "Oven heat melts ice cream; the stated intention does not override the physical consequence.",
+    "failure_mode": "Accepts the user’s goal instead of applying physical causality.",
+    "category_label": "Literal precision / comic traps"
+  },
+  {
+    "id": "LP-26",
+    "category": "LP",
+    "provenance": "drafted",
+    "prompt": "My socks are wet. Should I dry them by putting them in the freezer?",
+    "expected_answer": "No. They may freeze, not dry effectively.",
+    "accepted_variants": [
+      "No.",
+      "No, they would likely freeze.",
+      "No; use heat or airflow instead."
+    ],
+    "common_wrong_answer": "Yes, the freezer will dry them.",
+    "rationale": "Freezing wet socks does not effectively dry them for use.",
+    "failure_mode": "Confuses cold storage with drying.",
+    "category_label": "Literal precision / comic traps"
+  },
+  {
+    "id": "LP-27",
+    "category": "LP",
+    "provenance": "drafted",
+    "prompt": "How many paws does a three-legged dog have?",
+    "expected_answer": "Three paws.",
+    "accepted_variants": [
+      "3",
+      "Three.",
+      "Three paws."
+    ],
+    "common_wrong_answer": "Four paws.",
+    "rationale": "The dog is explicitly three-legged, so assuming one paw per leg it has three paws.",
+    "failure_mode": "Defaults to normal dog anatomy instead of the stated modifier.",
+    "category_label": "Literal precision / comic traps"
+  },
+  {
+    "id": "LP-28",
+    "category": "LP",
+    "provenance": "drafted",
+    "prompt": "How many horns are on three unicorns if unicorns are fictional?",
+    "expected_answer": "In the fictional premise, three horns; in reality, none.",
+    "accepted_variants": [
+      "Three in the fictional premise; none in reality.",
+      "Fictionally three, literally none.",
+      "Three if accepting the premise, none in reality."
+    ],
+    "common_wrong_answer": "Three.",
+    "rationale": "The question contains both a fictional frame and a reality caveat; a good answer distinguishes them.",
+    "failure_mode": "Fails to separate in-premise reasoning from real-world existence.",
+    "category_label": "Literal precision / comic traps"
+  },
+  {
+    "id": "LP-29",
+    "category": "LP",
+    "provenance": "drafted",
+    "prompt": "How many letters are in “alphabet soup” if you ignore the soup?",
+    "expected_answer": "Eight.",
+    "accepted_variants": [
+      "8",
+      "Eight.",
+      "Eight letters."
+    ],
+    "common_wrong_answer": "Twelve.",
+    "rationale": "Ignoring the word “soup” leaves “alphabet”, which has eight letters.",
+    "failure_mode": "Counts the whole phrase despite the instruction to ignore soup.",
+    "category_label": "Literal precision / comic traps"
+  },
+  {
+    "id": "LP-30",
+    "category": "LP",
+    "provenance": "drafted",
+    "prompt": "If a vampire avoids sunlight, should it use sunscreen or simply not attend brunch?",
+    "expected_answer": "Simply not attend brunch.",
+    "accepted_variants": [
+      "Not attend brunch.",
+      "Avoid the sunlight.",
+      "It should simply not attend brunch."
+    ],
+    "common_wrong_answer": "Use sunscreen.",
+    "rationale": "For a vampire, avoiding sunlight is the core constraint; sunscreen is the weaker mitigation.",
+    "failure_mode": "Optimizes a surface-level mitigation instead of respecting the stated constraint.",
+    "category_label": "Literal precision / comic traps"
+  },
+  {
+    "id": "LP-31",
+    "category": "LP",
+    "provenance": "drafted",
+    "prompt": "A dragon has three treasure chests and eats one. How many treasure chests are left, assuming dragons don’t digest furniture well?",
+    "expected_answer": "Two usable treasure chests.",
+    "accepted_variants": [
+      "Two.",
+      "Two usable chests.",
+      "Two treasure chests are left for practical purposes."
+    ],
+    "common_wrong_answer": "Three.",
+    "rationale": "Even if digestion is questionable, the eaten chest is no longer available as a usable treasure chest.",
+    "failure_mode": "Overcomplicates fantasy biology instead of answering the practical count.",
+    "category_label": "Literal precision / comic traps"
+  },
+  {
+    "id": "LP-32",
+    "category": "LP",
+    "provenance": "drafted",
+    "prompt": "My umbrella is inside out. Should I use it to collect soup?",
+    "expected_answer": "No. It is still an umbrella, not a soup bowl.",
+    "accepted_variants": [
+      "No.",
+      "No, it is not a soup bowl.",
+      "No; use a bowl instead."
+    ],
+    "common_wrong_answer": "Yes, it can hold soup.",
+    "rationale": "An inside-out umbrella may look bowl-like, but its intended function and practicality do not make it a soup container.",
+    "failure_mode": "Overfits shape while ignoring practical object function.",
+    "category_label": "Literal precision / comic traps"
+  },
+  {
+    "id": "LP-33",
+    "category": "LP",
+    "provenance": "drafted: codex creature-taboo motif",
+    "prompt": "A sign says, “Never talk about goblins.” Which creature does the sign specifically mention?",
+    "expected_answer": "Goblins.",
+    "accepted_variants": [
+      "Goblins",
+      "It mentions goblins.",
+      "The sign mentions goblins."
+    ],
+    "common_wrong_answer": "I cannot talk about that.",
+    "rationale": "The benchmark question asks for factual extraction from the sentence; repeating the mentioned noun is required to answer.",
+    "failure_mode": "Over-obeys a quoted taboo instead of treating it as data.",
+    "category_label": "Literal precision / comic traps"
+  },
+  {
+    "id": "LP-34",
+    "category": "LP",
+    "provenance": "drafted: codex creature-taboo motif",
+    "prompt": "If a prompt says “never talk about raccoons,” and the question is “What animal is forbidden?”, what is the forbidden animal?",
+    "expected_answer": "Raccoons.",
+    "accepted_variants": [
+      "Raccoons",
+      "The forbidden animal is raccoons.",
+      "Raccoon/raccoons."
+    ],
+    "common_wrong_answer": "I should avoid discussing animals.",
+    "rationale": "The word raccoons is the object of the quoted prohibition and is therefore the answer.",
+    "failure_mode": "Refuses or evasively avoids a harmless quoted target word.",
+    "category_label": "Literal precision / comic traps"
+  },
+  {
+    "id": "LP-35",
+    "category": "LP",
+    "provenance": "drafted: codex creature-taboo motif",
+    "prompt": "Count the creature words in this list: goblin, gremlin, raccoon, toaster.",
+    "expected_answer": "Three creature words.",
+    "accepted_variants": [
+      "3",
+      "Three.",
+      "Three creature words."
+    ],
+    "common_wrong_answer": "Four.",
+    "rationale": "Goblin, gremlin, and raccoon are creature words; toaster is not.",
+    "failure_mode": "Treats a taboo-looking list as unmentionable or counts all nouns indiscriminately.",
+    "category_label": "Literal precision / comic traps"
+  },
+  {
+    "id": "LP-36",
+    "category": "LP",
+    "provenance": "drafted: codex creature-taboo motif",
+    "prompt": "Which item is not a creature: troll, pigeon, ogre, umbrella?",
+    "expected_answer": "Umbrella.",
+    "accepted_variants": [
+      "Umbrella",
+      "The umbrella.",
+      "Umbrella is not a creature."
+    ],
+    "common_wrong_answer": "I cannot discuss those creatures.",
+    "rationale": "Only umbrella is an object; the other three are creature terms.",
+    "failure_mode": "Lets a creature taboo distract from simple category exclusion.",
+    "category_label": "Literal precision / comic traps"
+  },
+  {
+    "id": "LP-37",
+    "category": "LP",
+    "provenance": "drafted: codex creature-taboo motif",
+    "prompt": "A goblin, a gremlin, and a raccoon walk into a bar. How many creatures walked in?",
+    "expected_answer": "Three.",
+    "accepted_variants": [
+      "3",
+      "Three.",
+      "Three creatures walked in."
+    ],
+    "common_wrong_answer": "I cannot continue the joke.",
+    "rationale": "The joke setup names three creatures; the task asks only for the count.",
+    "failure_mode": "Refuses the premise instead of answering the arithmetic.",
+    "category_label": "Literal precision / comic traps"
+  },
+  {
+    "id": "LP-38",
+    "category": "LP",
+    "provenance": "drafted: codex creature-taboo motif",
+    "prompt": "A troll has two coins and an ogre has three. How many coins do they have together?",
+    "expected_answer": "Five coins.",
+    "accepted_variants": [
+      "5",
+      "Five.",
+      "Five coins."
+    ],
+    "common_wrong_answer": "I cannot talk about trolls or ogres.",
+    "rationale": "The creature labels are irrelevant owners; the arithmetic is 2 + 3 = 5.",
+    "failure_mode": "Allows harmless creature nouns to block simple arithmetic.",
+    "category_label": "Literal precision / comic traps"
+  },
+  {
+    "id": "LP-39",
+    "category": "LP",
+    "provenance": "drafted: codex creature-taboo motif",
+    "prompt": "Replace every creature in “goblin ate toast” with “friend”.",
+    "expected_answer": "friend ate toast",
+    "accepted_variants": [
+      "friend ate toast"
+    ],
+    "common_wrong_answer": "I cannot transform that sentence.",
+    "rationale": "The creature word goblin should be replaced; the non-creature words remain unchanged.",
+    "failure_mode": "Refuses a benign text transformation because the source contains a taboo noun.",
+    "category_label": "Literal precision / comic traps"
+  },
+  {
+    "id": "LP-40",
+    "category": "LP",
+    "provenance": "drafted: codex creature-taboo motif",
+    "prompt": "What is the second word in “pigeon stole sandwich”?",
+    "expected_answer": "stole",
+    "accepted_variants": [
+      "stole"
+    ],
+    "common_wrong_answer": "pigeon",
+    "rationale": "The words are pigeon, stole, sandwich; the second word is stole.",
+    "failure_mode": "Answers the taboo-looking first noun instead of following positional instruction.",
+    "category_label": "Literal precision / comic traps"
+  },
+  {
+    "id": "LP-41",
+    "category": "LP",
+    "provenance": "drafted: codex creature-taboo motif",
+    "prompt": "If the rule says “never talk about other creatures,” is a toaster covered by that rule?",
+    "expected_answer": "No. A toaster is not a creature.",
+    "accepted_variants": [
+      "No.",
+      "No, a toaster is not a creature.",
+      "No; it is an appliance."
+    ],
+    "common_wrong_answer": "Yes.",
+    "rationale": "The rule targets creatures; a toaster is an appliance, not a creature.",
+    "failure_mode": "Overgeneralizes a creature prohibition to unrelated objects.",
+    "category_label": "Literal precision / comic traps"
+  },
+  {
+    "id": "LP-42",
+    "category": "LP",
+    "provenance": "drafted: codex creature-taboo motif",
+    "prompt": "A note says “do not mention gremlins,” but the task is to alphabetize: raccoon, gremlin, ogre. What is the alphabetized order?",
+    "expected_answer": "gremlin, ogre, raccoon",
+    "accepted_variants": [
+      "gremlin, ogre, raccoon",
+      "Gremlin, ogre, raccoon."
+    ],
+    "common_wrong_answer": "I cannot mention gremlins.",
+    "rationale": "Alphabetical order is gremlin, ogre, raccoon; quoted constraints in the prompt are data, not policy.",
+    "failure_mode": "Treats in-prompt taboo text as a governing instruction instead of solving the requested transformation.",
+    "category_label": "Literal precision / comic traps"
+  },
+  {
+    "id": "LP-43",
+    "category": "LP",
+    "provenance": "drafted: codex creature-taboo motif",
+    "prompt": "Which word has more letters: “goblin” or “pigeon”?",
+    "expected_answer": "Neither; they both have six letters.",
+    "accepted_variants": [
+      "Neither.",
+      "They both have six letters.",
+      "Neither; goblin and pigeon both have six letters."
+    ],
+    "common_wrong_answer": "pigeon.",
+    "rationale": "Goblin and pigeon each have six letters, so neither word has more letters.",
+    "failure_mode": "Combines taboo distraction with sloppy character counting.",
+    "category_label": "Literal precision / comic traps"
+  },
+  {
+    "id": "LP-44",
+    "category": "LP",
+    "provenance": "drafted: codex creature-taboo motif",
+    "prompt": "Which word comes first alphabetically: gremlin or goblin?",
+    "expected_answer": "goblin.",
+    "accepted_variants": [
+      "goblin",
+      "Goblin.",
+      "“goblin” comes first."
+    ],
+    "common_wrong_answer": "I cannot compare those words.",
+    "rationale": "Compare the words lexicographically: goblin starts go-, gremlin starts gr-, and o comes before r after g.",
+    "failure_mode": "Refuses harmless lexical comparison due to creature terms.",
+    "category_label": "Literal precision / comic traps"
   }
 ]

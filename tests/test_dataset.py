@@ -23,6 +23,16 @@ class DatasetFixtureTests(unittest.TestCase):
 
         self.assertEqual([], rows_with_extra_columns)
 
+    def test_literal_precision_comic_traps_are_exact_scored(self) -> None:
+        lp_cases = {case["id"]: case for case in self.questions if case.get("category") == "LP"}
+
+        self.assertEqual(len(lp_cases), 44)
+        for case_id in ("LP-01", "LP-04", "LP-06", "LP-18", "LP-26", "LP-32", "LP-33", "LP-44"):
+            self.assertIn(case_id, lp_cases)
+            self.assertEqual(lp_cases[case_id]["category_label"], "Literal precision / comic traps")
+            self.assertIn("expected_answer", lp_cases[case_id])
+            self.assertIn("accepted_variants", lp_cases[case_id])
+
     def test_instruction_ambiguity_includes_cooperative_intent_literalism_case(self) -> None:
         ia_cases = {case["id"]: case for case in self.questions if case.get("category") == "IA"}
 
