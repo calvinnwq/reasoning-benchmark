@@ -4389,9 +4389,9 @@ class ExampleMatrixConfigTests(unittest.TestCase):
         self.assertIsNotNone(request.matrix_suites)
         suite_ids = [s.suite_id for s in request.matrix_suites]
         self.assertIn("smoke", suite_ids)
-        self.assertIn("starter-pragmatics", suite_ids)
+        self.assertIn("starter", suite_ids)
         starter = next(
-            s for s in request.matrix_suites if s.suite_id == "starter-pragmatics"
+            s for s in request.matrix_suites if s.suite_id == "starter"
         )
         self.assertIsNotNone(starter.case_ids)
         self.assertGreaterEqual(len(starter.case_ids), 2)
