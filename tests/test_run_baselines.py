@@ -2901,6 +2901,73 @@ class BaselineRunnerTests(unittest.TestCase):
         self.assertEqual(payload["execution"]["mode"], "custom")
         self.assertFalse((run_dir / "gpt-5-4.custom.manifest.json").exists())
 
+    def test_config_file_rejects_default_suite_id_with_explicit_case_ids(self) -> None:
+        dataset_path = self._dataset()
+        run_dir = self.tmp_dir / "default-caseids-runs"
+
+        config_path = self.tmp_dir / "default-caseids-config.json"
+        config_path.write_text(
+            json.dumps(
+                {
+                    "schema_version": "2.0.0",
+                    "id": "unit-default-caseids",
+                    "benchmark": "reasoning-benchmark",
+                    "suite_id": "default",
+                    "suite": {
+                        "case_ids": ["GG-04", "GG-02", "GG-06"],
+                    },
+                    "dataset": {"path": str(dataset_path)},
+                    "models": ["gpt-5.4"],
+                    "prompt_contract": run_baselines.build_prompt_contract(),
+                    "execution": {
+                        "skip_scoring": True,
+                    },
+                    "output": {"bundle_dir": str(run_dir)},
+                }
+            ),
+            encoding="utf-8",
+        )
+
+        with self.assertRaisesRegex(
+            ValueError,
+            "RunConfig suite_id cannot be default when case_ids are provided",
+        ):
+            run_baselines.request_from_config(config_path)
+
+    def test_config_file_rejects_default_execution_mode_with_explicit_case_ids(self) -> None:
+        dataset_path = self._dataset()
+        run_dir = self.tmp_dir / "default-mode-caseids-runs"
+
+        config_path = self.tmp_dir / "default-mode-caseids-config.json"
+        config_path.write_text(
+            json.dumps(
+                {
+                    "schema_version": "2.0.0",
+                    "id": "unit-default-mode-caseids",
+                    "benchmark": "reasoning-benchmark",
+                    "suite_id": "custom",
+                    "suite": {
+                        "case_ids": ["GG-04", "GG-02", "GG-06"],
+                    },
+                    "dataset": {"path": str(dataset_path)},
+                    "models": ["gpt-5.4"],
+                    "prompt_contract": run_baselines.build_prompt_contract(),
+                    "execution": {
+                        "mode": "default",
+                        "skip_scoring": True,
+                    },
+                    "output": {"bundle_dir": str(run_dir)},
+                }
+            ),
+            encoding="utf-8",
+        )
+
+        with self.assertRaisesRegex(
+            ValueError,
+            "RunConfig execution.mode cannot be default when case_ids are provided",
+        ):
+            run_baselines.request_from_config(config_path)
+
     def test_config_file_seed_does_not_shuffle_explicit_suite_case_ids(self) -> None:
         dataset_path = self._dataset()
         run_dir = self.tmp_dir / "seeded-suite-runs"
@@ -3240,6 +3307,26 @@ class MatrixSuiteParsingTests(unittest.TestCase):
             [{"suite_id": "custom", "case_ids": ["GG-01", 7]}]
         )
         with self.assertRaisesRegex(ValueError, "case_ids"):
+            run_baselines.config_matrix_suites(payload)
+
+    def test_rejects_default_suite_id_with_case_ids(self) -> None:
+        payload = self._payload_with_matrix(
+            [{"suite_id": "default", "case_ids": ["GG-01", "GG-02"]}]
+        )
+        with self.assertRaisesRegex(
+            ValueError,
+            "RunConfig matrix.suites suite_id cannot be default when case_ids are provided",
+        ):
+            run_baselines.config_matrix_suites(payload)
+
+    def test_rejects_default_mode_with_case_ids(self) -> None:
+        payload = self._payload_with_matrix(
+            [{"suite_id": "custom", "mode": "default", "case_ids": ["GG-01", "GG-02"]}]
+        )
+        with self.assertRaisesRegex(
+            ValueError,
+            "RunConfig matrix.suites mode cannot be default when case_ids are provided",
+        ):
             run_baselines.config_matrix_suites(payload)
 
 

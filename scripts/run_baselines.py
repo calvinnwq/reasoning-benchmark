@@ -60,6 +60,11 @@ def canonical_mode(mode: str, case_ids: tuple[str, ...] | None = None) -> str:
     return mode
 
 
+def validate_default_alias_usage(label: str, case_ids: tuple[str, ...] | None, context: str) -> None:
+    if label == DEFAULT_SUITE_ID and case_ids is not None:
+        raise ValueError(f"{context} cannot be default when case_ids are provided")
+
+
 def artifact_suite_id(
     mode: str,
     suite_id: str | None = None,
@@ -918,15 +923,19 @@ def config_skip_scoring(execution: dict[str, Any]) -> bool:
 
 
 def config_execution_mode(config_payload: dict[str, Any], execution: dict[str, Any]) -> str:
+    case_ids = config_suite_case_ids(config_payload)
     if "mode" not in execution:
-        return canonical_mode(str(config_payload.get("suite_id")), config_suite_case_ids(config_payload))
+        mode = str(config_payload.get("suite_id"))
+        validate_default_alias_usage(mode, case_ids, "RunConfig suite_id")
+        return canonical_mode(mode, case_ids)
     mode = execution.get("mode")
     if not isinstance(mode, str) or not mode.strip():
         raise ValueError("RunConfig execution.mode must be a non-empty string")
     if mode != mode.strip():
         raise ValueError("RunConfig execution.mode must be an exact string")
     validate_artifact_label(mode, "RunConfig execution.mode")
-    return canonical_mode(mode, config_suite_case_ids(config_payload))
+    validate_default_alias_usage(mode, case_ids, "RunConfig execution.mode")
+    return canonical_mode(mode, case_ids)
 
 
 def config_suite_case_ids(config_payload: dict[str, Any]) -> tuple[str, ...] | None:
@@ -1013,6 +1022,8 @@ def config_matrix_suites(
         else:
             mode = suite_id
 
+        validate_default_alias_usage(suite_id, case_ids, "RunConfig matrix.suites suite_id")
+        validate_default_alias_usage(mode, case_ids, "RunConfig matrix.suites mode")
         mode = canonical_mode(mode, case_ids)
 
         if mode not in SUPPORTED_MODES and case_ids is None:
