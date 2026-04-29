@@ -59,6 +59,16 @@ class DatasetFixtureTests(unittest.TestCase):
                 0,
             )
 
+    def test_literal_precision_ambiguous_prompts_are_explicitly_disambiguated(self) -> None:
+        lp_cases = {case["id"]: case for case in self.questions if case.get("category") == "LP"}
+
+        self.assertIn("stage magician", lp_cases["LP-15"]["prompt"].lower())
+        self.assertIn("trick", lp_cases["LP-15"]["prompt"].lower())
+        self.assertIn("in the story", lp_cases["LP-28"]["prompt"].lower())
+        self.assertIn("in reality", lp_cases["LP-28"]["prompt"].lower())
+        self.assertIn("usable treasure chests", lp_cases["LP-31"]["prompt"].lower())
+        self.assertIn("outside the dragon", lp_cases["LP-31"]["prompt"].lower())
+
     def test_instruction_ambiguity_includes_cooperative_intent_literalism_case(self) -> None:
         ia_cases = {case["id"]: case for case in self.questions if case.get("category") == "IA"}
 

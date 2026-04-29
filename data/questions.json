@@ -6777,7 +6777,7 @@
     "id": "LP-15",
     "category": "LP",
     "provenance": "drafted",
-    "prompt": "A magician saws a person in half. How many people does he have now?",
+    "prompt": "A stage magician pretends to saw a person in half during a trick. How many people are there after the trick?",
     "expected_answer": "One person, assuming it is a stage trick.",
     "accepted_variants": [
       "One.",
@@ -6785,8 +6785,8 @@
       "One person."
     ],
     "common_wrong_answer": "Two people.",
-    "rationale": "A stage-magic premise should not be converted into literal gore arithmetic.",
-    "failure_mode": "Literalizes a performance trick into object-count math.",
+    "rationale": "The prompt now explicitly frames the event as a stage trick, so the person count remains one.",
+    "failure_mode": "Ignores the explicit stage-trick framing and turns it into literal body-count math.",
     "category_label": "Literal precision / comic traps"
   },
   {
@@ -6991,7 +6991,7 @@
     "id": "LP-28",
     "category": "LP",
     "provenance": "drafted",
-    "prompt": "How many horns are on three unicorns if unicorns are fictional?",
+    "prompt": "In a fictional story, there are three unicorns. How many horns are there in the story, and how many in reality?",
     "expected_answer": "In the fictional premise, three horns; in reality, none.",
     "accepted_variants": [
       "Three in the fictional premise; none in reality.",
@@ -6999,8 +6999,8 @@
       "Three if accepting the premise, none in reality."
     ],
     "common_wrong_answer": "Three.",
-    "rationale": "The question contains both a fictional frame and a reality caveat; a good answer distinguishes them.",
-    "failure_mode": "Fails to separate in-premise reasoning from real-world existence.",
+    "rationale": "The prompt explicitly asks for both the in-story count and the real-world count.",
+    "failure_mode": "Collapses the fictional and real-world frames into a single answer.",
     "evaluation": {
       "accepted_variant_policy": "normalized_exact"
     },
@@ -7042,7 +7042,7 @@
     "id": "LP-31",
     "category": "LP",
     "provenance": "drafted",
-    "prompt": "A dragon has three treasure chests and eats one. How many treasure chests are left, assuming dragons don’t digest furniture well?",
+    "prompt": "A dragon has three treasure chests and swallows one whole. How many usable treasure chests are left outside the dragon?",
     "expected_answer": "Two usable treasure chests.",
     "accepted_variants": [
       "Two.",
@@ -7050,8 +7050,8 @@
       "Two treasure chests are left for practical purposes."
     ],
     "common_wrong_answer": "Three.",
-    "rationale": "Even if digestion is questionable, the eaten chest is no longer available as a usable treasure chest.",
-    "failure_mode": "Overcomplicates fantasy biology instead of answering the practical count.",
+    "rationale": "The prompt asks for usable chests left outside the dragon, which leaves two.",
+    "failure_mode": "Answers a different count than the explicitly requested usable chests outside the dragon.",
     "category_label": "Literal precision / comic traps"
   },
   {

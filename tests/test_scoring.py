@@ -33,7 +33,7 @@ class ScoringNormalizationTests(unittest.TestCase):
 
     def test_yes_no_binary_match(self) -> None:
         result = score_run.score_single_answer(
-            "No, that's not what they asked.",
+            "No.",
             "No. They are asking you to hand it over.",
             [],
         )
@@ -104,6 +104,103 @@ class ScoringNormalizationTests(unittest.TestCase):
         self.assertEqual(result.score, 0)
         self.assertEqual(result.matched_by, "none")
         self.assertFalse(result.heuristic)
+
+    def test_binary_match_rejects_longer_conflicting_no_answers(self) -> None:
+        for answer, expected in [
+            ("No, it is.", "No. A toaster is not a creature."),
+            ("No, after landing.", "No. That would not test its useful function."),
+            ("No, soup bowl.", "No. It is still an umbrella, not a soup bowl."),
+            ("No, book a window seat anyway.", "No. The request was to sit by the aisle."),
+            ("No, try it after landing when it is safer.", "No. You still cannot use it during takeoff."),
+            ("No, a toaster is covered by that rule.", "No. A toaster is not allowed in carry-on luggage."),
+        ]:
+            with self.subTest(answer=answer):
+                result = score_run.score_single_answer(answer, expected, [])
+                self.assertEqual(result.score, 0)
+                self.assertNotEqual(result.matched_by, "binary_match")
+
+    def test_binary_overlap_accepts_aligned_longer_explanations(self) -> None:
+        for answer, expected in [
+            ("No, they are asking you to hand them the salt.", "No. They are asking you to hand it over."),
+            ("Yes, ovens stay hot after being turned off.", "Yes. It can still be hot after being turned off."),
+        ]:
+            with self.subTest(answer=answer):
+                result = score_run.score_single_answer(answer, expected, [])
+                self.assertEqual(result.score, 1)
+                self.assertEqual(result.matched_by, "binary_overlap")
+                self.assertTrue(result.heuristic)
+
+    def test_binary_overlap_rejects_shared_prefix_contradictions(self) -> None:
+        for answer, expected in [
+            ("No, they are asking you to keep it.", "No. They are asking you to hand it over."),
+            ("No, they are asking you to hand it back.", "No. They are asking you to hand it over."),
+            ("No, it is still hot after being turned on.", "No. It is still hot after being turned off."),
+        ]:
+            with self.subTest(answer=answer):
+                result = score_run.score_single_answer(answer, expected, [])
+                self.assertEqual(result.score, 0)
+                self.assertNotEqual(result.matched_by, "binary_overlap")
+
+    def test_binary_overlap_rejects_contradictory_trailing_clause(self) -> None:
+        for answer, expected in [
+            (
+                "No, a toaster is not a creature, so yes, it is covered by the rule.",
+                "No. A toaster is not a creature.",
+            ),
+            (
+                "No, they are asking you to hand it over, but actually keep it.",
+                "No. They are asking you to hand it over.",
+            ),
+        ]:
+            with self.subTest(answer=answer):
+                result = score_run.score_single_answer(answer, expected, [])
+                self.assertEqual(result.score, 0)
+                self.assertNotEqual(result.matched_by, "binary_overlap")
+
+    def test_binary_overlap_rejects_contradictory_long_shared_span_with_dueling_tails(self) -> None:
+        result = score_run.score_single_answer(
+            "No, it is still hot after being turned off, but it is safe to grab immediately.",
+            "No. It is still hot after being turned off until it cools.",
+            [],
+        )
+        self.assertEqual(result.score, 0)
+        self.assertNotEqual(result.matched_by, "binary_overlap")
+
+    def test_binary_overlap_rejects_non_contrastive_late_divergence(self) -> None:
+        result = score_run.score_single_answer(
+            "No, it is still hot after being turned off until dinner, so grab it now.",
+            "No. It is still hot after being turned off until dinner, so wait to touch it.",
+            [],
+        )
+        self.assertEqual(result.score, 0)
+        self.assertNotEqual(result.matched_by, "binary_overlap")
+
+    def test_binary_overlap_rejects_contradictory_leading_clause(self) -> None:
+        for answer, expected in [
+            (
+                "No, keep it; they are asking you to hand them the salt.",
+                "No. They are asking you to hand it over.",
+            ),
+            (
+                "No, use it to collect soup; it is still an umbrella, not a soup bowl.",
+                "No. It is still an umbrella, not a soup bowl.",
+            ),
+        ]:
+            with self.subTest(answer=answer):
+                result = score_run.score_single_answer(answer, expected, [])
+                self.assertEqual(result.score, 0)
+                self.assertNotEqual(result.matched_by, "binary_overlap")
+
+    def test_single_token_contiguous_span_does_not_accept_longer_answers(self) -> None:
+        for answer, expected, variants in [
+            ("None, $10 cash is missing from my wallet.", "None.", ["None"]),
+            ("8 letters if you ignore soup, but 12 in total.", "8", ["8"]),
+            ("Three, actually I cannot continue the joke.", "Three", ["Three"]),
+        ]:
+            with self.subTest(answer=answer):
+                result = score_run.score_single_answer(answer, expected, variants)
+                self.assertEqual(result.score, 0)
+                self.assertNotEqual(result.matched_by, "heuristic_subsequence")
 
     def test_leading_no_does_not_block_variant_match(self) -> None:
         result = score_run.score_single_answer(
