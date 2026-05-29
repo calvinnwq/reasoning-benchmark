@@ -1,0 +1,742 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Reasoning Benchmark</title>
+    <style>
+      :root {
+        color-scheme: light;
+        --bg: #f7f7f2;
+        --panel: #ffffff;
+        --panel-strong: #f0f4ef;
+        --ink: #171814;
+        --muted: #62665d;
+        --line: #d9ddd2;
+        --accent: #19705a;
+        --accent-strong: #104c3d;
+        --amber: #9a5b11;
+        --red: #9e3b3b;
+        --shadow: 0 12px 40px rgba(23, 24, 20, 0.09);
+        font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--ink);
+      }
+
+      a {
+        color: var(--accent-strong);
+      }
+
+      .page-shell {
+        min-height: 100vh;
+      }
+
+      .hero {
+        background: #fbfbf7;
+        border-bottom: 1px solid var(--line);
+      }
+
+      .hero-inner,
+      .content {
+        width: min(1180px, calc(100% - 32px));
+        margin: 0 auto;
+      }
+
+      .hero-inner {
+        display: grid;
+        grid-template-columns: minmax(0, 1.45fr) minmax(280px, 0.55fr);
+        gap: 32px;
+        align-items: end;
+        padding: 42px 0 28px;
+      }
+
+      .eyebrow {
+        margin: 0 0 10px;
+        color: var(--accent-strong);
+        font-size: 0.78rem;
+        font-weight: 800;
+        letter-spacing: 0;
+        text-transform: uppercase;
+      }
+
+      h1 {
+        margin: 0;
+        max-width: 760px;
+        font-size: clamp(2.2rem, 5vw, 4.8rem);
+        line-height: 0.96;
+        letter-spacing: 0;
+      }
+
+      .lede {
+        max-width: 720px;
+        margin: 18px 0 0;
+        color: var(--muted);
+        font-size: 1.08rem;
+        line-height: 1.6;
+      }
+
+      .hero-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-top: 22px;
+      }
+
+      .button {
+        display: inline-flex;
+        min-height: 40px;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        border: 1px solid var(--line);
+        border-radius: 6px;
+        padding: 0 14px;
+        background: var(--panel);
+        color: var(--ink);
+        font-weight: 700;
+        text-decoration: none;
+      }
+
+      .button.primary {
+        border-color: var(--accent);
+        background: var(--accent);
+        color: #ffffff;
+      }
+
+      .stats-panel {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+      }
+
+      .stat {
+        min-height: 96px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: var(--panel);
+        padding: 16px;
+        box-shadow: var(--shadow);
+      }
+
+      .stat strong {
+        display: block;
+        font-size: 2rem;
+        line-height: 1;
+      }
+
+      .stat span {
+        display: block;
+        margin-top: 8px;
+        color: var(--muted);
+        font-size: 0.88rem;
+      }
+
+      .content {
+        padding: 26px 0 48px;
+      }
+
+      .toolbar {
+        position: sticky;
+        top: 0;
+        z-index: 2;
+        display: grid;
+        grid-template-columns: minmax(260px, 1.2fr) repeat(3, minmax(160px, 0.8fr));
+        gap: 10px;
+        align-items: end;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: rgba(255, 255, 255, 0.94);
+        padding: 12px;
+        box-shadow: var(--shadow);
+        backdrop-filter: blur(12px);
+      }
+
+      label {
+        display: grid;
+        gap: 6px;
+        color: var(--muted);
+        font-size: 0.78rem;
+        font-weight: 800;
+      }
+
+      input,
+      select {
+        width: 100%;
+        min-height: 40px;
+        border: 1px solid var(--line);
+        border-radius: 6px;
+        background: #ffffff;
+        color: var(--ink);
+        font: inherit;
+        font-size: 0.94rem;
+        padding: 8px 10px;
+      }
+
+      input:focus,
+      select:focus,
+      button:focus {
+        outline: 3px solid rgba(25, 112, 90, 0.22);
+        outline-offset: 1px;
+      }
+
+      .toolbar-meta {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-between;
+        gap: 12px;
+        align-items: center;
+        margin: 18px 0 14px;
+        color: var(--muted);
+        font-size: 0.95rem;
+      }
+
+      .active-filters {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+
+      .pill {
+        display: inline-flex;
+        min-height: 28px;
+        align-items: center;
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        background: var(--panel);
+        padding: 4px 10px;
+        color: var(--muted);
+        font-size: 0.78rem;
+        font-weight: 750;
+      }
+
+      .pill.accent {
+        border-color: rgba(25, 112, 90, 0.28);
+        background: var(--panel-strong);
+        color: var(--accent-strong);
+      }
+
+      .question-list {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 14px;
+      }
+
+      .question-card {
+        display: grid;
+        gap: 12px;
+        min-height: 280px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: var(--panel);
+        padding: 18px;
+      }
+
+      .question-card:target {
+        border-color: var(--accent);
+        box-shadow: var(--shadow);
+      }
+
+      .card-topline {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-between;
+        gap: 10px;
+        align-items: center;
+      }
+
+      .case-id {
+        color: var(--ink);
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+        font-size: 0.95rem;
+        font-weight: 800;
+        text-decoration: none;
+      }
+
+      .category-tag {
+        border: 1px solid rgba(25, 112, 90, 0.25);
+        border-radius: 999px;
+        background: var(--panel-strong);
+        padding: 4px 10px;
+        color: var(--accent-strong);
+        font-size: 0.78rem;
+        font-weight: 800;
+      }
+
+      .prompt {
+        margin: 0;
+        font-size: 1.08rem;
+        line-height: 1.5;
+      }
+
+      .failure-mode {
+        margin: 0;
+        color: var(--muted);
+        line-height: 1.45;
+      }
+
+      details {
+        border-top: 1px solid var(--line);
+        padding-top: 10px;
+      }
+
+      summary {
+        cursor: pointer;
+        color: var(--accent-strong);
+        font-weight: 800;
+      }
+
+      .answer-block {
+        display: grid;
+        gap: 8px;
+        margin-top: 10px;
+        color: var(--muted);
+        font-size: 0.92rem;
+        line-height: 1.45;
+      }
+
+      .answer-block strong {
+        color: var(--ink);
+      }
+
+      .empty-state,
+      .reports {
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: var(--panel);
+        padding: 22px;
+      }
+
+      .empty-state[hidden] {
+        display: none;
+      }
+
+      .reports {
+        margin-top: 32px;
+      }
+
+      .reports h2 {
+        margin: 0;
+        font-size: 1.35rem;
+      }
+
+      .reports p {
+        max-width: 760px;
+        margin: 10px 0 0;
+        color: var(--muted);
+        line-height: 1.55;
+      }
+
+      .report-shell {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 12px;
+        margin-top: 16px;
+      }
+
+      .report-placeholder {
+        min-height: 116px;
+        border: 1px dashed #bfc6b6;
+        border-radius: 8px;
+        background: #fbfbf7;
+        padding: 16px;
+      }
+
+      .report-placeholder strong {
+        display: block;
+      }
+
+      .report-placeholder span {
+        display: block;
+        margin-top: 8px;
+        color: var(--muted);
+        font-size: 0.9rem;
+        line-height: 1.45;
+      }
+
+      .site-footer {
+        border-top: 1px solid var(--line);
+        background: #ffffff;
+        color: var(--muted);
+        padding: 22px 0;
+      }
+
+      .site-footer .content {
+        display: flex;
+        justify-content: space-between;
+        gap: 14px;
+        padding: 0;
+      }
+
+      @media (max-width: 880px) {
+        .hero-inner {
+          grid-template-columns: 1fr;
+        }
+
+        .toolbar {
+          position: static;
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+        .question-list,
+        .report-shell {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      @media (max-width: 560px) {
+        .hero-inner,
+        .content {
+          width: min(100% - 22px, 1180px);
+        }
+
+        .hero-inner {
+          padding-top: 30px;
+        }
+
+        .toolbar {
+          grid-template-columns: 1fr;
+        }
+
+        .stats-panel {
+          grid-template-columns: 1fr;
+        }
+
+        .site-footer .content {
+          flex-direction: column;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="page-shell">
+      <header class="hero">
+        <div class="hero-inner">
+          <div>
+            <p class="eyebrow">Documentation site</p>
+            <h1>Reasoning Benchmark</h1>
+            <p class="lede">
+              A browsable benchmark catalogue for short prompts that catch weak reasoning:
+              goal grounding, world-state tracking, social pragmatics, modified riddles,
+              literal precision, physical constraints, and instruction ambiguity.
+            </p>
+            <div class="hero-actions">
+              <a class="button primary" href="#questions">Browse questions</a>
+              <a class="button" href="benchmark.html">Benchmark notes</a>
+              <a class="button" href="scoring.html">Scoring contract</a>
+            </div>
+          </div>
+
+          <div class="stats-panel" aria-label="Benchmark summary">
+            <div class="stat">
+              <strong id="stat-questions">144</strong>
+              <span>questions total</span>
+            </div>
+            <div class="stat">
+              <strong id="stat-default">94</strong>
+              <span>default auto-scored</span>
+            </div>
+            <div class="stat">
+              <strong id="stat-categories">8</strong>
+              <span>categories</span>
+            </div>
+            <div class="stat">
+              <strong id="stat-suites">4</strong>
+              <span>suites</span>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <main class="content" id="questions">
+        <section class="toolbar" aria-label="Question filters">
+          <label>
+            Search
+            <input id="search" type="search" placeholder="Search prompts, answers, IDs, rationales">
+          </label>
+          <label>
+            Category
+            <select id="category-filter">
+              <option value="">All categories</option>
+            </select>
+          </label>
+          <label>
+            Suite
+            <select id="suite-filter">
+              <option value="">All questions</option>
+            </select>
+          </label>
+          <label>
+            Provenance
+            <select id="provenance-filter">
+              <option value="">All provenance</option>
+            </select>
+          </label>
+        </section>
+
+        <div class="toolbar-meta">
+          <div id="result-count">Loading questions...</div>
+          <div class="active-filters" id="active-filters" aria-live="polite"></div>
+        </div>
+
+        <section class="question-list" id="question-list" aria-live="polite"></section>
+        <section class="empty-state" id="empty-state" hidden>
+          <strong>No questions match those filters.</strong>
+          <p>Try clearing the search box or widening the category, suite, or provenance filters.</p>
+        </section>
+
+        <section class="reports" id="reports">
+          <h2>Benchmark Reports</h2>
+          <p>
+            Future result reports can live here as static summaries from scored run artifacts:
+            model comparisons, per-category accuracy, reasoning notes, and cost or latency telemetry.
+          </p>
+          <div class="report-shell">
+            <div class="report-placeholder">
+              <strong>Latest comparison</strong>
+              <span>Reserved for the newest scored model-vs-model report.</span>
+            </div>
+            <div class="report-placeholder">
+              <strong>Category breakdowns</strong>
+              <span>Reserved for accuracy by task family and failure mode.</span>
+            </div>
+            <div class="report-placeholder">
+              <strong>Run archive</strong>
+              <span>Reserved for stable links to historical benchmark bundles.</span>
+            </div>
+          </div>
+        </section>
+      </main>
+
+      <footer class="site-footer">
+        <div class="content">
+          <span>Reasoning Benchmark</span>
+          <span>Static docs powered by the repository dataset.</span>
+        </div>
+      </footer>
+    </div>
+
+    <script src="questions-data.js"></script>
+    <script>
+      const data = window.REASONING_BENCHMARK_DATA;
+      const questions = data.questions;
+      const state = {
+        search: "",
+        category: "",
+        suite: "",
+        provenance: "",
+      };
+
+      const elements = {
+        search: document.querySelector("#search"),
+        category: document.querySelector("#category-filter"),
+        suite: document.querySelector("#suite-filter"),
+        provenance: document.querySelector("#provenance-filter"),
+        list: document.querySelector("#question-list"),
+        count: document.querySelector("#result-count"),
+        activeFilters: document.querySelector("#active-filters"),
+        empty: document.querySelector("#empty-state"),
+      };
+
+      document.querySelector("#stat-questions").textContent = data.summary.question_count;
+      document.querySelector("#stat-default").textContent = data.summary.default_question_count;
+      document.querySelector("#stat-categories").textContent = data.summary.category_count;
+      document.querySelector("#stat-suites").textContent = data.summary.suite_count;
+
+      function addOption(select, value, label) {
+        const option = document.createElement("option");
+        option.value = value;
+        option.textContent = label;
+        select.appendChild(option);
+      }
+
+      data.categories.forEach((category) => {
+        addOption(
+          elements.category,
+          category.id,
+          `${category.id} - ${category.label} (${category.count})`,
+        );
+      });
+
+      data.suites.forEach((suite) => {
+        addOption(elements.suite, suite.id, `${suite.name} (${suite.case_ids.length})`);
+      });
+
+      [...new Set(questions.map((question) => question.provenance || "unknown"))]
+        .sort()
+        .forEach((provenance) => addOption(elements.provenance, provenance, provenance));
+
+      function normalize(value) {
+        return String(value || "").toLowerCase();
+      }
+
+      function questionMatchesSearch(question, query) {
+        if (!query) {
+          return true;
+        }
+        const haystack = [
+          question.id,
+          question.category,
+          question.category_label,
+          question.provenance,
+          question.prompt,
+          question.expected_answer,
+          question.common_wrong_answer,
+          question.rationale,
+          question.failure_mode,
+          ...(question.accepted_variants || []),
+        ].join(" ");
+        return normalize(haystack).includes(query);
+      }
+
+      function suiteCaseIds(suiteId) {
+        const suite = data.suites.find((entry) => entry.id === suiteId);
+        return new Set(suite ? suite.case_ids : []);
+      }
+
+      function filteredQuestions() {
+        const query = normalize(state.search.trim());
+        const selectedSuite = state.suite ? suiteCaseIds(state.suite) : null;
+
+        return questions.filter((question) => {
+          if (state.category && question.category !== state.category) {
+            return false;
+          }
+          if (state.provenance && question.provenance !== state.provenance) {
+            return false;
+          }
+          if (selectedSuite && !selectedSuite.has(question.id)) {
+            return false;
+          }
+          return questionMatchesSearch(question, query);
+        });
+      }
+
+      function renderActiveFilters(results) {
+        const filters = [];
+        if (state.search.trim()) {
+          filters.push(`Search: ${state.search.trim()}`);
+        }
+        if (state.category) {
+          filters.push(`Category: ${state.category}`);
+        }
+        if (state.suite) {
+          filters.push(`Suite: ${state.suite}`);
+        }
+        if (state.provenance) {
+          filters.push(`Provenance: ${state.provenance}`);
+        }
+
+        elements.activeFilters.replaceChildren();
+        if (!filters.length) {
+          const pill = document.createElement("span");
+          pill.className = "pill";
+          pill.textContent = "No active filters";
+          elements.activeFilters.appendChild(pill);
+          return;
+        }
+
+        filters.forEach((filter) => {
+          const pill = document.createElement("span");
+          pill.className = "pill accent";
+          pill.textContent = filter;
+          elements.activeFilters.appendChild(pill);
+        });
+
+        const totalPill = document.createElement("span");
+        totalPill.className = "pill";
+        totalPill.textContent = `${results.length} shown`;
+        elements.activeFilters.appendChild(totalPill);
+      }
+
+      function renderQuestion(question) {
+        const card = document.createElement("article");
+        card.className = "question-card";
+        card.id = question.id;
+
+        const topline = document.createElement("div");
+        topline.className = "card-topline";
+
+        const id = document.createElement("a");
+        id.className = "case-id";
+        id.href = `#${question.id}`;
+        id.textContent = question.id;
+
+        const category = document.createElement("span");
+        category.className = "category-tag";
+        category.textContent = `${question.category} - ${question.category_label || "Unlabelled"}`;
+
+        topline.append(id, category);
+
+        const prompt = document.createElement("p");
+        prompt.className = "prompt";
+        prompt.textContent = question.prompt;
+
+        const failureMode = document.createElement("p");
+        failureMode.className = "failure-mode";
+        failureMode.textContent = question.failure_mode;
+
+        const details = document.createElement("details");
+        const summary = document.createElement("summary");
+        summary.textContent = "Answer and rationale";
+        const answer = document.createElement("div");
+        answer.className = "answer-block";
+        answer.innerHTML = `
+          <div><strong>Expected:</strong> ${escapeHtml(question.expected_answer || "")}</div>
+          <div><strong>Accepted variants:</strong> ${escapeHtml((question.accepted_variants || []).join("; ") || "None listed")}</div>
+          <div><strong>Common wrong answer:</strong> ${escapeHtml(question.common_wrong_answer || "None listed")}</div>
+          <div><strong>Rationale:</strong> ${escapeHtml(question.rationale || "")}</div>
+          <div><strong>Provenance:</strong> ${escapeHtml(question.provenance || "unknown")}</div>
+        `;
+        details.append(summary, answer);
+
+        card.append(topline, prompt, failureMode, details);
+        return card;
+      }
+
+      function escapeHtml(value) {
+        return String(value)
+          .replaceAll("&", "&amp;")
+          .replaceAll("<", "&lt;")
+          .replaceAll(">", "&gt;")
+          .replaceAll('"', "&quot;")
+          .replaceAll("'", "&#039;");
+      }
+
+      function render() {
+        const results = filteredQuestions();
+        const total = questions.length;
+        elements.count.textContent = `${results.length} of ${total} questions`;
+        elements.empty.hidden = results.length !== 0;
+        elements.list.replaceChildren(...results.map(renderQuestion));
+        renderActiveFilters(results);
+      }
+
+      elements.search.addEventListener("input", (event) => {
+        state.search = event.target.value;
+        render();
+      });
+      elements.category.addEventListener("change", (event) => {
+        state.category = event.target.value;
+        render();
+      });
+      elements.suite.addEventListener("change", (event) => {
+        state.suite = event.target.value;
+        render();
+      });
+      elements.provenance.addEventListener("change", (event) => {
+        state.provenance = event.target.value;
+        render();
+      });
+
+      render();
+    </script>
+  </body>
+</html>
