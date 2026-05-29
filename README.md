@@ -29,6 +29,19 @@ python3 -m unittest discover tests
 
 No `pip install` — stdlib only.
 
+## Documentation site
+
+The GitHub Pages site lives in `docs/` and is designed to be served from the
+repository's Pages settings. It includes a filterable catalogue of benchmark
+questions plus a placeholder area for future scored benchmark reports.
+
+Regenerate the static question payload after editing `data/questions.json` or
+`data/suites/*.json`:
+
+```bash
+python3 scripts/build_docs_data.py
+```
+
 ## What it tests
 
 | Code | Failure mode | Cases |
