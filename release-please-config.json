@@ -3,6 +3,7 @@
   "packages": {
     ".": {
       "release-type": "simple",
+      "initial-version": "0.1.0",
       "package-name": "reasoning-benchmark",
       "changelog-path": "CHANGELOG.md"
     }
