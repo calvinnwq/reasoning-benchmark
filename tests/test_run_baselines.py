@@ -277,7 +277,7 @@ class BaselineRunnerTests(unittest.TestCase):
                     "#!/usr/bin/env python3",
                     "import json,sys",
                     "model, prompt = sys.argv[1], sys.argv[2]",
-                    "print(json.dumps({'answer': 'ans_' + model, 'reasoning': 'r_' + prompt[:3]}))",
+                    "print(json.dumps({'answer': 'ans_' + model, 'reasoning': 'r_' + prompt[:3], 'usage': {'input_tokens': 10, 'output_tokens': 2, 'provider': 'unit'}}))",
                 ]
             ),
             encoding="utf-8",
@@ -309,6 +309,10 @@ class BaselineRunnerTests(unittest.TestCase):
             self.assertEqual(row["adapter"]["stderr"], "")
             self.assertTrue(row["started_at"])
             self.assertTrue(row["completed_at"])
+            self.assertEqual(row["usage"]["input_tokens"], 10)
+            self.assertEqual(row["usage"]["output_tokens"], 2)
+            self.assertEqual(row["usage"]["provider"], "unit")
+            self.assertIn("duration_ms", row["usage"])
 
     def test_provider_command_arguments_are_not_written_into_results(self) -> None:
         row = {"id": "GG-01", "prompt": "Prompt one"}
@@ -330,6 +334,42 @@ class BaselineRunnerTests(unittest.TestCase):
 
         self.assertEqual(record["adapter"]["command"], "provider '[arguments omitted]'")
         self.assertNotIn("secret-token", json.dumps(record))
+
+    def test_build_result_record_writes_usage_when_available(self) -> None:
+        row = {"id": "GG-01", "prompt": "Prompt one"}
+        provider = run_baselines.ProviderResult(
+            answer="answer",
+            reasoning="reasoning",
+            adapter_name="provider-command",
+            adapter_command=["provider"],
+            adapter_exit_code=0,
+            usage={
+                "input_tokens": 7,
+                "output_tokens": 3,
+                "reasoning_output_tokens": 2,
+                "duration_ms": 99,
+                "provider": "unit",
+            },
+        )
+
+        record = run_baselines.build_result_record(
+            row=row,
+            model="gpt-5.4",
+            answer=provider.answer,
+            reasoning=provider.reasoning,
+            provider=provider,
+        )
+
+        self.assertEqual(
+            record["usage"],
+            {
+                "input_tokens": 7,
+                "output_tokens": 3,
+                "reasoning_output_tokens": 2,
+                "duration_ms": 99,
+                "provider": "unit",
+            },
+        )
 
     def test_config_file_drives_smoke_run_settings(self) -> None:
         dataset_path = self._dataset()

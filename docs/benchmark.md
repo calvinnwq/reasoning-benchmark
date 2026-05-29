@@ -291,6 +291,10 @@ python3 scripts/run_baselines.py --mode smoke \
   --provider-command python3 scripts/cli_adapter.py
 ```
 
+When a harness exposes telemetry, raw artifacts include a per-result `usage` object. Codex, Claude,
+and Ollama adapters populate normalized token/cache/latency fields where available; custom provider
+commands can emit their own `usage` object beside `answer` and `reasoning`.
+
 Direct/provider path (currently useful for local Qwen via Ollama):
 
 ```bash

@@ -367,6 +367,16 @@ The validator lives in `scripts/extensions.py` (`RESERVED_EXTENSION_NAMESPACES`,
     "exit_code": 0,
     "stderr": ""
   },
+  "usage": {
+    "provider": "codex",
+    "input_tokens": 100,
+    "output_tokens": 10,
+    "reasoning_output_tokens": 7,
+    "cache_read_input_tokens": 25,
+    "cache_creation_input_tokens": 0,
+    "duration_ms": 1200,
+    "provider_reported_cost_usd": 0.01
+  },
   "started_at": "2026-04-26T00:00:00Z",
   "completed_at": "2026-04-26T00:00:01Z"
 }
@@ -384,6 +394,7 @@ Optional fields:
 
 - `raw_response`
 - `adapter`
+- `usage`
 - `started_at`
 - `completed_at`
 - `notes`
@@ -391,6 +402,13 @@ Optional fields:
 For live provider-backed runs, `adapter.name` records the executed program basename and
 `adapter.command` redacts arguments as `program '[arguments omitted]'` so artifact audit metadata
 does not persist adapter arguments or secrets.
+
+`usage` records best-effort provider telemetry. Normalized fields include `provider`,
+`input_tokens`, `output_tokens`, `reasoning_output_tokens`, `cache_read_input_tokens`,
+`cache_creation_input_tokens`, `duration_ms`, and `provider_reported_cost_usd` when a harness
+exposes them. Adapters may also include provider-specific telemetry under `provider_usage` or
+`provider_model_usage`; consumers should treat those blocks as informational because fields differ
+by harness.
 
 ## ScoreRecord
 

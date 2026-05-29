@@ -147,7 +147,7 @@ Raw artifacts land under `runs/baseline/` as one JSON per model, alongside score
 
 `--skip-scoring` (or `execution.skip_scoring` in a RunConfig) writes only raw artifacts and removes any stale manifest for that model/mode.
 
-If you have a local model adapter, you can execute live by providing a command that accepts `MODEL` and `PROMPT` as positional args and returns JSON with `answer` and `reasoning` fields. Adapter arguments are redacted in persisted artifacts as `program '[arguments omitted]'` so secrets are not stored.
+If you have a local model adapter, you can execute live by providing a command that accepts `MODEL` and `PROMPT` as positional args and returns JSON with `answer` and `reasoning` fields. Adapter JSON may also include a `usage` object with telemetry such as `input_tokens`, `output_tokens`, `reasoning_output_tokens`, cache-token counts, `duration_ms`, and provider-reported cost. Adapter arguments are redacted in persisted artifacts as `program '[arguments omitted]'` so secrets are not stored.
 
 RunConfig and bundle-manifest validation rules (fingerprints, `case_count` reconciliation, matrix suite constraints, allowed adapter values, `extensions` namespacing) are documented in [`docs/contracts-v2.md`](docs/contracts-v2.md).
 
