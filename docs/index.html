@@ -473,12 +473,6 @@
               <option value="">All questions</option>
             </select>
           </label>
-          <label>
-            Provenance
-            <select id="provenance-filter">
-              <option value="">All provenance</option>
-            </select>
-          </label>
         </section>
 
         <div class="toolbar-meta">
@@ -489,7 +483,7 @@
         <section class="question-list" id="question-list" aria-live="polite"></section>
         <section class="empty-state" id="empty-state" hidden>
           <strong>No questions match those filters.</strong>
-          <p>Try clearing the search box or widening the category, suite, or provenance filters.</p>
+          <p>Try clearing the search box or widening the category or suite filters.</p>
         </section>
 
         <section class="reports" id="reports">
@@ -531,14 +525,12 @@
         search: "",
         category: "",
         suite: "",
-        provenance: "",
       };
 
       const elements = {
         search: document.querySelector("#search"),
         category: document.querySelector("#category-filter"),
         suite: document.querySelector("#suite-filter"),
-        provenance: document.querySelector("#provenance-filter"),
         list: document.querySelector("#question-list"),
         count: document.querySelector("#result-count"),
         activeFilters: document.querySelector("#active-filters"),
@@ -568,10 +560,6 @@
       data.suites.forEach((suite) => {
         addOption(elements.suite, suite.id, `${suite.name} (${suite.case_ids.length})`);
       });
-
-      [...new Set(questions.map((question) => question.provenance || "unknown"))]
-        .sort()
-        .forEach((provenance) => addOption(elements.provenance, provenance, provenance));
 
       function normalize(value) {
         return String(value || "").toLowerCase();
@@ -609,9 +597,6 @@
           if (state.category && question.category !== state.category) {
             return false;
           }
-          if (state.provenance && question.provenance !== state.provenance) {
-            return false;
-          }
           if (selectedSuite && !selectedSuite.has(question.id)) {
             return false;
           }
@@ -629,9 +614,6 @@
         }
         if (state.suite) {
           filters.push(`Suite: ${state.suite}`);
-        }
-        if (state.provenance) {
-          filters.push(`Provenance: ${state.provenance}`);
         }
 
         elements.activeFilters.replaceChildren();
@@ -729,10 +711,6 @@
       });
       elements.suite.addEventListener("change", (event) => {
         state.suite = event.target.value;
-        render();
-      });
-      elements.provenance.addEventListener("change", (event) => {
-        state.provenance = event.target.value;
         render();
       });
 

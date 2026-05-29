@@ -64,6 +64,8 @@ class DocsSiteTests(unittest.TestCase):
         self.assertIn('<script src="questions-data.js"></script>', html)
         self.assertIn("REASONING_BENCHMARK_DATA", html)
         self.assertIn("question-list", html)
+        self.assertNotIn("provenance-filter", html)
+        self.assertNotIn("All provenance", html)
 
     def test_default_suite_count_matches_runner(self) -> None:
         questions = run_benchmark.load_questions()
