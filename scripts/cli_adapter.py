@@ -15,7 +15,10 @@ from benchmark_adapters import AdapterError, run_cli_adapter
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="CLI adapter for reasoning benchmark baseline runs")
-    parser.add_argument("model", help="Benchmark model id (gpt-5.4 | sonnet-4.6 | qwen3.5-9b)")
+    parser.add_argument(
+        "model",
+        help="Benchmark model id (gpt-5.4 | gpt-5.5-xhigh | sonnet-4.6 | opus-4.7-max | opus-4.8-max | qwen3.5-9b)",
+    )
     parser.add_argument("prompt", help="Benchmark question prompt")
     parser.add_argument(
         "--prefer",

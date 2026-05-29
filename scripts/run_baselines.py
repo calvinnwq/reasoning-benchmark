@@ -10,6 +10,7 @@ import random
 import shlex
 import subprocess
 import sys
+import time
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
@@ -28,7 +29,14 @@ DEFAULT_DATASET_PATH = REPO_ROOT / "data" / "questions.json"
 DEFAULT_RUN_DIR = REPO_ROOT / "runs" / "baseline"
 
 BENCHMARK_ID = "reasoning-benchmark"
-SUPPORTED_MODELS: tuple[str, ...] = ("gpt-5.4", "sonnet-4.6", "qwen3.5-9b")
+SUPPORTED_MODELS: tuple[str, ...] = (
+    "gpt-5.4",
+    "gpt-5.5-xhigh",
+    "sonnet-4.6",
+    "opus-4.7-max",
+    "opus-4.8-max",
+    "qwen3.5-9b",
+)
 SUPPORTED_MODES: tuple[str, ...] = ("smoke", "full")
 SMOKE_COUNT = 5
 DEFAULT_SUITE_ID = "default"
@@ -105,6 +113,7 @@ class ProviderResult:
     adapter_stderr: str = ""
     started_at: str | None = None
     completed_at: str | None = None
+    usage: dict[str, Any] | None = None
 
 
 @dataclass(frozen=True)
@@ -290,22 +299,38 @@ def build_empty_record(row: dict[str, Any], model: str, notes: str | None = None
     return record
 
 
-def parse_provider_output(raw_stdout: str) -> tuple[str, str, str | None, str]:
+def normalize_provider_usage(value: Any) -> dict[str, Any] | None:
+    if not isinstance(value, dict):
+        return None
+    return copy.deepcopy(value)
+
+
+def merge_usage(base: dict[str, Any] | None, extra: dict[str, Any] | None) -> dict[str, Any] | None:
+    merged: dict[str, Any] = {}
+    if base:
+        merged.update(copy.deepcopy(base))
+    if extra:
+        merged.update(copy.deepcopy(extra))
+    return merged or None
+
+
+def parse_provider_output(raw_stdout: str) -> tuple[str, str, str | None, str, dict[str, Any] | None]:
     text = raw_stdout.strip()
     if not text:
-        return "", "", None, "empty"
+        return "", "", None, "empty", None
 
     try:
         payload = json.loads(text)
     except json.JSONDecodeError:
-        return text, "", None, "text"
+        return text, "", None, "text", None
 
     if not isinstance(payload, dict):
-        return "", "", "Provider output must be JSON object", "json"
+        return "", "", "Provider output must be JSON object", "json", None
 
     answer = payload.get("answer")
     reasoning = payload.get("reasoning")
     notes = payload.get("notes")
+    usage = normalize_provider_usage(payload.get("usage"))
     if answer is None:
         answer = ""
     if reasoning is None:
@@ -318,7 +343,7 @@ def parse_provider_output(raw_stdout: str) -> tuple[str, str, str | None, str]:
         reasoning = str(reasoning) if reasoning is not None else ""
     if notes is not None and not isinstance(notes, str):
         notes = str(notes)
-    return answer, reasoning, notes, "json"
+    return answer, reasoning, notes, "json", usage
 
 
 def build_result_record(
@@ -349,6 +374,8 @@ def build_result_record(
             base["started_at"] = provider.started_at
         if provider.completed_at:
             base["completed_at"] = provider.completed_at
+        if provider.usage:
+            base["usage"] = copy.deepcopy(provider.usage)
     return base
 
 
@@ -359,15 +386,18 @@ def run_provider(
     timeout: float,
 ) -> ProviderResult:
     started_at = datetime.now(timezone.utc).isoformat()
+    started_monotonic = time.perf_counter()
     process = subprocess.run(
         command + [model, prompt],
         capture_output=True,
         text=True,
         timeout=timeout,
     )
+    duration_ms = round((time.perf_counter() - started_monotonic) * 1000)
     completed_at = datetime.now(timezone.utc).isoformat()
     stderr = process.stderr.strip()
     adapter_name = Path(command[0]).name if command else "provider-command"
+    timing_usage = {"duration_ms": duration_ms}
 
     if process.returncode != 0:
         notes = f"provider_command_failed_exit_{process.returncode}: {stderr or process.stdout.strip()}"
@@ -383,9 +413,10 @@ def run_provider(
             adapter_stderr=stderr,
             started_at=started_at,
             completed_at=completed_at,
+            usage=timing_usage,
         )
 
-    answer, reasoning, parsed_notes, response_format = parse_provider_output(process.stdout)
+    answer, reasoning, parsed_notes, response_format, parsed_usage = parse_provider_output(process.stdout)
     notes = parsed_notes
     if parsed_notes is None and not answer and not reasoning and process.stdout.strip():
         notes = "provider_output_not_json" if process.stdout.strip() else None
@@ -404,6 +435,7 @@ def run_provider(
         adapter_stderr=stderr,
         started_at=started_at,
         completed_at=completed_at,
+        usage=merge_usage(timing_usage, parsed_usage),
     )
 
 
