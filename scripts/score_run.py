@@ -12,6 +12,7 @@ from pathlib import Path
 from typing import Any, Dict, Iterable, List, Optional, Sequence, Tuple
 
 import unicodedata
+from usage_normalization import normalize_usage
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 DEFAULT_DATASET_PATH = REPO_ROOT / "data" / "questions.json"
@@ -1128,6 +1129,7 @@ def score_record(result: Dict[str, Any], dataset: Dict[str, Dict[str, Any]]) -> 
                 },
             }
         )
+        coerced.update(normalize_usage(coerced.get("usage"), model=str(coerced.get("model") or "")))
         return coerced
 
     question = dataset[record_id]
@@ -1171,6 +1173,7 @@ def score_record(result: Dict[str, Any], dataset: Dict[str, Dict[str, Any]]) -> 
                 "score_reason": status["reason"],
             }
         )
+        coerced.update(normalize_usage(coerced.get("usage"), model=str(coerced.get("model") or "")))
         return coerced
 
     if evaluation_mode not in SUPPORTED_EVALUATION_MODES:
@@ -1199,6 +1202,7 @@ def score_record(result: Dict[str, Any], dataset: Dict[str, Dict[str, Any]]) -> 
                 "score_reason": status["reason"],
             }
         )
+        coerced.update(normalize_usage(coerced.get("usage"), model=str(coerced.get("model") or "")))
         return coerced
 
     match = score_single_answer(
@@ -1238,6 +1242,7 @@ def score_record(result: Dict[str, Any], dataset: Dict[str, Dict[str, Any]]) -> 
             "score_reason": status["reason"],
         }
     )
+    coerced.update(normalize_usage(coerced.get("usage"), model=str(coerced.get("model") or "")))
     return coerced
 
 
@@ -1315,10 +1320,45 @@ def build_summary(
             "manual_review_required": 0,
         }
 
+    def add_usage(bucket: Dict[str, Any], item: Dict[str, Any]) -> None:
+        usage = item.get("normalized_usage")
+        if not isinstance(usage, dict):
+            return
+        totals = bucket.setdefault(
+            "normalized_usage",
+            {
+                "input_tokens": 0,
+                "output_tokens": 0,
+                "reasoning_output_tokens": 0,
+                "cache_read_input_tokens": 0,
+                "cache_creation_input_tokens": 0,
+                "duration_ms": 0,
+                "cost_usd": 0.0,
+                "cost_unknown_count": 0,
+            },
+        )
+        for key in (
+            "input_tokens",
+            "output_tokens",
+            "reasoning_output_tokens",
+            "cache_read_input_tokens",
+            "cache_creation_input_tokens",
+            "duration_ms",
+        ):
+            value = usage.get(key)
+            if isinstance(value, (int, float)) and not isinstance(value, bool):
+                totals[key] += int(value)
+        cost = usage.get("cost_usd")
+        if isinstance(cost, (int, float)) and not isinstance(cost, bool):
+            totals["cost_usd"] += float(cost)
+        else:
+            totals["cost_unknown_count"] += 1
+
     for item in scored:
         model = str(item.get("model") or "unknown").strip() or "unknown"
         model_bucket = by_model.setdefault(model, empty_bucket())
         model_bucket["total"] += 1
+        add_usage(model_bucket, item)
 
         mode = str(item.get("evaluation_mode") or "exact").strip() or "exact"
         bucket = by_evaluation_mode.setdefault(mode, empty_bucket())

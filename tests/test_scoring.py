@@ -377,6 +377,60 @@ class ScoringFixtureTests(unittest.TestCase):
         )
         self.assertEqual(scored["scoring_status"]["reason"], "exact_normalized_match")
 
+    def test_scored_record_adds_codex_normalized_and_billing_usage(self) -> None:
+        scored = score_run.score_record(
+            {
+                "case_id": "GG-01",
+                "model": "gpt-5.5-xhigh",
+                "answer": "Drive there.",
+                "usage": {
+                    "provider": "codex",
+                    "input_tokens": 100,
+                    "cache_read_input_tokens": 25,
+                    "output_tokens": 10,
+                    "reasoning_output_tokens": 7,
+                    "duration_ms": 1200,
+                },
+            },
+            self.dataset,
+        )
+
+        self.assertEqual(scored["normalized_usage"]["input_tokens"], 100)
+        self.assertEqual(scored["normalized_usage"]["output_tokens"], 10)
+        self.assertEqual(scored["normalized_usage"]["reasoning_output_tokens"], 7)
+        self.assertTrue(scored["normalized_usage"]["reasoning_output_tokens_included"])
+        self.assertAlmostEqual(scored["normalized_usage"]["cost_usd"], 0.0006875)
+        self.assertEqual(scored["normalized_usage"]["cost_source"], "estimated_api_equivalent")
+        self.assertEqual(scored["billing_usage"]["uncached_input_tokens"], 75)
+        self.assertEqual(scored["billing_usage"]["cache_read_input_tokens"], 25)
+        self.assertAlmostEqual(scored["billing_usage"]["estimated_codex_credits"], 0.0171875)
+
+    def test_scored_record_adds_claude_normalized_and_billing_usage(self) -> None:
+        scored = score_run.score_record(
+            {
+                "case_id": "GG-01",
+                "model": "opus-4.8-max",
+                "answer": "Drive there.",
+                "usage": {
+                    "provider": "claude",
+                    "input_tokens": 100,
+                    "cache_read_input_tokens": 25,
+                    "cache_creation_input_tokens": 50,
+                    "output_tokens": 10,
+                    "provider_reported_cost_usd": 0.0123,
+                },
+            },
+            self.dataset,
+        )
+
+        self.assertEqual(scored["normalized_usage"]["input_tokens"], 175)
+        self.assertEqual(scored["normalized_usage"]["output_tokens"], 10)
+        self.assertEqual(scored["normalized_usage"]["cost_usd"], 0.0123)
+        self.assertEqual(scored["normalized_usage"]["cost_source"], "provider_reported")
+        self.assertEqual(scored["billing_usage"]["uncached_input_tokens"], 100)
+        self.assertEqual(scored["billing_usage"]["cache_read_input_tokens"], 25)
+        self.assertEqual(scored["billing_usage"]["cache_creation_input_tokens"], 50)
+
     def test_usage_run_false_negative_regressions_score_correctly(self) -> None:
         cases = {
             "MC-04": "No, test them in bright glare conditions.",
@@ -728,6 +782,46 @@ class ScoringFixtureTests(unittest.TestCase):
         self.assertIn("auto_scored", parsed["summary"])
         self.assertIn("manual_only", parsed["summary"])
         self.assertEqual(parsed["summary"]["overall"]["question_count"], 2)
+
+    def test_summary_rolls_up_normalized_usage_by_model(self) -> None:
+        scored = [
+            score_run.score_record(
+                {
+                    "id": "GG-01",
+                    "model": "gpt-5.5-xhigh",
+                    "answer": "Drive there.",
+                    "usage": {
+                        "provider": "codex",
+                        "input_tokens": 100,
+                        "cache_read_input_tokens": 25,
+                        "output_tokens": 10,
+                    },
+                },
+                self.dataset,
+            ),
+            score_run.score_record(
+                {
+                    "id": "GG-02",
+                    "model": "gpt-5.5-xhigh",
+                    "answer": "Bring the suit.",
+                    "usage": {
+                        "provider": "codex",
+                        "input_tokens": 200,
+                        "cache_read_input_tokens": 50,
+                        "output_tokens": 20,
+                    },
+                },
+                self.dataset,
+            ),
+        ]
+
+        summary = score_run.build_summary(scored)
+        usage = summary["by_model"]["gpt-5.5-xhigh"]["normalized_usage"]
+
+        self.assertEqual(usage["input_tokens"], 300)
+        self.assertEqual(usage["output_tokens"], 30)
+        self.assertAlmostEqual(usage["cost_usd"], 0.0020625)
+        self.assertEqual(usage["cost_unknown_count"], 0)
 
     def test_checked_in_example_run_includes_v2_raw_aliases(self) -> None:
         example_path = REPO_ROOT / "runs" / "example-run.json"
