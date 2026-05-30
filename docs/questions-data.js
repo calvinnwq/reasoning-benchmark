@@ -4658,7 +4658,8 @@ window.REASONING_BENCHMARK_DATA = {
     {
       "accepted_variants": [
         "No, you need a bright or glary setting.",
-        "No, test them in conditions with glare."
+        "No, test them in conditions with glare.",
+        "No, test them in bright glare conditions."
       ],
       "category": "MC",
       "category_label": "Physical constraint / practical reasoning",
@@ -4924,7 +4925,9 @@ window.REASONING_BENCHMARK_DATA = {
       "accepted_variants": [
         "No.",
         "No; a toaster cannot give career advice.",
-        "No, it is just a toaster."
+        "No, it is just a toaster.",
+        "No, it is not being rude.",
+        "No, it's not being rude."
       ],
       "category": "LP",
       "category_label": "Literal precision / comic traps",
@@ -5052,7 +5055,9 @@ window.REASONING_BENCHMARK_DATA = {
     {
       "accepted_variants": [
         "Concise",
-        "concise"
+        "concise",
+        "Terse",
+        "terse"
       ],
       "category": "LP",
       "category_label": "Literal precision / comic traps",

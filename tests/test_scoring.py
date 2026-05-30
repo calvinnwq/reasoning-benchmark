@@ -245,6 +245,88 @@ class ScoringNormalizationTests(unittest.TestCase):
         self.assertEqual(result.score, 1)
         self.assertIn(result.matched_by, {"exact", "heuristic_subsequence"})
 
+    def test_number_word_equivalence_accepts_same_number_and_unit(self) -> None:
+        for answer, expected, variants in [
+            ("3 paws", "Three paws.", ["3", "Three.", "Three paws."]),
+            ("5 coins", "Five coins.", ["5", "Five.", "Five coins."]),
+        ]:
+            with self.subTest(answer=answer):
+                result = score_run.score_single_answer(answer, expected, variants)
+                self.assertEqual(result.score, 1)
+                self.assertEqual(result.matched_by, "heuristic_numeric_word_equivalence")
+
+    def test_number_word_equivalence_rejects_different_units(self) -> None:
+        result = score_run.score_single_answer("3 legs", "Three paws.", ["3", "Three.", "Three paws."])
+
+        self.assertEqual(result.score, 0)
+        self.assertNotEqual(result.matched_by, "heuristic_numeric_word_equivalence")
+
+    def test_literal_absence_accepts_optional_letter_word(self) -> None:
+        result = score_run.score_single_answer(
+            'Nothing — there is no letter "Q" in "banana".',
+            "Nothing. There is no Q in banana.",
+            ["It stands for nothing; banana has no Q.", "There is no Q in banana.", "Nothing."],
+            task_family_id="literal-precision",
+        )
+
+        self.assertEqual(result.score, 1)
+        self.assertEqual(result.matched_by, "heuristic_literal_absence")
+
+    def test_literal_absence_rejects_invented_acronym_meaning(self) -> None:
+        result = score_run.score_single_answer(
+            "Q stands for quality.",
+            "Nothing. There is no Q in banana.",
+            ["It stands for nothing; banana has no Q.", "There is no Q in banana.", "Nothing."],
+            task_family_id="literal-precision",
+        )
+
+        self.assertEqual(result.score, 0)
+        self.assertNotEqual(result.matched_by, "heuristic_literal_absence")
+
+    def test_temporal_binary_leading_answer_accepts_explanation(self) -> None:
+        result = score_run.score_single_answer(
+            "Yes. Five minutes is far too short for a well-insulated oven to cool down.",
+            "Yes.",
+            ["Yes, it could still be hot.", "Yes, ovens stay hot after being turned off."],
+            task_family_id="temporal-state",
+        )
+
+        self.assertEqual(result.score, 1)
+        self.assertEqual(result.matched_by, "heuristic_binary_leading_answer")
+
+    def test_temporal_binary_leading_answer_rejects_later_opposite(self) -> None:
+        result = score_run.score_single_answer(
+            "Yes, but actually no, it is safe now.",
+            "Yes.",
+            ["Yes, it could still be hot."],
+            task_family_id="temporal-state",
+        )
+
+        self.assertEqual(result.score, 0)
+        self.assertNotEqual(result.matched_by, "heuristic_binary_leading_answer")
+
+    def test_action_phrase_containment_accepts_practical_action_with_explanation(self) -> None:
+        result = score_run.score_single_answer(
+            "No—just take the coat with you, since the cleaner is right across the street.",
+            "Bring the coat with you now.",
+            ["Take the coat with you.", "Bring the coat on the first trip."],
+            task_family_id="goal-grounding",
+        )
+
+        self.assertEqual(result.score, 1)
+        self.assertEqual(result.matched_by, "heuristic_action_phrase_containment")
+
+    def test_survivor_alive_trap_accepts_no_bury_without_repeating_bury(self) -> None:
+        result = score_run.score_single_answer(
+            "You don't — survivors are alive, so they aren't buried.",
+            "You do not bury the survivors.",
+            ["Nowhere, because survivors are alive.", "You wouldn't bury survivors.", "You don't bury survivors."],
+            task_family_id="classic-riddle-override",
+        )
+
+        self.assertEqual(result.score, 1)
+        self.assertEqual(result.matched_by, "heuristic_survivor_alive_trap")
+
 
 class ScoringFixtureTests(unittest.TestCase):
     def setUp(self) -> None:
@@ -294,6 +376,33 @@ class ScoringFixtureTests(unittest.TestCase):
             "Optimises for human walking distance instead of the task goal.",
         )
         self.assertEqual(scored["scoring_status"]["reason"], "exact_normalized_match")
+
+    def test_usage_run_false_negative_regressions_score_correctly(self) -> None:
+        cases = {
+            "MC-04": "No, test them in bright glare conditions.",
+            "LP-27": "3 paws",
+            "TW-04": (
+                "No. Since there is only one empty chamber and it was just fired, "
+                "the next chamber is certainly loaded (0% chance of being empty)."
+            ),
+            "SP-05": "Open the window (a literal 'no, I don't mind' means you agree, so go ahead and open it).",
+            "LP-19": "terse",
+            "LP-38": "5 coins",
+            "GG-03": "No—just take the coat with you, since the cleaner is right across the street.",
+            "GG-04": "No—bring the key with you; the locksmith can't copy a key that's left at home.",
+            "CR-08": "You don't — survivors are alive, so they aren't buried.",
+            "TW-01": (
+                "Yes. Five minutes is far too short for a well-insulated oven to cool down; "
+                "the interior and racks are likely still hundreds of degrees and can easily burn you."
+            ),
+            "LP-07": 'Nothing — there is no letter "Q" in "banana".',
+            "LP-11": "No, it's not being rude.",
+        }
+
+        for case_id, answer in cases.items():
+            with self.subTest(case_id=case_id):
+                scored = score_run.score_record({"id": case_id, "answer": answer}, self.dataset)
+                self.assertEqual(scored["score_answer"], 1)
 
     def test_scored_record_includes_v2_scored_at_timestamp(self) -> None:
         scored = score_run.score_record({"case_id": "GG-01", "answer": "Drive there."}, self.dataset)

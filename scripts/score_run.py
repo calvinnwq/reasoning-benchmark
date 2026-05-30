@@ -46,6 +46,32 @@ BINARY_EXPLANATION_SHARED_SPAN_MIN_TOKENS = 4
 BINARY_EXPLANATION_LONG_SHARED_SPAN_MIN_TOKENS = 6
 HEURISTIC_SPAN_MAX_TOKENS = 10
 CONCISE_PREFIX_MAX_TOKENS = 3
+ACTION_PHRASE_MAX_CANDIDATE_TOKENS = 8
+ACTION_PHRASE_MAX_ANSWER_TOKENS = 24
+KEY_TERM_BINARY_MIN_SHARED_TERMS = 2
+NUMBER_WORDS = {
+    "0": "zero",
+    "1": "one",
+    "2": "two",
+    "3": "three",
+    "4": "four",
+    "5": "five",
+    "6": "six",
+    "7": "seven",
+    "8": "eight",
+    "9": "nine",
+    "10": "ten",
+    "11": "eleven",
+    "12": "twelve",
+    "13": "thirteen",
+    "14": "fourteen",
+    "15": "fifteen",
+    "16": "sixteen",
+    "17": "seventeen",
+    "18": "eighteen",
+    "19": "nineteen",
+    "20": "twenty",
+}
 
 
 @dataclass(frozen=True)
@@ -187,6 +213,22 @@ def starts_with_token_sequence(candidate_tokens: Sequence[str], prefix_tokens: S
 def strip_soft_determiners(tokens: Sequence[str]) -> List[str]:
     soft_words = {"a", "an", "the", "my", "your", "our", "his", "her", "their", "you", "now"}
     return [token for token in tokens if token not in soft_words]
+
+
+def canonicalize_number_tokens(tokens: Sequence[str]) -> List[str]:
+    return [NUMBER_WORDS.get(token, token) for token in tokens]
+
+
+def has_number_word_equivalence(answer_norm: str, candidate_norms: Sequence[str]) -> bool:
+    answer_tokens = token_sequence(answer_norm)
+    if not any(token in NUMBER_WORDS for token in answer_tokens):
+        return False
+    canonical_answer = canonicalize_number_tokens(answer_tokens)
+    for candidate_norm in candidate_norms:
+        candidate_tokens = token_sequence(candidate_norm)
+        if canonical_answer == canonicalize_number_tokens(candidate_tokens):
+            return True
+    return False
 
 
 def build_candidate_norms(expected_text: str, accepted_variants: Iterable[Any]) -> List[str]:
@@ -383,11 +425,150 @@ def has_binary_explanation_overlap(answer_text: str, candidate_text: str) -> boo
     return has_anchored_binary_explanation_overlap(stripped_answer_tokens, stripped_candidate_tokens)
 
 
+def has_late_binary_contradiction(answer_tokens: Sequence[str], expected_binary: str) -> bool:
+    opposite = "no" if expected_binary == "yes" else "yes"
+    for index, token in enumerate(answer_tokens[1:], start=1):
+        if token == opposite:
+            return True
+        if token in {"actually", "but", "however", "instead", "though", "yet"} and opposite in answer_tokens[index + 1 :]:
+            return True
+    return False
+
+
+def has_temporal_binary_leading_answer(answer_norm: str, expected_binary: str | None, task_family_id: str | None) -> bool:
+    if task_family_id != "temporal-state" or expected_binary not in {"yes", "no"}:
+        return False
+    answer_tokens = token_sequence(answer_norm)
+    if len(answer_tokens) <= BINARY_ANSWER_MAX_TOKENS:
+        return False
+    if not answer_tokens or answer_tokens[0] != expected_binary:
+        return False
+    return not has_late_binary_contradiction(answer_tokens, expected_binary)
+
+
+def has_action_phrase_containment(
+    answer_norm: str,
+    candidate_norms: Sequence[str],
+    task_family_id: str | None,
+) -> bool:
+    if task_family_id not in {"goal-grounding", "social-pragmatics"}:
+        return False
+    answer_tokens = token_sequence(answer_norm)
+    if not answer_tokens or len(answer_tokens) > ACTION_PHRASE_MAX_ANSWER_TOKENS:
+        return False
+    stripped_answer_tokens = strip_soft_determiners(answer_tokens)
+    for candidate_norm in candidate_norms:
+        candidate_tokens = token_sequence(candidate_norm)
+        if not (1 < len(candidate_tokens) <= ACTION_PHRASE_MAX_CANDIDATE_TOKENS):
+            continue
+        stripped_candidate_tokens = strip_soft_determiners(candidate_tokens)
+        if contains_expected_as_contiguous_span(stripped_answer_tokens, stripped_candidate_tokens):
+            return True
+    return False
+
+
+def key_terms(tokens: Sequence[str]) -> set[str]:
+    generic_tokens = {
+        "a",
+        "an",
+        "and",
+        "are",
+        "be",
+        "bright",
+        "can",
+        "conditions",
+        "do",
+        "exists",
+        "for",
+        "in",
+        "is",
+        "it",
+        "need",
+        "no",
+        "or",
+        "setting",
+        "should",
+        "the",
+        "them",
+        "there",
+        "to",
+        "where",
+        "with",
+        "yes",
+        "you",
+    }
+    return {token for token in tokens if token not in generic_tokens and len(token) > 2}
+
+
+def has_physical_condition_key_terms(
+    answer_norm: str,
+    candidate_norms: Sequence[str],
+    expected_binary: str | None,
+    task_family_id: str | None,
+) -> bool:
+    if task_family_id != "physical-commonsense" or expected_binary not in {"yes", "no"}:
+        return False
+    answer_tokens = token_sequence(answer_norm)
+    if not answer_tokens or answer_tokens[0] != expected_binary:
+        return False
+    answer_terms = key_terms(answer_tokens)
+    for candidate_norm in candidate_norms:
+        candidate_terms = key_terms(token_sequence(candidate_norm))
+        if len(answer_terms & candidate_terms) >= KEY_TERM_BINARY_MIN_SHARED_TERMS:
+            return True
+    return False
+
+
+def has_literal_absence_equivalence(answer_norm: str, candidate_norms: Sequence[str], task_family_id: str | None) -> bool:
+    if task_family_id != "literal-precision":
+        return False
+    absence_patterns = [
+        re.compile(r"\bnothing there is no (?P<char>[a-z0-9]) in (?P<word>[a-z0-9]+)\b"),
+        re.compile(r"\bthere is no (?P<char>[a-z0-9]) in (?P<word>[a-z0-9]+)\b"),
+    ]
+    letter_absence_patterns = [
+        re.compile(r"\bnothing there is no letter (?P<char>[a-z0-9]) in (?P<word>[a-z0-9]+)\b"),
+        re.compile(r"\bthere is no letter (?P<char>[a-z0-9]) in (?P<word>[a-z0-9]+)\b"),
+    ]
+    expected_absences = {
+        (match.group("char"), match.group("word"))
+        for candidate_norm in candidate_norms
+        for pattern in absence_patterns
+        for match in [pattern.search(candidate_norm)]
+        if match
+    }
+    if not expected_absences:
+        return False
+    answer_absences = {
+        (match.group("char"), match.group("word"))
+        for pattern in letter_absence_patterns
+        for match in [pattern.search(answer_norm)]
+        if match
+    }
+    return bool(expected_absences & answer_absences)
+
+
+def has_survivor_alive_trap_equivalence(answer_norm: str, task_family_id: str | None) -> bool:
+    if task_family_id != "classic-riddle-override":
+        return False
+    tokens = set(token_sequence(answer_norm))
+    has_survivor = "survivors" in tokens or "survivor" in tokens
+    has_alive_reason = "alive" in tokens or ("not" in tokens and "buried" in tokens)
+    has_no_bury_answer = (
+        answer_norm.startswith("you do not")
+        or answer_norm.startswith("you would not")
+        or answer_norm.startswith("nowhere")
+        or answer_norm.startswith("nothing")
+    )
+    return has_survivor and has_alive_reason and has_no_bury_answer
+
+
 def score_single_answer(
     answer: Any,
     expected_text: str,
     accepted_variants: Iterable[Any],
     accepted_variant_policy: str = DEFAULT_ACCEPTED_VARIANT_POLICY,
+    task_family_id: str | None = None,
 ) -> MatchResult:
     raw_answer = "" if answer is None else str(answer).strip()
     raw_answer_norm = normalize_text(raw_answer)
@@ -449,6 +630,20 @@ def score_single_answer(
                 answer_normalized=normalized_answer,
             )
 
+    for normalized_answer in answer_norms:
+        if has_number_word_equivalence(normalized_answer, candidate_norms):
+            return MatchResult(
+                score=1,
+                matched=True,
+                reason="numeric_word_equivalence",
+                matched_by="heuristic_numeric_word_equivalence",
+                heuristic=True,
+                expected=expected_text,
+                expected_normalized=expected_norm,
+                answer=raw_answer,
+                answer_normalized=normalized_answer,
+            )
+
     if expected_binary in {"yes", "no"} and accepted_variant_policy != NORMALIZED_EXACT_ACCEPTED_VARIANT_POLICY:
         answer_binary = extract_binary_token(raw_answer)
         if answer_binary is None:
@@ -501,6 +696,33 @@ def score_single_answer(
                     answer_normalized=answer_norm,
                 )
 
+        for normalized_answer in answer_norms:
+            if has_temporal_binary_leading_answer(normalized_answer, expected_binary, task_family_id):
+                return MatchResult(
+                    score=1,
+                    matched=True,
+                    reason="temporal_binary_leading_answer",
+                    matched_by="heuristic_binary_leading_answer",
+                    heuristic=True,
+                    expected=expected_text,
+                    expected_normalized=expected_norm,
+                    answer=raw_answer,
+                    answer_normalized=normalized_answer,
+                )
+
+            if has_physical_condition_key_terms(normalized_answer, candidate_norms, expected_binary, task_family_id):
+                return MatchResult(
+                    score=1,
+                    matched=True,
+                    reason="physical_condition_key_terms",
+                    matched_by="heuristic_physical_condition_key_terms",
+                    heuristic=True,
+                    expected=expected_text,
+                    expected_normalized=expected_norm,
+                    answer=raw_answer,
+                    answer_normalized=normalized_answer,
+                )
+
     for normalized_answer in answer_norms:
         answer_tokens = token_sequence(normalized_answer)
         if len(answer_tokens) <= HEURISTIC_SPAN_MAX_TOKENS:
@@ -533,6 +755,46 @@ def score_single_answer(
                         answer=raw_answer,
                         answer_normalized=normalized_answer,
                     )
+
+    for normalized_answer in answer_norms:
+        if has_action_phrase_containment(normalized_answer, candidate_norms, task_family_id):
+            return MatchResult(
+                score=1,
+                matched=True,
+                reason="action_phrase_containment",
+                matched_by="heuristic_action_phrase_containment",
+                heuristic=True,
+                expected=expected_text,
+                expected_normalized=expected_norm,
+                answer=raw_answer,
+                answer_normalized=normalized_answer,
+            )
+
+        if has_literal_absence_equivalence(normalized_answer, candidate_norms, task_family_id):
+            return MatchResult(
+                score=1,
+                matched=True,
+                reason="literal_absence_equivalence",
+                matched_by="heuristic_literal_absence",
+                heuristic=True,
+                expected=expected_text,
+                expected_normalized=expected_norm,
+                answer=raw_answer,
+                answer_normalized=normalized_answer,
+            )
+
+        if has_survivor_alive_trap_equivalence(normalized_answer, task_family_id):
+            return MatchResult(
+                score=1,
+                matched=True,
+                reason="survivor_alive_trap_equivalence",
+                matched_by="heuristic_survivor_alive_trap",
+                heuristic=True,
+                expected=expected_text,
+                expected_normalized=expected_norm,
+                answer=raw_answer,
+                answer_normalized=normalized_answer,
+            )
 
     for normalized_answer in answer_norms:
         answer_tokens = token_sequence(normalized_answer)
@@ -944,6 +1206,7 @@ def score_record(result: Dict[str, Any], dataset: Dict[str, Dict[str, Any]]) -> 
         expected_text=str(question.get("expected_answer", "")),
         accepted_variants=question.get("accepted_variants", []),
         accepted_variant_policy=accepted_variant_policy,
+        task_family_id=task_family_id_for(question),
     )
     status = {
         "matched": bool(match.matched),
