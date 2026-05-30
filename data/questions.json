@@ -461,7 +461,9 @@
       "They want to leave.",
       "They are preparing to head out.",
       "They are signaling that they want to leave soon.",
-      "They are getting ready to leave."
+      "They are getting ready to leave.",
+      "They are preparing to leave.",
+      "That they intend to leave soon."
     ],
     "common_wrong_answer": "They want a debate about whether motion is possible.",
     "rationale": "This is a standard social pre-departure cue.",
@@ -6678,7 +6680,10 @@
     "accepted_variants": [
       "Neither.",
       "Neither; rocks cannot run away.",
-      "A rock cannot run away or come home."
+      "A rock cannot run away or come home.",
+      "Neither; a pet rock can't run away or come when called.",
+      "Neither—a rock is inanimate, so it can't run away, hear a call, or come home on its own.",
+      "Neither—a pet rock is inanimate and can't run away, hear a call, or walk home on its own."
     ],
     "common_wrong_answer": "Call it.",
     "rationale": "The premise anthropomorphizes an inanimate object; the practical answer should reject the impossible action.",
@@ -7010,7 +7015,9 @@
     "accepted_variants": [
       "Three in the fictional premise; none in reality.",
       "Fictionally three, literally none.",
-      "Three if accepting the premise, none in reality."
+      "Three if accepting the premise, none in reality.",
+      "3 in the story, 0 in reality.",
+      "3 horns in the story, 0 in reality."
     ],
     "common_wrong_answer": "Three.",
     "rationale": "The prompt explicitly asks for both the in-story count and the real-world count.",
@@ -7266,7 +7273,9 @@
     "accepted_variants": [
       "Neither.",
       "They both have six letters.",
-      "Neither; goblin and pigeon both have six letters."
+      "Neither; goblin and pigeon both have six letters.",
+      "Neither; they have the same number of letters.",
+      "Neither; both have 6 letters."
     ],
     "common_wrong_answer": "pigeon.",
     "rationale": "Goblin and pigeon each have six letters, so neither word has more letters.",
