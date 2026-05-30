@@ -6452,7 +6452,8 @@
     "expected_answer": "No. Test them where glare exists.",
     "accepted_variants": [
       "No, you need a bright or glary setting.",
-      "No, test them in conditions with glare."
+      "No, test them in conditions with glare.",
+      "No, test them in bright glare conditions."
     ],
     "common_wrong_answer": "Yes, a dark room is fine for checking glare reduction.",
     "rationale": "You can only observe glare reduction when glare is present.",
@@ -6718,7 +6719,9 @@
     "accepted_variants": [
       "No.",
       "No; a toaster cannot give career advice.",
-      "No, it is just a toaster."
+      "No, it is just a toaster.",
+      "No, it is not being rude.",
+      "No, it's not being rude."
     ],
     "common_wrong_answer": "Yes, it is being rude.",
     "rationale": "A toaster is an appliance, not a social agent with conversational obligations.",
@@ -6846,7 +6849,9 @@
     "expected_answer": "Concise.",
     "accepted_variants": [
       "Concise",
-      "concise"
+      "concise",
+      "Terse",
+      "terse"
     ],
     "common_wrong_answer": "Concise, because it means brief and clear...",
     "rationale": "The one-word constraint conflicts with the request for explanation; the stricter output format should win.",
