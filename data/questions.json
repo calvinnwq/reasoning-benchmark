@@ -149,7 +149,9 @@
       "Run one race with all six horses.",
       "Race them all at the same time.",
       "Race all six horses together.",
-      "Race all six horses together once."
+      "Race all six horses together once.",
+      "Race all six horses together in a single race; the winner is the fastest.",
+      "Race all six horses together in a single race; the one that finishes first is the fastest."
     ],
     "common_wrong_answer": "Race them in groups, then race the winners.",
     "rationale": "The prompt gives no lane or grouping constraint, so one race is sufficient.",
@@ -6422,7 +6424,9 @@
     "expected_answer": "No. Keep it steadier.",
     "accepted_variants": [
       "No, keep your arm stable.",
-      "No, minimise motion."
+      "No, minimise motion.",
+      "No. Keep the cup as steady as possible and walk slowly.",
+      "No, keep your arm steady and minimize movement."
     ],
     "common_wrong_answer": "Yes, moving it more helps distribute the coffee.",
     "rationale": "Extra motion increases sloshing and spill risk.",
@@ -6937,7 +6941,8 @@
     "accepted_variants": [
       "No.",
       "No, test it before landing in a safe way.",
-      "No; after landing is too late to test its purpose."
+      "No; after landing is too late to test its purpose.",
+      "No. Test or inspect it before jumping, not after landing."
     ],
     "common_wrong_answer": "Yes, after landing is safer.",
     "rationale": "A parachute’s useful function matters before landing; after landing is not a valid functional test.",
@@ -6953,7 +6958,8 @@
     "accepted_variants": [
       "It melts.",
       "The ice cream will melt.",
-      "It would melt."
+      "It would melt.",
+      "The ice cream melts."
     ],
     "common_wrong_answer": "It stays warm.",
     "rationale": "Oven heat melts ice cream; the stated intention does not override the physical consequence.",

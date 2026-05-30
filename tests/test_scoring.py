@@ -433,7 +433,11 @@ class ScoringFixtureTests(unittest.TestCase):
 
     def test_usage_run_false_negative_regressions_score_correctly(self) -> None:
         cases = {
+            "CR-02": "Race all six horses together in a single race; the winner is the fastest.",
+            "MC-02": "No—keep your arm steady and minimize movement.",
             "MC-04": "No, test them in bright glare conditions.",
+            "LP-24": "No. Test or inspect it before jumping, not after landing.",
+            "LP-25": "The ice cream melts.",
             "LP-27": "3 paws",
             "TW-04": (
                 "No. Since there is only one empty chamber and it was just fired, "

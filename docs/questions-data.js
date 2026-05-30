@@ -189,7 +189,9 @@ window.REASONING_BENCHMARK_DATA = {
         "Run one race with all six horses.",
         "Race them all at the same time.",
         "Race all six horses together.",
-        "Race all six horses together once."
+        "Race all six horses together once.",
+        "Race all six horses together in a single race; the winner is the fastest.",
+        "Race all six horses together in a single race; the one that finishes first is the fastest."
       ],
       "category": "CR",
       "category_label": "Classic-riddle override / anti-pattern-match",
@@ -4628,7 +4630,9 @@ window.REASONING_BENCHMARK_DATA = {
     {
       "accepted_variants": [
         "No, keep your arm stable.",
-        "No, minimise motion."
+        "No, minimise motion.",
+        "No. Keep the cup as steady as possible and walk slowly.",
+        "No, keep your arm steady and minimize movement."
       ],
       "category": "MC",
       "category_label": "Physical constraint / practical reasoning",
@@ -5143,7 +5147,8 @@ window.REASONING_BENCHMARK_DATA = {
       "accepted_variants": [
         "No.",
         "No, test it before landing in a safe way.",
-        "No; after landing is too late to test its purpose."
+        "No; after landing is too late to test its purpose.",
+        "No. Test or inspect it before jumping, not after landing."
       ],
       "category": "LP",
       "category_label": "Literal precision / comic traps",
@@ -5159,7 +5164,8 @@ window.REASONING_BENCHMARK_DATA = {
       "accepted_variants": [
         "It melts.",
         "The ice cream will melt.",
-        "It would melt."
+        "It would melt.",
+        "The ice cream melts."
       ],
       "category": "LP",
       "category_label": "Literal precision / comic traps",
