@@ -65,6 +65,7 @@ class BaselineSelectionTests(unittest.TestCase):
 
     def test_model_slug_is_stable(self) -> None:
         self.assertEqual(run_baselines.normalize_model_id("gpt-5.4"), "gpt-5-4")
+        self.assertEqual(run_baselines.normalize_model_id("gpt-5.4-xhigh"), "gpt-5-4-xhigh")
         self.assertEqual(run_baselines.normalize_model_id("qwen3.5-9b"), "qwen3-5-9b")
 
     def test_run_paths_are_stable(self) -> None:

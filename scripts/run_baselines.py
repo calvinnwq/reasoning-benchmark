@@ -31,6 +31,7 @@ DEFAULT_RUN_DIR = REPO_ROOT / "runs" / "baseline"
 BENCHMARK_ID = "reasoning-benchmark"
 SUPPORTED_MODELS: tuple[str, ...] = (
     "gpt-5.4",
+    "gpt-5.4-xhigh",
     "gpt-5.5-xhigh",
     "sonnet-4.6",
     "opus-4.7-max",

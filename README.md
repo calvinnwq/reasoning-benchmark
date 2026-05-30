@@ -123,11 +123,12 @@ Migrated v2 cases additionally carry ambiguity, cooperative-intent, accepted-int
 
 ## Baselines
 
-Three first-class baseline models are wired in:
+First-class baseline models are wired in:
 
 | Model | `cli_adapter.py` | `api_adapter.py` |
 |-------|------------------|------------------|
 | `gpt-5.4` | Codex CLI | stubbed |
+| `gpt-5.4-xhigh` | Codex CLI with xhigh reasoning effort | stubbed |
 | `sonnet-4.6` | Claude CLI | stubbed |
 | `qwen3.5-9b` | local Ollama via shared adapter layer | local Ollama |
 

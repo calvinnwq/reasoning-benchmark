@@ -434,14 +434,14 @@ class ScoringFixtureTests(unittest.TestCase):
     def test_usage_run_false_negative_regressions_score_correctly(self) -> None:
         cases = {
             "CR-01": (
-                "Put the wolf, goat, and cabbage each in their own separate secure compartment "
-                "and row across in a single trip."
+                "He puts the wolf, goat, and cabbage in the boat's three separate secure "
+                "compartments and takes them across in one trip."
             ),
-            "CR-02": "Race all six horses together in a single race; the winner is the fastest.",
+            "CR-02": "Race all six horses together once and see which finishes first.",
             "MC-02": "No—keep your arm steady and minimize movement.",
             "MC-04": "No, test them in bright glare conditions.",
             "SP-06": "That they intend to leave soon.",
-            "LP-08": "Neither—a pet rock is inanimate and can't run away, hear a call, or walk home on its own.",
+            "LP-08": "Neither; it's a rock, so it didn't run away and can't answer a call.",
             "LP-24": "No. Test or inspect it before jumping, not after landing.",
             "LP-25": "The ice cream melts.",
             "LP-27": "3 paws",
@@ -462,7 +462,8 @@ class ScoringFixtureTests(unittest.TestCase):
                 "the interior and racks are likely still hundreds of degrees and can easily burn you."
             ),
             "LP-07": 'Nothing — there is no letter "Q" in "banana".',
-            "LP-11": "No, it's not being rude.",
+            "LP-11": "No. It's not being rude; it's a toaster and can't give career advice.",
+            "LP-23": "Up first.",
         }
 
         for case_id, answer in cases.items():

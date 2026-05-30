@@ -67,6 +67,8 @@ class AdapterParsingTests(unittest.TestCase):
         with self.assertRaises(benchmark_adapters.AdapterError):
             benchmark_adapters.run_api_adapter("gpt-5.4", "Prompt")
         with self.assertRaises(benchmark_adapters.AdapterError):
+            benchmark_adapters.run_api_adapter("gpt-5.4-xhigh", "Prompt")
+        with self.assertRaises(benchmark_adapters.AdapterError):
             benchmark_adapters.run_api_adapter("gpt-5.5-xhigh", "Prompt")
         with self.assertRaises(benchmark_adapters.AdapterError):
             benchmark_adapters.run_api_adapter("opus-4.8-max", "Prompt")
@@ -92,14 +94,23 @@ class AdapterParsingTests(unittest.TestCase):
             "run_claude_cli",
             return_value=benchmark_adapters.AdapterResult("C", "D"),
         ) as mock_claude:
-            gpt = benchmark_adapters.run_cli_adapter("gpt-5.5-xhigh", "Prompt one")
+            gpt54 = benchmark_adapters.run_cli_adapter("gpt-5.4-xhigh", "Prompt one")
+            gpt55 = benchmark_adapters.run_cli_adapter("gpt-5.5-xhigh", "Prompt two")
             opus = benchmark_adapters.run_cli_adapter("opus-4.8-max", "Prompt two")
             opus47 = benchmark_adapters.run_cli_adapter("opus-4.7-max", "Prompt three")
 
-        self.assertEqual(gpt.answer, "A")
+        self.assertEqual(gpt54.answer, "A")
+        self.assertEqual(gpt55.answer, "A")
         self.assertEqual(opus.answer, "C")
         self.assertEqual(opus47.answer, "C")
-        mock_codex.assert_called_once_with("gpt-5.5", "Prompt one", reasoning_effort="xhigh")
+        self.assertEqual(
+            [call.args for call in mock_codex.call_args_list],
+            [("gpt-5.4", "Prompt one"), ("gpt-5.5", "Prompt two")],
+        )
+        self.assertEqual(
+            [call.kwargs for call in mock_codex.call_args_list],
+            [{"reasoning_effort": "xhigh"}, {"reasoning_effort": "xhigh"}],
+        )
         self.assertEqual(
             [call.args for call in mock_claude.call_args_list],
             [("claude-opus-4-8", "Prompt two"), ("claude-opus-4-7", "Prompt three")],
