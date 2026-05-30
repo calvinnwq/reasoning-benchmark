@@ -377,6 +377,28 @@ The validator lives in `scripts/extensions.py` (`RESERVED_EXTENSION_NAMESPACES`,
     "duration_ms": 1200,
     "provider_reported_cost_usd": 0.01
   },
+  "normalized_usage": {
+    "provider": "codex",
+    "input_tokens": 100,
+    "output_tokens": 10,
+    "reasoning_output_tokens": 7,
+    "reasoning_output_tokens_included": true,
+    "cache_read_input_tokens": 25,
+    "cache_creation_input_tokens": 0,
+    "duration_ms": 1200,
+    "cost_usd": 0.01,
+    "cost_source": "provider_reported"
+  },
+  "billing_usage": {
+    "uncached_input_tokens": 75,
+    "cache_read_input_tokens": 25,
+    "cache_creation_input_tokens": 0,
+    "output_tokens": 10,
+    "reasoning_output_tokens": 7,
+    "reasoning_output_tokens_included": true,
+    "duration_ms": 1200,
+    "provider_reported_cost_usd": 0.01
+  },
   "started_at": "2026-04-26T00:00:00Z",
   "completed_at": "2026-04-26T00:00:01Z"
 }
@@ -403,12 +425,28 @@ For live provider-backed runs, `adapter.name` records the executed program basen
 `adapter.command` redacts arguments as `program '[arguments omitted]'` so artifact audit metadata
 does not persist adapter arguments or secrets.
 
-`usage` records best-effort provider telemetry. Normalized fields include `provider`,
+`usage` records best-effort provider telemetry. Raw normalized fields include `provider`,
 `input_tokens`, `output_tokens`, `reasoning_output_tokens`, `cache_read_input_tokens`,
 `cache_creation_input_tokens`, `duration_ms`, and `provider_reported_cost_usd` when a harness
 exposes them. Adapters may also include provider-specific telemetry under `provider_usage` or
 `provider_model_usage`; consumers should treat those blocks as informational because fields differ
 by harness.
+
+Scored artifacts also derive `normalized_usage` and `billing_usage` from the raw `usage` object.
+`normalized_usage` is the comparison view for per-question efficiency charts and summaries:
+Codex input stays as `input_tokens` because Codex reports cached input inside that total, while
+Claude/OpenCode/Pi-style providers use `input_tokens + cache_read_input_tokens +
+cache_creation_input_tokens` as normalized input when those cache fields are separate.
+`output_tokens` is the total output figure; `reasoning_output_tokens` is recorded as included
+output, never added again.
+
+`billing_usage` is the audit view. It separates uncached input, cache read input, cache creation
+input, output, included reasoning output, duration, provider-reported cost, and any estimated
+pricing fields. When a provider reports dollars, `normalized_usage.cost_source` is
+`provider_reported`. When Codex does not report dollars, the scorer may emit an
+`estimated_api_equivalent` dollar cost from the pinned OpenAI API pricing table and an
+`estimated_codex_credits` value from the pinned Codex rate card. These estimates are explicitly
+marked and should not be treated as provider-billed dollars.
 
 ## ScoreRecord
 

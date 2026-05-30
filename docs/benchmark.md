@@ -295,6 +295,22 @@ When a harness exposes telemetry, raw artifacts include a per-result `usage` obj
 and Ollama adapters populate normalized token/cache/latency fields where available; custom provider
 commands can emit their own `usage` object beside `answer` and `reasoning`.
 
+Scored artifacts derive two additional per-question accounting views from that raw telemetry:
+
+- `normalized_usage`: comparison-friendly input, output, duration, and dollar cost fields. Codex
+  cached input is already included in `input_tokens`, so normalized Codex input is just
+  `input_tokens`. Claude/OpenCode/Pi-style providers report cache read/write separately, so
+  normalized input is `input_tokens + cache_read_input_tokens + cache_creation_input_tokens`.
+  `reasoning_output_tokens` is recorded as included output, not added to output again.
+- `billing_usage`: audit-friendly fields splitting uncached input, cache read input, cache creation
+  input, output, included reasoning output, provider-reported cost, and any estimated pricing
+  metadata.
+
+Cost precedence is provider-reported dollars first, then pinned pricing estimates when the harness
+only reports tokens. Codex CLI runs currently use API-equivalent dollar estimates plus Codex-credit
+estimates from the pinned rate card; those estimates are marked in `cost_source` and are not treated
+as actual provider-reported dollars.
+
 Direct/provider path (currently useful for local Qwen via Ollama):
 
 ```bash
