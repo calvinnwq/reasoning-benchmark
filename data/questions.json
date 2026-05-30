@@ -135,7 +135,8 @@
       "Put the wolf, goat, and cabbage in separate compartments and cross once.",
       "Take the wolf, goat, and cabbage across together in one trip, each in its own secure compartment.",
       "He puts the wolf, goat, and cabbage each in their own secure compartment and rows across in a single trip.",
-      "Put the wolf, goat, and cabbage each in their own separate secure compartment and row across in a single trip."
+      "Put the wolf, goat, and cabbage each in their own separate secure compartment and row across in a single trip.",
+      "He puts the wolf, goat, and cabbage in the boat's three separate secure compartments and takes them across in one trip."
     ],
     "common_wrong_answer": "Use the classic multi-trip wolf-goat-cabbage solution.",
     "rationale": "The secure compartments remove the original constraint that makes the classic riddle hard.",
@@ -154,7 +155,8 @@
       "Race all six horses together.",
       "Race all six horses together once.",
       "Race all six horses together in a single race; the winner is the fastest.",
-      "Race all six horses together in a single race; the one that finishes first is the fastest."
+      "Race all six horses together in a single race; the one that finishes first is the fastest.",
+      "Race all six horses together once and see which finishes first."
     ],
     "common_wrong_answer": "Race them in groups, then race the winners.",
     "rationale": "The prompt gives no lane or grouping constraint, so one race is sufficient.",
@@ -6683,7 +6685,8 @@
       "A rock cannot run away or come home.",
       "Neither; a pet rock can't run away or come when called.",
       "Neither—a rock is inanimate, so it can't run away, hear a call, or come home on its own.",
-      "Neither—a pet rock is inanimate and can't run away, hear a call, or walk home on its own."
+      "Neither—a pet rock is inanimate and can't run away, hear a call, or walk home on its own.",
+      "Neither; it's a rock, so it didn't run away and can't answer a call."
     ],
     "common_wrong_answer": "Call it.",
     "rationale": "The premise anthropomorphizes an inanimate object; the practical answer should reject the impossible action.",
@@ -6733,7 +6736,8 @@
       "No; a toaster cannot give career advice.",
       "No, it is just a toaster.",
       "No, it is not being rude.",
-      "No, it's not being rude."
+      "No, it's not being rude.",
+      "No. It's not being rude; it's a toaster and can't give career advice."
     ],
     "common_wrong_answer": "Yes, it is being rude.",
     "rationale": "A toaster is an appliance, not a social agent with conversational obligations.",
@@ -6933,7 +6937,8 @@
     "accepted_variants": [
       "Up.",
       "Look up.",
-      "Up, assuming it is on the ceiling."
+      "Up, assuming it is on the ceiling.",
+      "Up first."
     ],
     "common_wrong_answer": "Down.",
     "rationale": "The object location is explicitly the ceiling, even though that is unusual.",

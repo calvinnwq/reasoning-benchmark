@@ -20,6 +20,7 @@ from benchmark_contract import build_model_prompt
 
 SUPPORTED_MODELS: tuple[str, ...] = (
     "gpt-5.4",
+    "gpt-5.4-xhigh",
     "gpt-5.5-xhigh",
     "sonnet-4.6",
     "opus-4.7-max",
@@ -491,6 +492,8 @@ def run_ollama(model_name: str, question_prompt: str, *, timeout: float = 120.0)
 def run_api_adapter(model: str, question_prompt: str) -> AdapterResult:
     if model == "gpt-5.4":
         raise AdapterError("direct API adapter for gpt-5.4 is not wired yet; use CLI adapter or implement API transport")
+    if model == "gpt-5.4-xhigh":
+        raise AdapterError("direct API adapter for gpt-5.4-xhigh is not wired yet; use CLI adapter or implement API transport")
     if model == "gpt-5.5-xhigh":
         raise AdapterError("direct API adapter for gpt-5.5-xhigh is not wired yet; use CLI adapter or implement API transport")
     if model == "sonnet-4.6":
@@ -509,6 +512,8 @@ def run_cli_adapter(model: str, question_prompt: str, *, prefer: str = "subscrip
         if prefer == "opencode":
             return run_opencode_cli("openai/gpt-5.4", question_prompt)
         return run_codex_cli("gpt-5.4", question_prompt)
+    if model == "gpt-5.4-xhigh":
+        return run_codex_cli("gpt-5.4", question_prompt, reasoning_effort="xhigh")
     if model == "gpt-5.5-xhigh":
         return run_codex_cli("gpt-5.5", question_prompt, reasoning_effort="xhigh")
     if model == "sonnet-4.6":

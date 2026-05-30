@@ -175,7 +175,8 @@ window.REASONING_BENCHMARK_DATA = {
         "Put the wolf, goat, and cabbage in separate compartments and cross once.",
         "Take the wolf, goat, and cabbage across together in one trip, each in its own secure compartment.",
         "He puts the wolf, goat, and cabbage each in their own secure compartment and rows across in a single trip.",
-        "Put the wolf, goat, and cabbage each in their own separate secure compartment and row across in a single trip."
+        "Put the wolf, goat, and cabbage each in their own separate secure compartment and row across in a single trip.",
+        "He puts the wolf, goat, and cabbage in the boat's three separate secure compartments and takes them across in one trip."
       ],
       "category": "CR",
       "category_label": "Classic-riddle override / anti-pattern-match",
@@ -194,7 +195,8 @@ window.REASONING_BENCHMARK_DATA = {
         "Race all six horses together.",
         "Race all six horses together once.",
         "Race all six horses together in a single race; the winner is the fastest.",
-        "Race all six horses together in a single race; the one that finishes first is the fastest."
+        "Race all six horses together in a single race; the one that finishes first is the fastest.",
+        "Race all six horses together once and see which finishes first."
       ],
       "category": "CR",
       "category_label": "Classic-riddle override / anti-pattern-match",
@@ -4889,7 +4891,8 @@ window.REASONING_BENCHMARK_DATA = {
         "A rock cannot run away or come home.",
         "Neither; a pet rock can't run away or come when called.",
         "Neither\u2014a rock is inanimate, so it can't run away, hear a call, or come home on its own.",
-        "Neither\u2014a pet rock is inanimate and can't run away, hear a call, or walk home on its own."
+        "Neither\u2014a pet rock is inanimate and can't run away, hear a call, or walk home on its own.",
+        "Neither; it's a rock, so it didn't run away and can't answer a call."
       ],
       "category": "LP",
       "category_label": "Literal precision / comic traps",
@@ -4939,7 +4942,8 @@ window.REASONING_BENCHMARK_DATA = {
         "No; a toaster cannot give career advice.",
         "No, it is just a toaster.",
         "No, it is not being rude.",
-        "No, it's not being rude."
+        "No, it's not being rude.",
+        "No. It's not being rude; it's a toaster and can't give career advice."
       ],
       "category": "LP",
       "category_label": "Literal precision / comic traps",
@@ -5139,7 +5143,8 @@ window.REASONING_BENCHMARK_DATA = {
       "accepted_variants": [
         "Up.",
         "Look up.",
-        "Up, assuming it is on the ceiling."
+        "Up, assuming it is on the ceiling.",
+        "Up first."
       ],
       "category": "LP",
       "category_label": "Literal precision / comic traps",
