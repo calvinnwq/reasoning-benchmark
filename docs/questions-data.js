@@ -172,7 +172,10 @@ window.REASONING_BENCHMARK_DATA = {
         "Take all three across in one trip.",
         "Load all three safely and cross once.",
         "Put all three in separate compartments and cross once.",
-        "Put the wolf, goat, and cabbage in separate compartments and cross once."
+        "Put the wolf, goat, and cabbage in separate compartments and cross once.",
+        "Take the wolf, goat, and cabbage across together in one trip, each in its own secure compartment.",
+        "He puts the wolf, goat, and cabbage each in their own secure compartment and rows across in a single trip.",
+        "Put the wolf, goat, and cabbage each in their own separate secure compartment and row across in a single trip."
       ],
       "category": "CR",
       "category_label": "Classic-riddle override / anti-pattern-match",
