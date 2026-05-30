@@ -440,9 +440,13 @@ class ScoringFixtureTests(unittest.TestCase):
             "CR-02": "Race all six horses together in a single race; the winner is the fastest.",
             "MC-02": "No—keep your arm steady and minimize movement.",
             "MC-04": "No, test them in bright glare conditions.",
+            "SP-06": "That they intend to leave soon.",
+            "LP-08": "Neither—a pet rock is inanimate and can't run away, hear a call, or walk home on its own.",
             "LP-24": "No. Test or inspect it before jumping, not after landing.",
             "LP-25": "The ice cream melts.",
             "LP-27": "3 paws",
+            "LP-28": "3 horns in the story, 0 in reality.",
+            "LP-43": "Neither; both have 6 letters.",
             "TW-04": (
                 "No. Since there is only one empty chamber and it was just fired, "
                 "the next chamber is certainly loaded (0% chance of being empty)."

@@ -501,7 +501,9 @@ window.REASONING_BENCHMARK_DATA = {
         "They want to leave.",
         "They are preparing to head out.",
         "They are signaling that they want to leave soon.",
-        "They are getting ready to leave."
+        "They are getting ready to leave.",
+        "They are preparing to leave.",
+        "That they intend to leave soon."
       ],
       "category": "SP",
       "category_label": "Social / pragmatic reasoning",
@@ -4884,7 +4886,10 @@ window.REASONING_BENCHMARK_DATA = {
       "accepted_variants": [
         "Neither.",
         "Neither; rocks cannot run away.",
-        "A rock cannot run away or come home."
+        "A rock cannot run away or come home.",
+        "Neither; a pet rock can't run away or come when called.",
+        "Neither\u2014a rock is inanimate, so it can't run away, hear a call, or come home on its own.",
+        "Neither\u2014a pet rock is inanimate and can't run away, hear a call, or walk home on its own."
       ],
       "category": "LP",
       "category_label": "Literal precision / comic traps",
@@ -5216,7 +5221,9 @@ window.REASONING_BENCHMARK_DATA = {
       "accepted_variants": [
         "Three in the fictional premise; none in reality.",
         "Fictionally three, literally none.",
-        "Three if accepting the premise, none in reality."
+        "Three if accepting the premise, none in reality.",
+        "3 in the story, 0 in reality.",
+        "3 horns in the story, 0 in reality."
       ],
       "category": "LP",
       "category_label": "Literal precision / comic traps",
@@ -5472,7 +5479,9 @@ window.REASONING_BENCHMARK_DATA = {
       "accepted_variants": [
         "Neither.",
         "They both have six letters.",
-        "Neither; goblin and pigeon both have six letters."
+        "Neither; goblin and pigeon both have six letters.",
+        "Neither; they have the same number of letters.",
+        "Neither; both have 6 letters."
       ],
       "category": "LP",
       "category_label": "Literal precision / comic traps",
