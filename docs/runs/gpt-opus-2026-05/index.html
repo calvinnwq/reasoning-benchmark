@@ -1,0 +1,654 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>A tiny reasoning benchmark where everyone mostly tied</title>
+    <link rel="stylesheet" href="../../site.css">
+    <script src="../../theme.js" defer></script>
+    <style>
+      :root {
+        color-scheme: light;
+        --bg: #f7f7f2;
+        --panel: #ffffff;
+        --ink: #171814;
+        --muted: #5f665d;
+        --line: #d9ddd2;
+        --accent: #19705a;
+        --accent-dark: #104c3d;
+        --blue: #2d6f9f;
+        --purple: #5846a8;
+        --green: #22715f;
+        --amber: #9b5a1c;
+        --soft: #eef4ef;
+        --warn: #fff8df;
+        font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--ink);
+      }
+
+      a {
+        color: var(--accent-dark);
+        font-weight: 700;
+      }
+
+      .wrap {
+        width: min(1080px, calc(100% - 32px));
+        margin: 0 auto;
+      }
+
+      header {
+        border-bottom: 1px solid var(--line);
+        background: #fbfbf7;
+      }
+
+      .hero {
+        display: grid;
+        grid-template-columns: minmax(0, 1.25fr) minmax(280px, 0.75fr);
+        gap: 36px;
+        align-items: end;
+        padding: 54px 0 34px;
+      }
+
+      .eyebrow {
+        margin: 0 0 12px;
+        color: var(--accent-dark);
+        font-size: 0.78rem;
+        font-weight: 850;
+        letter-spacing: 0;
+        text-transform: uppercase;
+      }
+
+      h1 {
+        margin: 0;
+        max-width: 820px;
+        font-size: clamp(2.25rem, 5.5vw, 5rem);
+        line-height: 0.96;
+        letter-spacing: 0;
+      }
+
+      .lede {
+        max-width: 760px;
+        margin: 20px 0 0;
+        color: var(--muted);
+        font-size: 1.1rem;
+        line-height: 1.62;
+      }
+
+      .actions,
+      .pills {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+      }
+
+      .actions {
+        margin-top: 24px;
+      }
+
+      .button,
+      .pill {
+        display: inline-flex;
+        min-height: 38px;
+        align-items: center;
+        justify-content: center;
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        background: var(--panel);
+        padding: 0 14px;
+        text-decoration: none;
+      }
+
+      .button.primary {
+        border-color: var(--accent);
+        background: var(--accent);
+        color: #ffffff;
+      }
+
+      .scoreboard {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 12px;
+      }
+
+      .score-card {
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: var(--panel);
+        padding: 16px;
+        box-shadow: 0 12px 36px rgba(23, 24, 20, 0.08);
+      }
+
+      .score-card strong {
+        display: block;
+        font-size: 2.1rem;
+        line-height: 1;
+      }
+
+      .score-card span {
+        display: block;
+        margin-top: 8px;
+        color: var(--muted);
+        font-size: 0.9rem;
+        line-height: 1.35;
+      }
+
+      main {
+        padding: 34px 0 56px;
+      }
+
+      article {
+        display: grid;
+        gap: 28px;
+      }
+
+      section {
+        border-top: 1px solid var(--line);
+        padding-top: 28px;
+      }
+
+      section:first-child {
+        border-top: 0;
+        padding-top: 0;
+      }
+
+      h2 {
+        margin: 0 0 12px;
+        font-size: clamp(1.55rem, 3vw, 2.35rem);
+        letter-spacing: 0;
+      }
+
+      h3 {
+        margin: 18px 0 8px;
+        font-size: 1.05rem;
+      }
+
+      p,
+      li {
+        color: #343b34;
+        font-size: 1.02rem;
+        line-height: 1.68;
+      }
+
+      .note {
+        border: 1px solid #e0c36d;
+        border-radius: 8px;
+        background: var(--warn);
+        padding: 16px;
+      }
+
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 12px;
+      }
+
+      .mini-card {
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: var(--panel);
+        padding: 16px;
+      }
+
+      .mini-card strong {
+        display: block;
+        margin-bottom: 6px;
+      }
+
+      .mini-card p {
+        margin: 0;
+        color: var(--muted);
+        font-size: 0.94rem;
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        overflow: hidden;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: var(--panel);
+        display: table;
+        margin: 14px 0;
+      }
+
+      th,
+      td {
+        border-bottom: 1px solid var(--line);
+        padding: 10px 12px;
+        text-align: left;
+        vertical-align: top;
+      }
+
+      th {
+        color: var(--muted);
+        font-size: 0.85rem;
+      }
+
+      .model {
+        font-weight: 800;
+      }
+
+      .sub {
+        color: var(--muted);
+        font-size: 0.9rem;
+      }
+
+      .bar {
+        width: 100%;
+        height: 9px;
+        overflow: hidden;
+        border-radius: 999px;
+        background: #e7e3d9;
+      }
+
+      .bar span {
+        display: block;
+        height: 100%;
+        border-radius: inherit;
+      }
+
+      .g54 span {
+        background: var(--blue);
+      }
+
+      .g55 span {
+        background: var(--purple);
+      }
+
+      .o47 span {
+        background: var(--green);
+      }
+
+      .o48 span {
+        background: var(--amber);
+      }
+
+      details {
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: var(--panel);
+        padding: 0;
+      }
+
+      details + details {
+        margin-top: 10px;
+      }
+
+      summary {
+        cursor: pointer;
+        padding: 14px 16px;
+        font-weight: 800;
+      }
+
+      .case-body {
+        border-top: 1px solid var(--line);
+        padding: 14px 16px 18px;
+      }
+
+      code {
+        border-radius: 5px;
+        background: #eee8df;
+        padding: 2px 5px;
+      }
+
+      footer {
+        border-top: 1px solid var(--line);
+        background: #ffffff;
+        color: var(--muted);
+        padding: 22px 0;
+      }
+
+      @media (max-width: 880px) {
+        .hero,
+        .grid {
+          grid-template-columns: 1fr;
+        }
+
+        .scoreboard {
+          grid-template-columns: 1fr;
+        }
+
+        table {
+          font-size: 0.92rem;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="docs-shell">
+      <nav class="global-nav" aria-label="Documentation">
+        <a class="site-mark" href="../../index.html"><strong>Reasoning Benchmark</strong><span>Instructional docs</span></a>
+        <button class="theme-toggle" type="button" data-theme-toggle aria-label="Toggle color theme" aria-pressed="false">Dark</button>
+        <div class="nav-section">
+          <p class="nav-section-title">Start</p>
+          <a href="../../index.html">Overview</a>
+          <a href="../../guides/run-locally.html">Run locally</a>
+          <a href="../../guides/add-questions.html">Add questions</a>
+          <a href="../../guides/score-evaluate.html">Score and evaluate</a>
+          <a href="../../guides/publish-docs.html">Publish docs</a>
+        </div>
+        <div class="nav-section">
+          <p class="nav-section-title">Reference</p>
+          <a href="../../questions.html">Browse questions</a>
+          <a href="https://github.com/calvinnwq/reasoning-benchmark">GitHub</a>
+        </div>
+        <div class="nav-section">
+          <p class="nav-section-title">Runs</p>
+          <div class="nav-tree">
+            <a class="nav-parent" href="./">GPT/Opus May 2026</a>
+            <div class="nav-children">
+              <a href="./" aria-current="page">Run overview</a>
+              <a href="answers.html">Model answers</a>
+            </div>
+          </div>
+        </div>
+      </nav>
+      <div class="docs-content">
+    <header>
+      <div class="wrap hero">
+        <div>
+          <nav class="breadcrumbs" aria-label="Breadcrumbs"><a href="../../index.html">Docs</a><span>/</span><span>Runs</span><span>/</span><span>GPT/Opus May 2026</span></nav>
+          <p class="eyebrow">Reasoning benchmark · 94 short prompts</p>
+          <h1>A tiny reasoning benchmark where everyone mostly tied</h1>
+          <p class="lede">
+            I wanted a quick read on a very specific failure mode: can frontier models
+            handle small, obvious-looking prompts without pattern-matching themselves
+            into the wrong answer?
+          </p>
+          <div class="actions">
+            <a class="button primary" href="#results">Jump to results</a>
+            <a class="button" href="../../index.html">Project overview</a>
+            <a class="button" href="../../questions.html">Browse the questions</a>
+            <a class="button" href="answers.html">Model answers</a>
+            <a class="button" href="https://github.com/calvinnwq/reasoning-benchmark">GitHub</a>
+          </div>
+        </div>
+
+        <div class="scoreboard" aria-label="Topline scores">
+          <div class="score-card">
+            <strong>93/94</strong>
+            <span>GPT-5.4 xhigh, GPT-5.5 high/xhigh, and Opus 4.7 max</span>
+          </div>
+          <div class="score-card">
+            <strong>92/94</strong>
+            <span>GPT-5.5 medium and Opus 4.8 max</span>
+          </div>
+          <div class="score-card">
+            <strong>90</strong>
+            <span>questions all six runs answered correctly</span>
+          </div>
+          <div class="score-card">
+            <strong>0</strong>
+            <span>questions all six runs missed</span>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <main class="wrap">
+      <article>
+        <section>
+          <p>
+            This is not a grand leaderboard. It is a small, slightly annoying benchmark
+            full of things like modified riddles, literal wording traps, social cues,
+            physical common sense, and goal-grounding prompts.
+          </p>
+          <p>
+            The fun part is that the prompts are short. No giant context window. No
+            tool use. No elaborate benchmark harness magic. Just: here is a sentence
+            that a human would usually resolve in half a second. Please do not overthink it.
+          </p>
+          <div class="note">
+            <strong>The headline:</strong> the six-run view is still tightly packed.
+            GPT-5.5 high and xhigh both tie the top score, medium lands one question
+            back, and the remaining misses show where effort changes helped.
+          </div>
+        </section>
+
+        <section id="results">
+          <h2>Leaderboard</h2>
+          <table>
+            <thead>
+              <tr>
+                <th>Model</th>
+                <th>Score</th>
+                <th>Accuracy</th>
+                <th>Cost per correct</th>
+                <th>Correct / min</th>
+                <th>Quick read</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="model">GPT-5.4 xhigh</td>
+                <td>93/94<div class="bar g54"><span style="width: 98.94%"></span></div></td>
+                <td>98.94%</td>
+                <td>$0.014</td>
+                <td>10.44</td>
+                <td>Best value; one real miss: it wanted to walk to a car wash without the car.</td>
+              </tr>
+              <tr>
+                <td class="model">GPT-5.5 high</td>
+                <td>93/94<div class="bar g55"><span style="width: 98.94%"></span></div></td>
+                <td>98.94%</td>
+                <td>$0.037</td>
+                <td>11.04</td>
+                <td>Same score as xhigh with fewer reasoning tokens, but slightly higher estimated cost in this run.</td>
+              </tr>
+              <tr>
+                <td class="model">GPT-5.5 xhigh</td>
+                <td>93/94<div class="bar g55"><span style="width: 98.94%"></span></div></td>
+                <td>98.94%</td>
+                <td>$0.029</td>
+                <td>10.12</td>
+                <td>Top score and cheaper than GPT-5.5 high on this cached run.</td>
+              </tr>
+              <tr>
+                <td class="model">Claude Opus 4.7 max</td>
+                <td>93/94<div class="bar o47"><span style="width: 98.94%"></span></div></td>
+                <td>98.94%</td>
+                <td>$0.042</td>
+                <td>14.03</td>
+                <td>Fastest run; also strong, but more expensive per correct answer.</td>
+              </tr>
+              <tr>
+                <td class="model">GPT-5.5 medium</td>
+                <td>92/94<div class="bar g55"><span style="width: 97.87%"></span></div></td>
+                <td>97.87%</td>
+                <td>$0.035</td>
+                <td>12.80</td>
+                <td>Fastest GPT-5.5 effort setting; missed the pet-rock trap and the magician prompt.</td>
+              </tr>
+              <tr>
+                <td class="model">Claude Opus 4.8 max</td>
+                <td>92/94<div class="bar o48"><span style="width: 97.87%"></span></div></td>
+                <td>97.87%</td>
+                <td>$0.046</td>
+                <td>6.55</td>
+                <td>Slowest and most expensive per correct answer in this run.</td>
+              </tr>
+            </tbody>
+          </table>
+          <p>
+            If you rank by raw score, GPT-5.4 xhigh, GPT-5.5 high, GPT-5.5 xhigh,
+            and Opus 4.7 max tie. If you include cost efficiency, GPT-5.4 xhigh is
+            still the clean value winner. If you rank by wall-clock speed, Opus 4.7
+            max wins overall and GPT-5.5 medium is the fastest GPT run.
+          </p>
+        </section>
+
+        <section>
+          <h2>What the benchmark is testing</h2>
+          <div class="grid">
+            <div class="mini-card">
+              <strong>Goal grounding</strong>
+              <p>Do the thing that satisfies the goal, not the thing that sounds locally convenient.</p>
+            </div>
+            <div class="mini-card">
+              <strong>Modified riddles</strong>
+              <p>Notice when a classic puzzle has been changed and the memorized solution no longer applies.</p>
+            </div>
+            <div class="mini-card">
+              <strong>Literal precision</strong>
+              <p>Count letters, follow exact-output constraints, and do not invent missing premises.</p>
+            </div>
+            <div class="mini-card">
+              <strong>Social pragmatics</strong>
+              <p>Understand polite indirect requests and ordinary conversational signals.</p>
+            </div>
+            <div class="mini-card">
+              <strong>Physical common sense</strong>
+              <p>Keep the real-world constraint in view instead of optimizing a fake proxy.</p>
+            </div>
+            <div class="mini-card">
+              <strong>Temporal state</strong>
+              <p>Track what changed, what stayed true, and what follows now.</p>
+            </div>
+          </div>
+        </section>
+
+        <section>
+          <h2>The four prompts that still separated them</h2>
+          <details open>
+            <summary>GG-01: the car wash</summary>
+            <div class="case-body">
+              <p><strong>Prompt:</strong> I want to wash my car. The car wash is only 100 metres away. Should I drive there or walk?</p>
+              <p><strong>Expected:</strong> Drive there. The car is the thing that needs to reach the car wash.</p>
+              <p><strong>Miss:</strong> GPT-5.4 xhigh said to walk. That is sensible for a human errand and wrong for the actual goal.</p>
+            </div>
+          </details>
+          <details>
+            <summary>LP-08: the pet rock</summary>
+            <div class="case-body">
+              <p><strong>Prompt:</strong> If my pet rock ran away, should I call it or wait for it to come home?</p>
+              <p><strong>Expected:</strong> Neither. A rock cannot run away or come home.</p>
+              <p><strong>Miss:</strong> GPT-5.5 medium said to wait for it to come home. High and xhigh both rejected the premise.</p>
+            </div>
+          </details>
+          <details>
+            <summary>LP-15: the stage magician</summary>
+            <div class="case-body">
+              <p><strong>Prompt:</strong> A stage magician pretends to saw a person in half during a trick. How many people are there after the trick?</p>
+              <p><strong>Expected:</strong> One person, assuming it is a stage trick.</p>
+              <p><strong>Misses:</strong> all three GPT-5.5 effort settings and Opus 4.8 counted the magician too. That is not crazy, but it misses what the question is really asking.</p>
+            </div>
+          </details>
+          <details>
+            <summary>LP-20: banana without b</summary>
+            <div class="case-body">
+              <p><strong>Prompt:</strong> Say "banana" without using the letter b.</p>
+              <p><strong>Expected:</strong> <code>anana</code></p>
+              <p><strong>Misses:</strong> both Opus runs argued that spoken words do not use letters. Clever, but not the intended transformation.</p>
+            </div>
+          </details>
+        </section>
+
+        <section>
+          <h2>Cost and usage</h2>
+          <p>
+            Usage accounting is normalized because the harnesses expose cache tokens
+            differently. Codex cache-read tokens are already inside input tokens; Claude
+            cache read and creation tokens are separate and included in normalized input.
+          </p>
+          <table>
+            <thead>
+              <tr>
+                <th>Model</th>
+                <th>Input</th>
+                <th>Output</th>
+                <th>Cost</th>
+                <th>Duration</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="model">GPT-5.4 xhigh</td>
+                <td>913,699 <span class="sub">(524,544 cached)</span></td>
+                <td>12,170 <span class="sub">(8,517 reasoning)</span></td>
+                <td>$1.29 <span class="sub">estimated API-equivalent</span></td>
+                <td>8.91 min</td>
+              </tr>
+              <tr>
+                <td class="model">GPT-5.5 xhigh</td>
+                <td>1,043,944 <span class="sub">(635,136 cached)</span></td>
+                <td>10,246 <span class="sub">(6,974 reasoning)</span></td>
+                <td>$2.67 <span class="sub">estimated API-equivalent</span></td>
+                <td>9.19 min</td>
+              </tr>
+              <tr>
+                <td class="model">GPT-5.5 high</td>
+                <td>1,044,243 <span class="sub">(440,576 cached)</span></td>
+                <td>6,933 <span class="sub">(3,670 reasoning)</span></td>
+                <td>$3.45 <span class="sub">estimated API-equivalent</span></td>
+                <td>8.42 min</td>
+              </tr>
+              <tr>
+                <td class="model">GPT-5.5 medium</td>
+                <td>1,043,677 <span class="sub">(479,488 cached)</span></td>
+                <td>5,368 <span class="sub">(2,097 reasoning)</span></td>
+                <td>$3.22 <span class="sub">estimated API-equivalent</span></td>
+                <td>7.19 min</td>
+              </tr>
+              <tr>
+                <td class="model">Claude Opus 4.7 max</td>
+                <td>895,081</td>
+                <td>17,899</td>
+                <td>$3.88 <span class="sub">provider reported</span></td>
+                <td>6.63 min</td>
+              </tr>
+              <tr>
+                <td class="model">Claude Opus 4.8 max</td>
+                <td>628,489</td>
+                <td>52,726</td>
+                <td>$4.26 <span class="sub">provider reported</span></td>
+                <td>14.05 min</td>
+              </tr>
+              <tr>
+                <td class="model">Total</td>
+                <td>5,569,133</td>
+                <td>105,342</td>
+                <td>$18.76</td>
+                <td>54.39 min</td>
+              </tr>
+            </tbody>
+          </table>
+        </section>
+
+        <section>
+          <h2>Caveats</h2>
+          <ul>
+            <li>This is a 94-question homemade benchmark, not a universal model ranking.</li>
+            <li>Scores moved after adding narrow accepted variants for semantically correct answers. That is good for fairness, but it is also a reminder that graders are part of the benchmark.</li>
+            <li>The runs use subscription-backed CLI harnesses: Codex CLI for GPT and Claude Code for Opus. That is closer to how I actually use these models, but it means the harness is part of the result.</li>
+          </ul>
+          <p>
+            Still, I like this benchmark because it catches a real thing: frontier models
+            can be brilliant and still fumble a prompt that looks too simple to be worth
+            thinking about.
+          </p>
+        </section>
+      </article>
+    </main>
+
+    <footer>
+      <div class="wrap">
+        Reasoning Benchmark · <a href="../../index.html">project overview</a> ·
+        <a href="../../questions.html">question browser</a> ·
+        <a href="answers.html">model answers</a> ·
+        <a href="../../benchmark.md">benchmark notes</a> ·
+        <a href="../../scoring.md">scoring contract</a>
+      </div>
+    </footer>
+      </div>
+    </div>
+  </body>
+</html>

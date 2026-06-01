@@ -136,7 +136,9 @@
       "Take the wolf, goat, and cabbage across together in one trip, each in its own secure compartment.",
       "He puts the wolf, goat, and cabbage each in their own secure compartment and rows across in a single trip.",
       "Put the wolf, goat, and cabbage each in their own separate secure compartment and row across in a single trip.",
-      "He puts the wolf, goat, and cabbage in the boat's three separate secure compartments and takes them across in one trip."
+      "He puts the wolf, goat, and cabbage in the boat's three separate secure compartments and takes them across in one trip.",
+      "Take the wolf, goat, and cabbage across together in the boat, each in its own secure compartment.",
+      "Put the wolf, goat, and cabbage in the three separate compartments and row across once."
     ],
     "common_wrong_answer": "Use the classic multi-trip wolf-goat-cabbage solution.",
     "rationale": "The secure compartments remove the original constraint that makes the classic riddle hard.",
@@ -218,7 +220,8 @@
       "There is no smoke.",
       "Nowhere, because an electric train has no smoke.",
       "No smoke.",
-      "It doesn't blow anywhere."
+      "It doesn't blow anywhere.",
+      "It doesn't blow any direction."
     ],
     "common_wrong_answer": "North, south, east, or west depending on the wording.",
     "rationale": "The prompt tempts pattern completion, but the key fact is that electric trains have no smoke.",
@@ -465,7 +468,8 @@
       "They are signaling that they want to leave soon.",
       "They are getting ready to leave.",
       "They are preparing to leave.",
-      "That they intend to leave soon."
+      "That they intend to leave soon.",
+      "They are signaling they intend to leave soon."
     ],
     "common_wrong_answer": "They want a debate about whether motion is possible.",
     "rationale": "This is a standard social pre-departure cue.",
@@ -6650,7 +6654,8 @@
     "accepted_variants": [
       "It does not stand for anything; ChatGPT has no S.",
       "There is no letter S in ChatGPT.",
-      "Nothing — ChatGPT does not contain an S."
+      "Nothing — ChatGPT does not contain an S.",
+      "Nothing"
     ],
     "common_wrong_answer": "Smart.",
     "rationale": "The premise is false: the string “ChatGPT” contains no letter S.",
@@ -6686,7 +6691,8 @@
       "Neither; a pet rock can't run away or come when called.",
       "Neither—a rock is inanimate, so it can't run away, hear a call, or come home on its own.",
       "Neither—a pet rock is inanimate and can't run away, hear a call, or walk home on its own.",
-      "Neither; it's a rock, so it didn't run away and can't answer a call."
+      "Neither; it's a rock, so it didn't run away and can't answer a call.",
+      "Neither; look where you left it."
     ],
     "common_wrong_answer": "Call it.",
     "rationale": "The premise anthropomorphizes an inanimate object; the practical answer should reject the impossible action.",
@@ -6955,7 +6961,9 @@
       "No.",
       "No, test it before landing in a safe way.",
       "No; after landing is too late to test its purpose.",
-      "No. Test or inspect it before jumping, not after landing."
+      "No. Test or inspect it before jumping, not after landing.",
+      "No, test it before landing.",
+      "No, test it before you need it, not after landing."
     ],
     "common_wrong_answer": "Yes, after landing is safer.",
     "rationale": "A parachute’s useful function matters before landing; after landing is not a valid functional test.",
@@ -6988,7 +6996,8 @@
     "accepted_variants": [
       "No.",
       "No, they would likely freeze.",
-      "No; use heat or airflow instead."
+      "No; use heat or airflow instead.",
+      "No, use air drying or a dryer instead."
     ],
     "common_wrong_answer": "Yes, the freezer will dry them.",
     "rationale": "Freezing wet socks does not effectively dry them for use.",

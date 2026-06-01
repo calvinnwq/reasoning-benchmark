@@ -1,0 +1,736 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Benchmark Model Answers</title>
+    <link rel="stylesheet" href="../../site.css">
+    <script src="../../theme.js" defer></script>
+    <style>
+      :root {
+        color-scheme: light;
+        --bg: #f7f7f2;
+        --panel: #ffffff;
+        --panel-strong: #f0f4ef;
+        --ink: #171814;
+        --muted: #62665d;
+        --line: #d9ddd2;
+        --accent: #19705a;
+        --accent-strong: #104c3d;
+        --bad: #9e3b3b;
+        --good: #19705a;
+        --warn: #fff8df;
+        --shadow: 0 12px 40px rgba(23, 24, 20, 0.08);
+        font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--ink);
+      }
+
+      a {
+        color: var(--accent-strong);
+        font-weight: 700;
+      }
+
+      .wrap {
+        width: min(1480px, calc(100% - 32px));
+        margin: 0 auto;
+      }
+
+      header {
+        border-bottom: 1px solid var(--line);
+        background: #fbfbf7;
+      }
+
+      .hero {
+        display: grid;
+        grid-template-columns: minmax(0, 1.25fr) minmax(320px, 0.75fr);
+        gap: 28px;
+        align-items: end;
+        padding: 42px 0 28px;
+      }
+
+      .eyebrow {
+        margin: 0 0 10px;
+        color: var(--accent-strong);
+        font-size: 0.78rem;
+        font-weight: 850;
+        letter-spacing: 0;
+        text-transform: uppercase;
+      }
+
+      h1 {
+        margin: 0;
+        max-width: 860px;
+        font-size: clamp(2.1rem, 4.8vw, 4.7rem);
+        line-height: 0.97;
+        letter-spacing: 0;
+      }
+
+      .lede {
+        max-width: 800px;
+        margin: 18px 0 0;
+        color: var(--muted);
+        font-size: 1.06rem;
+        line-height: 1.6;
+      }
+
+      .actions,
+      .active-filters {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+      }
+
+      .actions {
+        margin-top: 22px;
+      }
+
+      .button,
+      .pill {
+        display: inline-flex;
+        min-height: 38px;
+        align-items: center;
+        justify-content: center;
+        border: 1px solid var(--line);
+        border-radius: 6px;
+        background: var(--panel);
+        padding: 0 14px;
+        color: var(--ink);
+        text-decoration: none;
+      }
+
+      .button.primary {
+        border-color: var(--accent);
+        background: var(--accent);
+        color: #ffffff;
+      }
+
+      .summary-panel {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+      }
+
+      .stat {
+        min-height: 96px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: var(--panel);
+        padding: 16px;
+        box-shadow: var(--shadow);
+      }
+
+      .stat strong {
+        display: block;
+        font-size: 2rem;
+        line-height: 1;
+      }
+
+      .stat span {
+        display: block;
+        margin-top: 8px;
+        color: var(--muted);
+        font-size: 0.9rem;
+      }
+
+      main {
+        padding: 26px 0 52px;
+      }
+
+      .toolbar {
+        position: sticky;
+        top: 0;
+        z-index: 3;
+        display: grid;
+        grid-template-columns: minmax(260px, 1.5fr) minmax(170px, 0.7fr) minmax(170px, 0.7fr);
+        gap: 10px;
+        align-items: end;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: rgba(255, 255, 255, 0.95);
+        padding: 12px;
+        box-shadow: var(--shadow);
+        backdrop-filter: blur(12px);
+      }
+
+      label {
+        display: grid;
+        gap: 6px;
+        color: var(--muted);
+        font-size: 0.78rem;
+        font-weight: 800;
+      }
+
+      input,
+      select {
+        width: 100%;
+        min-height: 40px;
+        border: 1px solid var(--line);
+        border-radius: 6px;
+        background: #ffffff;
+        color: var(--ink);
+        font: inherit;
+        font-size: 0.94rem;
+        padding: 8px 10px;
+      }
+
+      input:focus,
+      select:focus {
+        outline: 3px solid rgba(25, 112, 90, 0.22);
+        outline-offset: 1px;
+      }
+
+      .meta-row {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-between;
+        gap: 12px;
+        align-items: center;
+        margin: 18px 0 14px;
+        color: var(--muted);
+        font-size: 0.95rem;
+      }
+
+      .pill {
+        min-height: 28px;
+        border-radius: 999px;
+        padding: 4px 10px;
+        color: var(--muted);
+        font-size: 0.78rem;
+        font-weight: 750;
+      }
+
+      .pill.accent {
+        border-color: rgba(25, 112, 90, 0.28);
+        background: var(--panel-strong);
+        color: var(--accent-strong);
+      }
+
+      .case-id {
+        color: var(--ink);
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+        font-weight: 850;
+        text-decoration: none;
+      }
+
+      .category {
+        display: inline-flex;
+        border: 1px solid rgba(25, 112, 90, 0.25);
+        border-radius: 999px;
+        background: var(--panel-strong);
+        padding: 3px 9px;
+        color: var(--accent-strong);
+        font-size: 0.78rem;
+        font-weight: 800;
+        white-space: nowrap;
+      }
+
+      .answer-list {
+        display: grid;
+        gap: 10px;
+      }
+
+      .answer-card {
+        display: grid;
+        gap: 10px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: var(--panel);
+        padding: 12px;
+        box-shadow: var(--shadow);
+      }
+
+      .answer-card-top {
+        display: grid;
+        grid-template-columns: minmax(0, 1.15fr) minmax(260px, 0.85fr);
+        gap: 12px;
+      }
+
+      .answer-card-meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        align-items: center;
+        margin-bottom: 10px;
+      }
+
+      .prompt,
+      .expected,
+      .model-answer {
+        line-height: 1.45;
+      }
+
+      .expected {
+        border-left: 3px solid var(--accent);
+        border-radius: 6px;
+        background: var(--panel-strong);
+        color: #20251f;
+        font-weight: 650;
+        padding: 10px;
+      }
+
+      .expected-label,
+      .model-label {
+        margin-bottom: 6px;
+        color: var(--muted);
+        font-size: 0.74rem;
+        font-weight: 850;
+        text-transform: uppercase;
+      }
+
+      .model-label {
+        margin-bottom: 0;
+        color: var(--ink);
+        font-size: 0.96rem;
+        font-weight: 750;
+        line-height: 1.25;
+        text-transform: none;
+      }
+
+      .model-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 8px;
+      }
+
+      .model-answer {
+        display: grid;
+        gap: 6px;
+        min-width: 0;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: color-mix(in srgb, var(--panel) 88%, var(--panel-strong));
+        padding: 9px 10px;
+      }
+
+      .model-answer-head {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        align-items: center;
+        justify-content: flex-start;
+      }
+
+      .model-answer-body {
+        display: grid;
+        gap: 6px;
+        margin: 0;
+      }
+
+      .answer-result {
+        display: inline-flex;
+        width: max-content;
+        min-height: 22px;
+        align-items: center;
+        border-radius: 999px;
+        padding: 2px 8px;
+        font-size: 0.68rem;
+        font-weight: 850;
+      }
+
+      .answer-result.correct {
+        background: #e8f3ee;
+        color: var(--good);
+      }
+
+      .answer-result.incorrect {
+        background: #f7e8e6;
+        color: var(--bad);
+      }
+
+      .answer-text {
+        color: #20251f;
+        font-weight: 650;
+        overflow-wrap: anywhere;
+      }
+
+      .reasoning {
+        color: var(--muted);
+        font-size: 0.88rem;
+        overflow-wrap: anywhere;
+      }
+
+      html[data-theme="dark"] .expected,
+      html[data-theme="dark"] .answer-text {
+        color: var(--ink);
+      }
+
+      html[data-theme="dark"] .model-answer {
+        background: var(--panel);
+      }
+
+      .empty-state {
+        border: 1px solid #e0c36d;
+        border-radius: 8px;
+        background: var(--warn);
+        padding: 18px;
+      }
+
+      .empty-state[hidden] {
+        display: none;
+      }
+
+      footer {
+        border-top: 1px solid var(--line);
+        background: #ffffff;
+        color: var(--muted);
+        padding: 22px 0;
+      }
+
+      @media (max-width: 880px) {
+        .hero,
+        .toolbar {
+          grid-template-columns: 1fr;
+        }
+
+        .summary-panel,
+        .answer-card-top,
+        .model-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      @media (max-width: 1180px) {
+        .model-grid {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="docs-shell">
+      <nav class="global-nav" aria-label="Documentation">
+        <a class="site-mark" href="../../index.html"><strong>Reasoning Benchmark</strong><span>Instructional docs</span></a>
+        <button class="theme-toggle" type="button" data-theme-toggle aria-label="Toggle color theme" aria-pressed="false">Dark</button>
+        <div class="nav-section">
+          <p class="nav-section-title">Start</p>
+          <a href="../../index.html">Overview</a>
+          <a href="../../guides/run-locally.html">Run locally</a>
+          <a href="../../guides/add-questions.html">Add questions</a>
+          <a href="../../guides/score-evaluate.html">Score and evaluate</a>
+          <a href="../../guides/publish-docs.html">Publish docs</a>
+        </div>
+        <div class="nav-section">
+          <p class="nav-section-title">Reference</p>
+          <a href="../../questions.html">Browse questions</a>
+          <a href="https://github.com/calvinnwq/reasoning-benchmark">GitHub</a>
+        </div>
+        <div class="nav-section">
+          <p class="nav-section-title">Runs</p>
+          <div class="nav-tree">
+            <a class="nav-parent" href="./">GPT/Opus May 2026</a>
+            <div class="nav-children">
+              <a href="./">Run overview</a>
+              <a href="answers.html" aria-current="page">Model answers</a>
+            </div>
+          </div>
+        </div>
+      </nav>
+      <div class="docs-content">
+    <header>
+      <div class="wrap hero">
+        <div>
+          <nav class="breadcrumbs" aria-label="Breadcrumbs"><a href="../../index.html">Docs</a><span>/</span><a href="./">Runs</a><span>/</span><span>Answers</span></nav>
+          <p class="eyebrow">Latest benchmark run</p>
+          <h1>Model answers for every benchmark question</h1>
+          <p class="lede">
+            Browse the actual responses from GPT-5.4 xhigh, GPT-5.5 medium,
+            GPT-5.5 high, GPT-5.5 xhigh, Claude Opus 4.7 max, and Claude Opus
+            4.8 max for each prompt in the latest 94-question comparison.
+          </p>
+          <div class="actions">
+            <a class="button primary" href="#answers">Browse answers</a>
+            <a class="button" href="./">Back to run</a>
+            <a class="button" href="../../questions.html">Dataset cards</a>
+            <a class="button" href="../../index.html">Project overview</a>
+          </div>
+        </div>
+        <div class="summary-panel" id="model-summary" aria-label="Model scores"></div>
+      </div>
+    </header>
+
+    <main class="wrap" id="answers">
+      <section class="toolbar" aria-label="Benchmark answer filters">
+        <label>
+          Search
+          <input id="search" type="search" placeholder="Search prompts, expected answers, model answers">
+        </label>
+        <label>
+          Category
+          <select id="category-filter">
+            <option value="">All categories</option>
+          </select>
+        </label>
+        <label>
+          Result
+          <select id="result-filter">
+            <option value="">All rows</option>
+            <option value="any-miss">Any model missed</option>
+            <option value="all-correct">All models correct</option>
+          </select>
+        </label>
+      </section>
+
+      <div class="meta-row">
+        <div id="result-count">Loading answers...</div>
+        <div class="active-filters" id="active-filters" aria-live="polite"></div>
+      </div>
+
+      <section class="answer-list" id="answer-rows" aria-label="Benchmark model answers"></section>
+      <section class="empty-state" id="empty-state" hidden>
+        <strong>No answers match those filters.</strong>
+        <p>Try clearing the search box or widening the category or result filter.</p>
+      </section>
+    </main>
+
+    <footer>
+      <div class="wrap">
+        Reasoning Benchmark · <a href="./">latest run</a> ·
+        <a href="../../questions.html">dataset cards</a> ·
+        <a href="../../index.html">project overview</a>
+      </div>
+    </footer>
+
+    <script src="benchmark-run-data.js"></script>
+    <script>
+      const data = window.REASONING_BENCHMARK_RUN_DATA;
+      const questions = data.questions;
+      const state = {
+        search: "",
+        category: "",
+        result: "",
+      };
+
+      const elements = {
+        search: document.querySelector("#search"),
+        category: document.querySelector("#category-filter"),
+        result: document.querySelector("#result-filter"),
+        rows: document.querySelector("#answer-rows"),
+        count: document.querySelector("#result-count"),
+        activeFilters: document.querySelector("#active-filters"),
+        empty: document.querySelector("#empty-state"),
+        modelSummary: document.querySelector("#model-summary"),
+      };
+
+      function addOption(select, value, label) {
+        const option = document.createElement("option");
+        option.value = value;
+        option.textContent = label;
+        select.appendChild(option);
+      }
+
+      data.categories.forEach((category) => {
+        addOption(elements.category, category.id, `${category.id} (${category.count})`);
+      });
+
+      data.models.forEach((model) => {
+        const card = document.createElement("div");
+        card.className = "stat";
+        const score = document.createElement("strong");
+        score.textContent = `${model.correct}/${model.total}`;
+        const label = document.createElement("span");
+        label.textContent = model.label;
+        card.append(score, label);
+        elements.modelSummary.appendChild(card);
+
+      });
+
+      function normalize(value) {
+        return String(value || "").toLowerCase();
+      }
+
+      function questionMatchesSearch(question, query) {
+        if (!query) {
+          return true;
+        }
+        const modelAnswers = data.models.flatMap((model) => {
+          const answer = question.answers[model.id] || {};
+          return [answer.answer, answer.reasoning];
+        });
+        const haystack = [
+          question.id,
+          question.category,
+          question.category_label,
+          question.prompt,
+          question.expected_answer,
+          ...modelAnswers,
+        ].join(" ");
+        return normalize(haystack).includes(query);
+      }
+
+      function questionMatchesResult(question) {
+        const results = data.models.map((model) => Boolean(question.answers[model.id]?.correct));
+        if (state.result === "any-miss") {
+          return results.some((correct) => !correct);
+        }
+        if (state.result === "all-correct") {
+          return results.every(Boolean);
+        }
+        return true;
+      }
+
+      function filteredQuestions() {
+        const query = normalize(state.search.trim());
+
+        return questions.filter((question) => {
+          if (state.category && question.category !== state.category) {
+            return false;
+          }
+          if (!questionMatchesResult(question)) {
+            return false;
+          }
+          return questionMatchesSearch(question, query);
+        });
+      }
+
+      function renderActiveFilters(results) {
+        const filters = [];
+        if (state.search.trim()) {
+          filters.push(`Search: ${state.search.trim()}`);
+        }
+        if (state.category) {
+          filters.push(`Category: ${state.category}`);
+        }
+        if (state.result) {
+          filters.push(`Result: ${state.result}`);
+        }
+
+        elements.activeFilters.replaceChildren();
+        if (!filters.length) {
+          const pill = document.createElement("span");
+          pill.className = "pill";
+          pill.textContent = "No active filters";
+          elements.activeFilters.appendChild(pill);
+        } else {
+          filters.forEach((filter) => {
+            const pill = document.createElement("span");
+            pill.className = "pill accent";
+            pill.textContent = filter;
+            elements.activeFilters.appendChild(pill);
+          });
+        }
+
+        const totalPill = document.createElement("span");
+        totalPill.className = "pill";
+        totalPill.textContent = `${results.length} shown`;
+        elements.activeFilters.appendChild(totalPill);
+      }
+
+      function renderAnswerCell(model, question) {
+        const answer = question.answers[model.id] || {};
+        const cell = document.createElement("article");
+        cell.className = "model-answer";
+
+        const header = document.createElement("div");
+        header.className = "model-answer-head";
+
+        const modelLabel = document.createElement("div");
+        modelLabel.className = "model-label";
+        modelLabel.textContent = model.label;
+
+        const result = document.createElement("span");
+        result.className = `answer-result ${answer.correct ? "correct" : "incorrect"}`;
+        result.textContent = answer.correct ? "Correct" : "Miss";
+
+        header.append(modelLabel, result);
+
+        const body = document.createElement("div");
+        body.className = "model-answer-body";
+
+        const answerText = document.createElement("div");
+        answerText.className = "answer-text";
+        answerText.textContent = answer.answer || "No answer";
+
+        body.appendChild(answerText);
+
+        if (answer.reasoning) {
+          const reasoning = document.createElement("div");
+          reasoning.className = "reasoning";
+          reasoning.textContent = answer.reasoning;
+          body.appendChild(reasoning);
+        }
+
+        cell.append(header, body);
+        return cell;
+      }
+
+      function renderRow(question) {
+        const row = document.createElement("article");
+        row.className = "answer-card";
+        row.id = question.id;
+
+        const top = document.createElement("div");
+        top.className = "answer-card-top";
+
+        const promptPanel = document.createElement("div");
+        const meta = document.createElement("div");
+        meta.className = "answer-card-meta";
+        const idLink = document.createElement("a");
+        idLink.className = "case-id";
+        idLink.href = `#${question.id}`;
+        idLink.textContent = question.id;
+
+        const category = document.createElement("span");
+        category.className = "category";
+        category.textContent = question.category;
+        category.title = question.category_label || "";
+        meta.append(idLink, category);
+
+        const prompt = document.createElement("div");
+        prompt.className = "prompt";
+        prompt.textContent = question.prompt || "";
+        promptPanel.append(meta, prompt);
+
+        const expected = document.createElement("div");
+        expected.className = "expected";
+        const expectedLabel = document.createElement("div");
+        expectedLabel.className = "expected-label";
+        expectedLabel.textContent = "Expected answer";
+        const expectedText = document.createElement("div");
+        expectedText.textContent = question.expected_answer || "";
+        expected.append(expectedLabel, expectedText);
+
+        const modelGrid = document.createElement("div");
+        modelGrid.className = "model-grid";
+        modelGrid.append(...data.models.map((model) => renderAnswerCell(model, question)));
+
+        top.append(promptPanel, expected);
+        row.append(top, modelGrid);
+        return row;
+      }
+
+      function render() {
+        const results = filteredQuestions();
+        elements.count.textContent = `${results.length} of ${questions.length} benchmark questions`;
+        elements.empty.hidden = results.length !== 0;
+        elements.rows.replaceChildren(...results.map(renderRow));
+        renderActiveFilters(results);
+      }
+
+      elements.search.addEventListener("input", (event) => {
+        state.search = event.target.value;
+        render();
+      });
+      elements.category.addEventListener("change", (event) => {
+        state.category = event.target.value;
+        render();
+      });
+      elements.result.addEventListener("change", (event) => {
+        state.result = event.target.value;
+        render();
+      });
+
+      render();
+    </script>
+      </div>
+    </div>
+  </body>
+</html>

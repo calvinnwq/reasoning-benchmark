@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Run Locally · Reasoning Benchmark</title>
+    <link rel="stylesheet" href="../site.css">
+    <script src="../theme.js" defer></script>
+  </head>
+  <body>
+    <div class="docs-shell">
+      <nav class="global-nav" aria-label="Documentation">
+        <a class="site-mark" href="../index.html"><strong>Reasoning Benchmark</strong><span>Instructional docs</span></a>
+        <button class="theme-toggle" type="button" data-theme-toggle aria-label="Toggle color theme" aria-pressed="false">Dark</button>
+        <div class="nav-section">
+          <p class="nav-section-title">Start</p>
+          <a href="../index.html">Overview</a>
+          <a href="run-locally.html" aria-current="page">Run locally</a>
+          <a href="add-questions.html">Add questions</a>
+          <a href="score-evaluate.html">Score and evaluate</a>
+          <a href="publish-docs.html">Publish docs</a>
+        </div>
+        <div class="nav-section">
+          <p class="nav-section-title">Reference</p>
+          <a href="../questions.html">Browse questions</a>
+          <a href="https://github.com/calvinnwq/reasoning-benchmark">GitHub</a>
+        </div>
+        <div class="nav-section">
+          <p class="nav-section-title">Runs</p>
+          <div class="nav-tree">
+            <a class="nav-parent" href="../runs/gpt-opus-2026-05/">GPT/Opus May 2026</a>
+            <div class="nav-children">
+              <a href="../runs/gpt-opus-2026-05/">Run overview</a>
+              <a href="../runs/gpt-opus-2026-05/answers.html">Model answers</a>
+            </div>
+          </div>
+        </div>
+      </nav>
+      <div class="docs-content">
+        <header class="page-top">
+          <div class="wrap">
+            <nav class="breadcrumbs" aria-label="Breadcrumbs"><a href="../index.html">Docs</a><span>/</span><span>Run locally</span></nav>
+            <div class="docs-hero">
+              <p class="eyebrow">How-to guide</p>
+              <h1>Run the benchmark locally</h1>
+              <p class="lede">Use the stdlib-only scripts to inspect suites, emit prompts, collect answers, and score a completed run.</p>
+            </div>
+          </div>
+        </header>
+        <main class="wrap">
+          <article>
+            <section>
+              <h2>Inspect The Dataset</h2>
+              <pre><code>python3 scripts/run_benchmark.py --list
+python3 scripts/run_benchmark.py --list-suites
+python3 scripts/run_benchmark.py --list --suite starter</code></pre>
+              <p>The default list command shows the 94-question auto-scored slice. Use a suite selector for calibrated slices such as <code>starter</code> or <code>holdout</code>.</p>
+            </section>
+            <section>
+              <h2>Create Prompts Or A Run Template</h2>
+              <pre><code>python3 scripts/run_benchmark.py --sample-run
+python3 scripts/run_benchmark.py --emit-prompts runs/prompts.jsonl</code></pre>
+              <p>The sample run gives the expected JSON shape. The prompt pack is useful when sending cases to an external harness.</p>
+            </section>
+            <section>
+              <h2>Run Through Adapters</h2>
+              <p>The adapter entrypoints live in <code>scripts/api_adapter.py</code> and <code>scripts/cli_adapter.py</code>. They share the prompt contract from <code>scripts/benchmark_contract.py</code> and adapter helpers from <code>scripts/benchmark_adapters.py</code>.</p>
+            </section>
+          </article>
+        </main>
+        <footer class="site-footer"><div class="wrap">Reasoning Benchmark docs</div></footer>
+      </div>
+    </div>
+  </body>
+</html>

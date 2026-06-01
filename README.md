@@ -129,6 +129,9 @@ First-class baseline models are wired in:
 |-------|------------------|------------------|
 | `gpt-5.4` | Codex CLI | stubbed |
 | `gpt-5.4-xhigh` | Codex CLI with xhigh reasoning effort | stubbed |
+| `gpt-5.5-medium` | Codex CLI with medium reasoning effort | stubbed |
+| `gpt-5.5-high` | Codex CLI with high reasoning effort | stubbed |
+| `gpt-5.5-xhigh` | Codex CLI with xhigh reasoning effort | stubbed |
 | `sonnet-4.6` | Claude CLI | stubbed |
 | `qwen3.5-9b` | local Ollama via shared adapter layer | local Ollama |
 
