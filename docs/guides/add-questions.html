@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Add Questions · Reasoning Benchmark</title>
+    <link rel="stylesheet" href="../site.css">
+    <script src="../theme.js" defer></script>
+  </head>
+  <body>
+    <div class="docs-shell">
+      <nav class="global-nav" aria-label="Documentation">
+        <a class="site-mark" href="../index.html"><strong>Reasoning Benchmark</strong><span>Instructional docs</span></a>
+        <button class="theme-toggle" type="button" data-theme-toggle aria-label="Toggle color theme" aria-pressed="false">Dark</button>
+        <div class="nav-section">
+          <p class="nav-section-title">Start</p>
+          <a href="../index.html">Overview</a>
+          <a href="run-locally.html">Run locally</a>
+          <a href="add-questions.html" aria-current="page">Add questions</a>
+          <a href="score-evaluate.html">Score and evaluate</a>
+          <a href="publish-docs.html">Publish docs</a>
+        </div>
+        <div class="nav-section">
+          <p class="nav-section-title">Reference</p>
+          <a href="../questions.html">Browse questions</a>
+          <a href="https://github.com/calvinnwq/reasoning-benchmark">GitHub</a>
+        </div>
+        <div class="nav-section">
+          <p class="nav-section-title">Runs</p>
+          <div class="nav-tree">
+            <a class="nav-parent" href="../runs/gpt-opus-2026-05/">GPT/Opus May 2026</a>
+            <div class="nav-children">
+              <a href="../runs/gpt-opus-2026-05/">Run overview</a>
+              <a href="../runs/gpt-opus-2026-05/answers.html">Model answers</a>
+            </div>
+          </div>
+        </div>
+      </nav>
+      <div class="docs-content">
+        <header class="page-top">
+          <div class="wrap">
+            <nav class="breadcrumbs" aria-label="Breadcrumbs"><a href="../index.html">Docs</a><span>/</span><span>Add questions</span></nav>
+            <div class="docs-hero">
+              <p class="eyebrow">How-to guide</p>
+              <h1>Add benchmark questions</h1>
+              <p class="lede">Keep new cases explicit, reviewable, and compatible with the scorer and static docs payload.</p>
+            </div>
+          </div>
+        </header>
+        <main class="wrap">
+          <article>
+            <section>
+              <h2>Update The Dataset</h2>
+              <p>Add each case to <code>data/questions.json</code> with a stable <code>id</code>, <code>category</code>, <code>prompt</code>, <code>expected_answer</code>, accepted variants, rationale, and failure mode. Keep <code>data/questions.csv</code> aligned when it is used for review workflows.</p>
+            </section>
+            <section>
+              <h2>Review Scoring Inputs</h2>
+              <p>Accepted variants should be narrow enough to avoid rewarding the common wrong answer, but broad enough to cover semantically equivalent final answers.</p>
+            </section>
+            <section>
+              <h2>Place Cases In Suites</h2>
+              <p>Suite manifests live in <code>data/suites/</code>. Add new IDs deliberately so starter, holdout, and default slices keep their intended coverage.</p>
+            </section>
+            <section>
+              <h2>Regenerate Docs Data</h2>
+              <pre><code>python3 scripts/build_docs_data.py
+python3 -m unittest tests.test_docs_site</code></pre>
+            </section>
+          </article>
+        </main>
+        <footer class="site-footer"><div class="wrap">Reasoning Benchmark docs</div></footer>
+      </div>
+    </div>
+  </body>
+</html>

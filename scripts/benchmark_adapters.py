@@ -21,6 +21,8 @@ from benchmark_contract import build_model_prompt
 SUPPORTED_MODELS: tuple[str, ...] = (
     "gpt-5.4",
     "gpt-5.4-xhigh",
+    "gpt-5.5-medium",
+    "gpt-5.5-high",
     "gpt-5.5-xhigh",
     "sonnet-4.6",
     "opus-4.7-max",
@@ -496,6 +498,8 @@ def run_api_adapter(model: str, question_prompt: str) -> AdapterResult:
         raise AdapterError("direct API adapter for gpt-5.4-xhigh is not wired yet; use CLI adapter or implement API transport")
     if model == "gpt-5.5-xhigh":
         raise AdapterError("direct API adapter for gpt-5.5-xhigh is not wired yet; use CLI adapter or implement API transport")
+    if model in {"gpt-5.5-high", "gpt-5.5-medium"}:
+        raise AdapterError(f"direct API adapter for {model} is not wired yet; use CLI adapter or implement API transport")
     if model == "sonnet-4.6":
         raise AdapterError("direct API adapter for sonnet-4.6 is not wired yet; use CLI adapter or implement API transport")
     if model == "opus-4.8-max":
@@ -516,6 +520,10 @@ def run_cli_adapter(model: str, question_prompt: str, *, prefer: str = "subscrip
         return run_codex_cli("gpt-5.4", question_prompt, reasoning_effort="xhigh")
     if model == "gpt-5.5-xhigh":
         return run_codex_cli("gpt-5.5", question_prompt, reasoning_effort="xhigh")
+    if model == "gpt-5.5-high":
+        return run_codex_cli("gpt-5.5", question_prompt, reasoning_effort="high")
+    if model == "gpt-5.5-medium":
+        return run_codex_cli("gpt-5.5", question_prompt, reasoning_effort="medium")
     if model == "sonnet-4.6":
         if prefer == "opencode":
             return run_opencode_cli("anthropic/claude-sonnet-4.6", question_prompt)

@@ -19,7 +19,8 @@ def build_parser() -> argparse.ArgumentParser:
         "model",
         help=(
             "Benchmark model id (gpt-5.4 | gpt-5.4-xhigh | gpt-5.5-xhigh | "
-            "sonnet-4.6 | opus-4.7-max | opus-4.8-max | qwen3.5-9b)"
+            "gpt-5.5-high | gpt-5.5-medium | sonnet-4.6 | opus-4.7-max | "
+            "opus-4.8-max | qwen3.5-9b)"
         ),
     )
     parser.add_argument("prompt", help="Benchmark question prompt")

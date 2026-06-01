@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Score And Evaluate · Reasoning Benchmark</title>
+    <link rel="stylesheet" href="../site.css">
+    <script src="../theme.js" defer></script>
+  </head>
+  <body>
+    <div class="docs-shell">
+      <nav class="global-nav" aria-label="Documentation">
+        <a class="site-mark" href="../index.html"><strong>Reasoning Benchmark</strong><span>Instructional docs</span></a>
+        <button class="theme-toggle" type="button" data-theme-toggle aria-label="Toggle color theme" aria-pressed="false">Dark</button>
+        <div class="nav-section">
+          <p class="nav-section-title">Start</p>
+          <a href="../index.html">Overview</a>
+          <a href="run-locally.html">Run locally</a>
+          <a href="add-questions.html">Add questions</a>
+          <a href="score-evaluate.html" aria-current="page">Score and evaluate</a>
+          <a href="publish-docs.html">Publish docs</a>
+        </div>
+        <div class="nav-section">
+          <p class="nav-section-title">Reference</p>
+          <a href="../questions.html">Browse questions</a>
+          <a href="https://github.com/calvinnwq/reasoning-benchmark">GitHub</a>
+        </div>
+        <div class="nav-section">
+          <p class="nav-section-title">Runs</p>
+          <div class="nav-tree">
+            <a class="nav-parent" href="../runs/gpt-opus-2026-05/">GPT/Opus May 2026</a>
+            <div class="nav-children">
+              <a href="../runs/gpt-opus-2026-05/">Run overview</a>
+              <a href="../runs/gpt-opus-2026-05/answers.html">Model answers</a>
+            </div>
+          </div>
+        </div>
+      </nav>
+      <div class="docs-content">
+        <header class="page-top">
+          <div class="wrap">
+            <nav class="breadcrumbs" aria-label="Breadcrumbs"><a href="../index.html">Docs</a><span>/</span><span>Score and evaluate</span></nav>
+            <div class="docs-hero">
+              <p class="eyebrow">How-to guide</p>
+              <h1>Score and evaluate a run</h1>
+              <p class="lede">Turn a completed answer file into a scored artifact while preserving manual review fields.</p>
+            </div>
+          </div>
+        </header>
+        <main class="wrap">
+          <article>
+            <section>
+              <h2>Score A Completed Run</h2>
+              <pre><code>python3 scripts/score_run.py --input runs/example-run.json --output runs/example-run.scored.json</code></pre>
+              <p>The scorer accepts the canonical top-level <code>results</code> list, compatibility keys such as <code>runs</code> or <code>answers</code>, and bare lists.</p>
+            </section>
+            <section>
+              <h2>Read The Output</h2>
+              <p><code>score_answer</code> is auto-filled from the final-answer matcher. Manual fields such as <code>score_reasoning</code>, <code>penalties</code>, and <code>notes</code> are preserved but not automatically assigned.</p>
+            </section>
+            <section>
+              <h2>Compare Runs</h2>
+              <p>Use the scored rows, normalized usage fields, and raw provider artifacts together. The historical run pages show one static presentation of those outputs.</p>
+            </section>
+          </article>
+        </main>
+        <footer class="site-footer"><div class="wrap">Reasoning Benchmark docs</div></footer>
+      </div>
+    </div>
+  </body>
+</html>

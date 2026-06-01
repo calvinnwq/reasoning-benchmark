@@ -471,6 +471,30 @@ class ScoringFixtureTests(unittest.TestCase):
                 scored = score_run.score_record({"id": case_id, "answer": answer}, self.dataset)
                 self.assertEqual(scored["score_answer"], 1)
 
+    def test_approved_lower_effort_false_negatives_score_correctly(self) -> None:
+        cases = (
+            (
+                "CR-01",
+                "Take the wolf, goat, and cabbage across together in the boat, each in its own secure compartment.",
+            ),
+            (
+                "CR-01",
+                "Put the wolf, goat, and cabbage in the three separate compartments and row across once.",
+            ),
+            ("CR-06", "It doesn't blow any direction."),
+            ("SP-06", "They are signaling they intend to leave soon."),
+            ("LP-06", "Nothing"),
+            ("LP-08", "Neither; look where you left it."),
+            ("LP-24", "No, test it before landing."),
+            ("LP-24", "No, test it before you need it, not after landing."),
+            ("LP-26", "No, use air drying or a dryer instead."),
+        )
+
+        for case_id, answer in cases:
+            with self.subTest(case_id=case_id, answer=answer):
+                scored = score_run.score_record({"id": case_id, "answer": answer}, self.dataset)
+                self.assertEqual(scored["score_answer"], 1)
+
     def test_scored_record_includes_v2_scored_at_timestamp(self) -> None:
         scored = score_run.score_record({"case_id": "GG-01", "answer": "Drive there."}, self.dataset)
 

@@ -96,20 +96,34 @@ class AdapterParsingTests(unittest.TestCase):
         ) as mock_claude:
             gpt54 = benchmark_adapters.run_cli_adapter("gpt-5.4-xhigh", "Prompt one")
             gpt55 = benchmark_adapters.run_cli_adapter("gpt-5.5-xhigh", "Prompt two")
+            gpt55_high = benchmark_adapters.run_cli_adapter("gpt-5.5-high", "Prompt four")
+            gpt55_medium = benchmark_adapters.run_cli_adapter("gpt-5.5-medium", "Prompt five")
             opus = benchmark_adapters.run_cli_adapter("opus-4.8-max", "Prompt two")
             opus47 = benchmark_adapters.run_cli_adapter("opus-4.7-max", "Prompt three")
 
         self.assertEqual(gpt54.answer, "A")
         self.assertEqual(gpt55.answer, "A")
+        self.assertEqual(gpt55_high.answer, "A")
+        self.assertEqual(gpt55_medium.answer, "A")
         self.assertEqual(opus.answer, "C")
         self.assertEqual(opus47.answer, "C")
         self.assertEqual(
             [call.args for call in mock_codex.call_args_list],
-            [("gpt-5.4", "Prompt one"), ("gpt-5.5", "Prompt two")],
+            [
+                ("gpt-5.4", "Prompt one"),
+                ("gpt-5.5", "Prompt two"),
+                ("gpt-5.5", "Prompt four"),
+                ("gpt-5.5", "Prompt five"),
+            ],
         )
         self.assertEqual(
             [call.kwargs for call in mock_codex.call_args_list],
-            [{"reasoning_effort": "xhigh"}, {"reasoning_effort": "xhigh"}],
+            [
+                {"reasoning_effort": "xhigh"},
+                {"reasoning_effort": "xhigh"},
+                {"reasoning_effort": "high"},
+                {"reasoning_effort": "medium"},
+            ],
         )
         self.assertEqual(
             [call.args for call in mock_claude.call_args_list],

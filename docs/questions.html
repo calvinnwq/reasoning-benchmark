@@ -4,6 +4,8 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Reasoning Benchmark</title>
+    <link rel="stylesheet" href="site.css">
+    <script src="theme.js" defer></script>
     <style>
       :root {
         color-scheme: light;
@@ -416,10 +418,39 @@
     </style>
   </head>
   <body>
-    <div class="page-shell">
+    <div class="docs-shell">
+      <nav class="global-nav" aria-label="Documentation">
+        <a class="site-mark" href="index.html"><strong>Reasoning Benchmark</strong><span>Instructional docs</span></a>
+        <button class="theme-toggle" type="button" data-theme-toggle aria-label="Toggle color theme" aria-pressed="false">Dark</button>
+        <div class="nav-section">
+          <p class="nav-section-title">Start</p>
+          <a href="index.html">Overview</a>
+          <a href="guides/run-locally.html">Run locally</a>
+          <a href="guides/add-questions.html">Add questions</a>
+          <a href="guides/score-evaluate.html">Score and evaluate</a>
+          <a href="guides/publish-docs.html">Publish docs</a>
+        </div>
+        <div class="nav-section">
+          <p class="nav-section-title">Reference</p>
+          <a href="questions.html" aria-current="page">Browse questions</a>
+          <a href="https://github.com/calvinnwq/reasoning-benchmark">GitHub</a>
+        </div>
+        <div class="nav-section">
+          <p class="nav-section-title">Runs</p>
+          <div class="nav-tree">
+            <a class="nav-parent" href="runs/gpt-opus-2026-05/">GPT/Opus May 2026</a>
+            <div class="nav-children">
+              <a href="runs/gpt-opus-2026-05/">Run overview</a>
+              <a href="runs/gpt-opus-2026-05/answers.html">Model answers</a>
+            </div>
+          </div>
+        </div>
+      </nav>
+      <div class="page-shell docs-content">
       <header class="hero">
         <div class="hero-inner">
           <div>
+            <nav class="breadcrumbs" aria-label="Breadcrumbs"><a href="index.html">Docs</a><span>/</span><span>Browse questions</span></nav>
             <p class="eyebrow">Documentation site</p>
             <h1>Reasoning Benchmark</h1>
             <p class="lede">
@@ -429,8 +460,10 @@
             </p>
             <div class="hero-actions">
               <a class="button primary" href="#questions">Browse questions</a>
-              <a class="button" href="benchmark.html">Benchmark notes</a>
-              <a class="button" href="scoring.html">Scoring contract</a>
+              <a class="button" href="index.html">Project overview</a>
+              <a class="button" href="runs/gpt-opus-2026-05/">Historical run</a>
+              <a class="button" href="runs/gpt-opus-2026-05/answers.html">Model answers</a>
+              <a class="button" href="scoring.md">Scoring contract</a>
             </div>
           </div>
 
@@ -512,9 +545,10 @@
       <footer class="site-footer">
         <div class="content">
           <span>Reasoning Benchmark</span>
-          <span>Static docs powered by the repository dataset.</span>
+          <span><a href="runs/gpt-opus-2026-05/answers.html">Model answers</a> · Static docs powered by the repository dataset.</span>
         </div>
       </footer>
+      </div>
     </div>
 
     <script src="questions-data.js"></script>

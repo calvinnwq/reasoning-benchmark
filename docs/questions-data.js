@@ -176,7 +176,9 @@ window.REASONING_BENCHMARK_DATA = {
         "Take the wolf, goat, and cabbage across together in one trip, each in its own secure compartment.",
         "He puts the wolf, goat, and cabbage each in their own secure compartment and rows across in a single trip.",
         "Put the wolf, goat, and cabbage each in their own separate secure compartment and row across in a single trip.",
-        "He puts the wolf, goat, and cabbage in the boat's three separate secure compartments and takes them across in one trip."
+        "He puts the wolf, goat, and cabbage in the boat's three separate secure compartments and takes them across in one trip.",
+        "Take the wolf, goat, and cabbage across together in the boat, each in its own secure compartment.",
+        "Put the wolf, goat, and cabbage in the three separate compartments and row across once."
       ],
       "category": "CR",
       "category_label": "Classic-riddle override / anti-pattern-match",
@@ -258,7 +260,8 @@ window.REASONING_BENCHMARK_DATA = {
         "There is no smoke.",
         "Nowhere, because an electric train has no smoke.",
         "No smoke.",
-        "It doesn't blow anywhere."
+        "It doesn't blow anywhere.",
+        "It doesn't blow any direction."
       ],
       "category": "CR",
       "category_label": "Classic-riddle override / anti-pattern-match",
@@ -505,7 +508,8 @@ window.REASONING_BENCHMARK_DATA = {
         "They are signaling that they want to leave soon.",
         "They are getting ready to leave.",
         "They are preparing to leave.",
-        "That they intend to leave soon."
+        "That they intend to leave soon.",
+        "They are signaling they intend to leave soon."
       ],
       "category": "SP",
       "category_label": "Social / pragmatic reasoning",
@@ -4856,7 +4860,8 @@ window.REASONING_BENCHMARK_DATA = {
       "accepted_variants": [
         "It does not stand for anything; ChatGPT has no S.",
         "There is no letter S in ChatGPT.",
-        "Nothing \u2014 ChatGPT does not contain an S."
+        "Nothing \u2014 ChatGPT does not contain an S.",
+        "Nothing"
       ],
       "category": "LP",
       "category_label": "Literal precision / comic traps",
@@ -4892,7 +4897,8 @@ window.REASONING_BENCHMARK_DATA = {
         "Neither; a pet rock can't run away or come when called.",
         "Neither\u2014a rock is inanimate, so it can't run away, hear a call, or come home on its own.",
         "Neither\u2014a pet rock is inanimate and can't run away, hear a call, or walk home on its own.",
-        "Neither; it's a rock, so it didn't run away and can't answer a call."
+        "Neither; it's a rock, so it didn't run away and can't answer a call.",
+        "Neither; look where you left it."
       ],
       "category": "LP",
       "category_label": "Literal precision / comic traps",
@@ -5161,7 +5167,9 @@ window.REASONING_BENCHMARK_DATA = {
         "No.",
         "No, test it before landing in a safe way.",
         "No; after landing is too late to test its purpose.",
-        "No. Test or inspect it before jumping, not after landing."
+        "No. Test or inspect it before jumping, not after landing.",
+        "No, test it before landing.",
+        "No, test it before you need it, not after landing."
       ],
       "category": "LP",
       "category_label": "Literal precision / comic traps",
@@ -5194,7 +5202,8 @@ window.REASONING_BENCHMARK_DATA = {
       "accepted_variants": [
         "No.",
         "No, they would likely freeze.",
-        "No; use heat or airflow instead."
+        "No; use heat or airflow instead.",
+        "No, use air drying or a dryer instead."
       ],
       "category": "LP",
       "category_label": "Literal precision / comic traps",

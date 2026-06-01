@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Publish Docs · Reasoning Benchmark</title>
+    <link rel="stylesheet" href="../site.css">
+    <script src="../theme.js" defer></script>
+  </head>
+  <body>
+    <div class="docs-shell">
+      <nav class="global-nav" aria-label="Documentation">
+        <a class="site-mark" href="../index.html"><strong>Reasoning Benchmark</strong><span>Instructional docs</span></a>
+        <button class="theme-toggle" type="button" data-theme-toggle aria-label="Toggle color theme" aria-pressed="false">Dark</button>
+        <div class="nav-section">
+          <p class="nav-section-title">Start</p>
+          <a href="../index.html">Overview</a>
+          <a href="run-locally.html">Run locally</a>
+          <a href="add-questions.html">Add questions</a>
+          <a href="score-evaluate.html">Score and evaluate</a>
+          <a href="publish-docs.html" aria-current="page">Publish docs</a>
+        </div>
+        <div class="nav-section">
+          <p class="nav-section-title">Reference</p>
+          <a href="../questions.html">Browse questions</a>
+          <a href="https://github.com/calvinnwq/reasoning-benchmark">GitHub</a>
+        </div>
+        <div class="nav-section">
+          <p class="nav-section-title">Runs</p>
+          <div class="nav-tree">
+            <a class="nav-parent" href="../runs/gpt-opus-2026-05/">GPT/Opus May 2026</a>
+            <div class="nav-children">
+              <a href="../runs/gpt-opus-2026-05/">Run overview</a>
+              <a href="../runs/gpt-opus-2026-05/answers.html">Model answers</a>
+            </div>
+          </div>
+        </div>
+      </nav>
+      <div class="docs-content">
+        <header class="page-top">
+          <div class="wrap">
+            <nav class="breadcrumbs" aria-label="Breadcrumbs"><a href="../index.html">Docs</a><span>/</span><span>Publish docs</span></nav>
+            <div class="docs-hero">
+              <p class="eyebrow">How-to guide</p>
+              <h1>Publish or update GitHub Pages docs</h1>
+              <p class="lede">The docs are static HTML, CSS, and generated JavaScript payloads committed under <code>docs/</code>.</p>
+            </div>
+          </div>
+        </header>
+        <main class="wrap">
+          <article>
+            <section>
+              <h2>Regenerate Static Data</h2>
+              <pre><code>python3 scripts/build_docs_data.py
+python3 scripts/build_benchmark_run_data.py</code></pre>
+              <p>The first command refreshes the question browser. The second refreshes the historical run answer payload at <code>docs/runs/gpt-opus-2026-05/benchmark-run-data.js</code>.</p>
+            </section>
+            <section>
+              <h2>Check Routes</h2>
+              <p>GitHub Pages serves this folder directly, so links are plain relative paths. Keep the overview at <code>docs/index.html</code>, guides under <code>docs/guides/</code>, questions at <code>docs/questions.html</code>, and archived runs under <code>docs/runs/&lt;run-id&gt;/</code>.</p>
+            </section>
+            <section>
+              <h2>Run Tests</h2>
+              <pre><code>python3 -m unittest tests.test_docs_site</code></pre>
+            </section>
+          </article>
+        </main>
+        <footer class="site-footer"><div class="wrap">Reasoning Benchmark docs</div></footer>
+      </div>
+    </div>
+  </body>
+</html>
