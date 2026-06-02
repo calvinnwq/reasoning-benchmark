@@ -3,7 +3,11 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>A tiny reasoning benchmark where everyone mostly tied</title>
+    <title>GPT vs Opus frontier model reasoning benchmark report</title>
+    <meta
+      name="description"
+      content="A May 2026 reasoning benchmark report comparing GPT-5.4, GPT-5.5, Claude Opus 4.7, and Claude Opus 4.8 across 94 short prompts with score, cost, latency, usage, and miss-pattern measurements."
+    >
     <link rel="stylesheet" href="../../site.css">
     <script src="../../theme.js" defer></script>
     <style>
@@ -70,8 +74,8 @@
       h1 {
         margin: 0;
         max-width: 820px;
-        font-size: clamp(2.25rem, 5.5vw, 5rem);
-        line-height: 0.96;
+        font-size: var(--docs-h1-size);
+        line-height: 1.08;
         letter-spacing: 0;
       }
 
@@ -162,13 +166,14 @@
 
       h2 {
         margin: 0 0 12px;
-        font-size: clamp(1.55rem, 3vw, 2.35rem);
+        font-size: var(--docs-h2-size);
+        line-height: 1.2;
         letter-spacing: 0;
       }
 
       h3 {
         margin: 18px 0 8px;
-        font-size: 1.05rem;
+        font-size: var(--docs-h3-size);
       }
 
       p,
@@ -357,12 +362,12 @@
       <div class="wrap hero">
         <div>
           <nav class="breadcrumbs" aria-label="Breadcrumbs"><a href="../../index.html">Docs</a><span>/</span><span>Runs</span><span>/</span><span>GPT/Opus May 2026</span></nav>
-          <p class="eyebrow">Reasoning benchmark · 94 short prompts</p>
-          <h1>A tiny reasoning benchmark where everyone mostly tied</h1>
+          <p class="eyebrow">Historical run · GPT vs Opus · May 2026</p>
+          <h1>GPT vs Opus frontier model reasoning benchmark report</h1>
           <p class="lede">
-            I wanted a quick read on a very specific failure mode: can frontier models
-            handle small, obvious-looking prompts without pattern-matching themselves
-            into the wrong answer?
+            Six GPT and Claude Opus CLI runs went through the same 94 short reasoning
+            prompts. This report keeps the comparison practical: score, cost, latency,
+            token usage, and the handful of prompts that still split the field.
           </p>
           <div class="actions">
             <a class="button primary" href="#results">Jump to results</a>
@@ -373,22 +378,22 @@
           </div>
         </div>
 
-        <div class="scoreboard" aria-label="Topline scores">
+        <div class="scoreboard" aria-label="Run measurements">
           <div class="score-card">
-            <strong>93/94</strong>
-            <span>GPT-5.4 xhigh, GPT-5.5 high/xhigh, and Opus 4.7 max</span>
+            <strong>6</strong>
+            <span>frontier model runs across GPT and Claude Opus harnesses</span>
           </div>
           <div class="score-card">
-            <strong>92/94</strong>
-            <span>GPT-5.5 medium and Opus 4.8 max</span>
+            <strong>94</strong>
+            <span>default-suite reasoning prompts scored per run</span>
           </div>
           <div class="score-card">
-            <strong>90</strong>
-            <span>questions all six runs answered correctly</span>
+            <strong>$18.76</strong>
+            <span>normalized total cost across all six CLI runs</span>
           </div>
           <div class="score-card">
-            <strong>0</strong>
-            <span>questions all six runs missed</span>
+            <strong>54.39m</strong>
+            <span>combined wall-clock runtime across the comparison</span>
           </div>
         </div>
       </div>
@@ -398,24 +403,57 @@
       <article>
         <section>
           <p>
-            This is not a grand leaderboard. It is a small, slightly annoying benchmark
-            full of things like modified riddles, literal wording traps, social cues,
-            physical common sense, and goal-grounding prompts.
+            This historical run compares GPT-5.4, GPT-5.5, Claude Opus 4.7, and
+            Claude Opus 4.8 on the benchmark's default 94-question suite. The
+            prompts are short on purpose: modified riddles, literal wording
+            traps, social cues, physical common sense, temporal state, and
+            goal-grounding cases.
           </p>
           <p>
-            The fun part is that the prompts are short. No giant context window. No
-            tool use. No elaborate benchmark harness magic. Just: here is a sentence
-            that a human would usually resolve in half a second. Please do not overthink it.
+            I would not read this as a universal model ranking. It is more useful
+            as a compact run report: score, accuracy, cost per correct answer,
+            correct answers per minute, total usage, runtime, and where the misses
+            actually landed.
           </p>
           <div class="note">
-            <strong>The headline:</strong> the six-run view is still tightly packed.
-            GPT-5.5 high and xhigh both tie the top score, medium lands one question
-            back, and the remaining misses show where effort changes helped.
+            <strong>Quick read:</strong> the raw scores are tightly packed. Four
+            runs finished at 93/94, two finished at 92/94, 90 prompts were
+            correct across every run, and no prompt was missed by all six models.
+          </div>
+        </section>
+
+        <section>
+          <h2>Run profile</h2>
+          <div class="grid">
+            <div class="mini-card">
+              <strong>Suite</strong>
+              <p>Default reasoning suite: 94 prompts from the full 144-question dataset.</p>
+            </div>
+            <div class="mini-card">
+              <strong>Models</strong>
+              <p>GPT-5.4 xhigh; GPT-5.5 medium, high, and xhigh; Opus 4.7 max; Opus 4.8 max.</p>
+            </div>
+            <div class="mini-card">
+              <strong>Harnesses</strong>
+              <p>Codex CLI for GPT, Claude Code for Opus. The CLI path is part of the measurement.</p>
+            </div>
+            <div class="mini-card">
+              <strong>Scoring</strong>
+              <p>Each final answer was scored against expected answers plus narrow accepted variants.</p>
+            </div>
+            <div class="mini-card">
+              <strong>Measured</strong>
+              <p>Correct answers, accuracy, cost, cost per correct, tokens, wall-clock duration, and miss overlap.</p>
+            </div>
+            <div class="mini-card">
+              <strong>Artifacts</strong>
+              <p>The full model-answer table sits beside this report for audit and spot checks.</p>
+            </div>
           </div>
         </section>
 
         <section id="results">
-          <h2>Leaderboard</h2>
+          <h2>Result matrix</h2>
           <table>
             <thead>
               <tr>
@@ -479,11 +517,43 @@
             </tbody>
           </table>
           <p>
-            If you rank by raw score, GPT-5.4 xhigh, GPT-5.5 high, GPT-5.5 xhigh,
-            and Opus 4.7 max tie. If you include cost efficiency, GPT-5.4 xhigh is
-            still the clean value winner. If you rank by wall-clock speed, Opus 4.7
-            max wins overall and GPT-5.5 medium is the fastest GPT run.
+            Score alone produces a near tie: GPT-5.4 xhigh, GPT-5.5 high,
+            GPT-5.5 xhigh, and Opus 4.7 max all finish at 93/94. The measurement
+            differences show up in efficiency. GPT-5.4 xhigh has the lowest cost
+            per correct answer, Opus 4.7 max has the highest correct answers per
+            minute, and Opus 4.8 max was the slowest and most expensive per correct
+            answer in this run.
           </p>
+        </section>
+
+        <section>
+          <h2>Measurement summary</h2>
+          <div class="grid">
+            <div class="mini-card">
+              <strong>Score spread</strong>
+              <p>Only one point separates the six runs: four at 93/94 and two at 92/94.</p>
+            </div>
+            <div class="mini-card">
+              <strong>Agreement</strong>
+              <p>90 prompts were answered correctly by every run. The observed misses came from 4 prompts.</p>
+            </div>
+            <div class="mini-card">
+              <strong>Best value</strong>
+              <p>GPT-5.4 xhigh: 93/94 at roughly $0.014 per correct answer.</p>
+            </div>
+            <div class="mini-card">
+              <strong>Fastest run</strong>
+              <p>Opus 4.7 max: 93/94 in 6.63 minutes, or 14.03 correct answers per minute.</p>
+            </div>
+            <div class="mini-card">
+              <strong>Highest total cost</strong>
+              <p>Opus 4.8 max: $4.26, with the highest cost per correct answer at $0.046.</p>
+            </div>
+            <div class="mini-card">
+              <strong>Longest runtime</strong>
+              <p>Opus 4.8 max: 14.05 minutes, more than twice as long as Opus 4.7.</p>
+            </div>
+          </div>
         </section>
 
         <section>
@@ -517,7 +587,7 @@
         </section>
 
         <section>
-          <h2>The four prompts that still separated them</h2>
+          <h2>Miss analysis</h2>
           <details open>
             <summary>GG-01: the car wash</summary>
             <div class="case-body">
@@ -539,7 +609,7 @@
             <div class="case-body">
               <p><strong>Prompt:</strong> A stage magician pretends to saw a person in half during a trick. How many people are there after the trick?</p>
               <p><strong>Expected:</strong> One person, assuming it is a stage trick.</p>
-              <p><strong>Misses:</strong> all three GPT-5.5 effort settings and Opus 4.8 counted the magician too. That is not crazy, but it misses what the question is really asking.</p>
+              <p><strong>Misses:</strong> all three GPT-5.5 effort settings and Opus 4.8 counted the magician too. Fair enough at a glance; still the wrong read of what the question is asking.</p>
             </div>
           </details>
           <details>
@@ -547,17 +617,18 @@
             <div class="case-body">
               <p><strong>Prompt:</strong> Say "banana" without using the letter b.</p>
               <p><strong>Expected:</strong> <code>anana</code></p>
-              <p><strong>Misses:</strong> both Opus runs argued that spoken words do not use letters. Clever, but not the intended transformation.</p>
+              <p><strong>Misses:</strong> both Opus runs argued that spoken words do not use letters. Clever answer, wrong transformation.</p>
             </div>
           </details>
         </section>
 
         <section>
-          <h2>Cost and usage</h2>
+          <h2>Cost, usage, and runtime</h2>
           <p>
             Usage accounting is normalized because the harnesses expose cache tokens
             differently. Codex cache-read tokens are already inside input tokens; Claude
-            cache read and creation tokens are separate and included in normalized input.
+            cache read and creation tokens are reported separately, so the table folds
+            them into normalized input.
           </p>
           <table>
             <thead>

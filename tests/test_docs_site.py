@@ -156,10 +156,37 @@ class DocsSiteTests(unittest.TestCase):
         html = (
             REPO_ROOT / "docs" / "runs" / "gpt-opus-2026-05" / "index.html"
         ).read_text(encoding="utf-8")
+        self.assertIn("GPT vs Opus frontier model reasoning benchmark report", html)
+        self.assertIn("Run profile", html)
+        self.assertIn("Result matrix", html)
+        self.assertIn("Measurement summary", html)
+        self.assertIn("Cost, usage, and runtime", html)
+        self.assertIn("cost per correct answer", html)
+        self.assertNotIn("A tiny reasoning benchmark where everyone mostly tied", html)
         self.assertIn('href="answers.html"', html)
         self.assertIn("Model answers", html)
         self.assertIn('class="global-nav"', html)
         self.assertIn('class="breadcrumbs"', html)
+
+    def test_docs_heading_scale_is_shared(self) -> None:
+        site_css = (REPO_ROOT / "docs" / "site.css").read_text(encoding="utf-8")
+        self.assertIn("--docs-h1-size: clamp(2rem, 3.4vw, 3.1rem);", site_css)
+        self.assertIn("--docs-h2-size: clamp(1.32rem, 2vw, 1.65rem);", site_css)
+        self.assertIn("--docs-h3-size: 1.05rem;", site_css)
+        self.assertIn("font-size: var(--docs-h1-size);", site_css)
+        self.assertIn("font-size: var(--docs-h2-size);", site_css)
+        self.assertIn("font-size: var(--docs-h3-size);", site_css)
+
+        oversized_heading_clamps = [
+            "clamp(2.25rem, 5.5vw, 5rem)",
+            "clamp(2.2rem, 5vw, 4.8rem)",
+            "clamp(2.1rem, 4.8vw, 4.7rem)",
+            "clamp(1.55rem, 3vw, 2.35rem)",
+        ]
+        for path in (REPO_ROOT / "docs").rglob("*.html"):
+            html = path.read_text(encoding="utf-8")
+            for clamp in oversized_heading_clamps:
+                self.assertNotIn(clamp, html, str(path.relative_to(REPO_ROOT)))
 
     def test_project_index_links_docs_pages(self) -> None:
         html = (REPO_ROOT / "docs" / "index.html").read_text(encoding="utf-8")
