@@ -1,0 +1,558 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>OpenCode Go Qwen 3.7 postflight benchmark report</title>
+    <meta
+      name="description"
+      content="A June 2026 OpenCode Go postflight benchmark. opencode-go/qwen3.7-plus and qwen3.7-max challenged the glm-5.1 incumbent on three real gnhf-postflight review tasks. Verdict: keep GLM as the postflight gate."
+    >
+    <link rel="stylesheet" href="../../site.css">
+    <script src="../../theme.js" defer></script>
+    <style>
+      /* Report-specific bits only. Layout, typography, tables, cards, notes,
+         buttons, and dark-mode all come from ../../site.css. */
+      .hero {
+        display: grid;
+        grid-template-columns: minmax(0, 1.3fr) minmax(260px, 0.7fr);
+        gap: 32px;
+        align-items: end;
+        padding: 40px 0 30px;
+      }
+
+      .scoreboard {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 12px;
+      }
+
+      .score-card {
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: var(--panel);
+        padding: 16px;
+        box-shadow: var(--shadow);
+      }
+
+      .score-card strong {
+        display: block;
+        color: var(--ink);
+        font-size: 2rem;
+        line-height: 1;
+      }
+
+      .score-card strong.compact {
+        font-size: 1.4rem;
+        white-space: nowrap;
+      }
+
+      .score-card span {
+        display: block;
+        margin-top: 8px;
+        color: var(--muted);
+        font-size: 0.9rem;
+        line-height: 1.4;
+      }
+
+      .verdict {
+        border: 1px solid var(--line);
+        border-left: 4px solid var(--accent);
+        border-radius: 8px;
+        background: var(--soft);
+        padding: 18px 20px;
+      }
+
+      .verdict p {
+        margin: 0;
+      }
+
+      .verdict p + p {
+        margin-top: 10px;
+      }
+
+      /* article is display:grid in site.css, so its section children are grid
+         items that default to min-width:auto. A wide table would otherwise
+         stretch the column past the viewport and scroll the whole page;
+         min-width:0 keeps the overflow inside .table-scroll instead. */
+      article > section {
+        min-width: 0;
+      }
+
+      .table-scroll {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+      }
+
+      table.matrix {
+        min-width: 720px;
+      }
+
+      /* Long evidence filenames and git refs wrap instead of overflowing. */
+      code {
+        overflow-wrap: anywhere;
+      }
+
+      .model {
+        font-weight: 700;
+        white-space: nowrap;
+      }
+
+      .sub {
+        display: block;
+        margin-top: 2px;
+        color: var(--muted);
+        font-size: 0.86rem;
+        line-height: 1.4;
+      }
+
+      td .num {
+        font-variant-numeric: tabular-nums;
+        white-space: nowrap;
+      }
+
+      .bar {
+        width: 100%;
+        max-width: 130px;
+        height: 8px;
+        margin-top: 6px;
+        overflow: hidden;
+        border-radius: 999px;
+        background: #e7e3d9;
+      }
+
+      .bar span {
+        display: block;
+        height: 100%;
+        border-radius: inherit;
+        background: var(--amber);
+      }
+
+      .bar.severe span {
+        background: var(--red);
+      }
+
+      .tag {
+        display: inline-block;
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        padding: 1px 9px;
+        font-size: 0.8rem;
+        font-weight: 600;
+        white-space: nowrap;
+      }
+
+      .tag.warn {
+        border-color: #d8b24a;
+        color: var(--amber);
+      }
+
+      details {
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: var(--panel);
+      }
+
+      details + details {
+        margin-top: 10px;
+      }
+
+      summary {
+        cursor: pointer;
+        padding: 13px 16px;
+        font-weight: 600;
+      }
+
+      .case-body {
+        border-top: 1px solid var(--line);
+        padding: 12px 16px 16px;
+      }
+
+      .case-body p {
+        margin: 0;
+      }
+
+      .case-body p + p {
+        margin-top: 8px;
+      }
+
+      @media (max-width: 880px) {
+        .hero,
+        .scoreboard {
+          grid-template-columns: 1fr;
+        }
+
+        .bar {
+          max-width: none;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="docs-shell">
+      <nav class="global-nav" aria-label="Documentation">
+        <a class="site-mark" href="../../index.html"><strong>Reasoning Benchmark</strong><span>Instructional docs</span></a>
+        <button class="theme-toggle" type="button" data-theme-toggle aria-label="Toggle color theme" aria-pressed="false">Dark</button>
+        <div class="nav-section">
+          <p class="nav-section-title">Start</p>
+          <a href="../../index.html">Overview</a>
+          <a href="../../guides/run-locally.html">Run locally</a>
+          <a href="../../guides/add-questions.html">Add questions</a>
+          <a href="../../guides/score-evaluate.html">Score and evaluate</a>
+          <a href="../../guides/publish-docs.html">Publish docs</a>
+        </div>
+        <div class="nav-section">
+          <p class="nav-section-title">Reference</p>
+          <a href="../../questions.html">Browse questions</a>
+          <a href="https://github.com/calvinnwq/reasoning-benchmark">GitHub</a>
+        </div>
+        <div class="nav-section">
+          <p class="nav-section-title">Runs</p>
+          <div class="nav-tree">
+            <a class="nav-parent" href="../gpt-opus-2026-05/">GPT/Opus May 2026</a>
+            <div class="nav-children">
+              <a href="../gpt-opus-2026-05/">Run overview</a>
+              <a href="../gpt-opus-2026-05/answers.html">Model answers</a>
+            </div>
+            <a class="nav-parent" href="./" aria-current="page">OpenCode Go Qwen 3.7 Jun 2026</a>
+            <div class="nav-children">
+              <a href="./" aria-current="page">Run overview</a>
+            </div>
+          </div>
+        </div>
+      </nav>
+
+      <div class="docs-content">
+        <header class="page-top">
+          <div class="wrap hero">
+            <div>
+              <nav class="breadcrumbs" aria-label="Breadcrumbs"><a href="../../index.html">Docs</a><span>/</span><span>Runs</span><span>/</span><span>OpenCode Go Qwen 3.7 Jun 2026</span></nav>
+              <p class="eyebrow">Postflight model bench · OpenCode Go · June 2026</p>
+              <h1>OpenCode Go Qwen 3.7 postflight benchmark report</h1>
+              <p class="lede">
+                Verdict first: keep <code>opencode-go/glm-5.1</code> as the postflight
+                incumbent. Qwen 3.7 was mostly clean, but it ran 2.53&times; to 9.63&times;
+                slower than GLM on comparable tasks and never produced a quality win big
+                enough to pay for the wait.
+              </p>
+              <div class="actions">
+                <a class="button primary" href="#verdict">Read the verdict</a>
+                <a class="button" href="#results">Result matrix</a>
+                <a class="button" href="../../index.html">Project overview</a>
+                <a class="button" href="../gpt-opus-2026-05/">GPT/Opus run</a>
+                <a class="button" href="https://github.com/calvinnwq/reasoning-benchmark">GitHub</a>
+              </div>
+            </div>
+
+            <div class="scoreboard" aria-label="Run measurements">
+              <div class="score-card">
+                <strong>5</strong>
+                <span>completed Qwen evidence records across three tasks</span>
+              </div>
+              <div class="score-card">
+                <strong>1</strong>
+                <span>Qwen Max run cut short before verification (Artshelf)</span>
+              </div>
+              <div class="score-card">
+                <strong class="compact">2.53&times;&ndash;9.63&times;</strong>
+                <span>slower than GLM on completed comparable tasks</span>
+              </div>
+              <div class="score-card">
+                <strong>0</strong>
+                <span>promotion-worthy wins for Qwen 3.7</span>
+              </div>
+            </div>
+          </div>
+        </header>
+
+        <main class="wrap">
+          <article>
+            <section id="verdict">
+              <h2>Verdict</h2>
+              <div class="verdict">
+                <p>
+                  <strong>Keep <code>opencode-go/glm-5.1</code> as the postflight incumbent.</strong>
+                  Do not promote Qwen 3.7 into the no-mistakes, GNHF, or postflight gates.
+                </p>
+                <p>
+                  <code>opencode-go/qwen3.7-plus</code> is the better of the two and is fine
+                  to keep as an occasional shadow second opinion when latency does not matter.
+                  <code>opencode-go/qwen3.7-max</code> is not worth it for this lane.
+                </p>
+              </div>
+              <p>
+                This was a postflight model bake-off, not a general coding contest. Two Qwen 3.7
+                challengers ran the same real review tasks GLM already handles. Their reviews were
+                usually clean, but clean was the floor here, and GLM was clean and several times
+                faster. Speed is the whole point of a gate that runs on every branch, so a model
+                that is two to nine times slower for the same outcome does not earn the seat.
+              </p>
+            </section>
+
+            <section>
+              <h2>Run profile</h2>
+              <p>
+                This benchmark measures real postflight review work, not synthetic reasoning
+                prompts. Each model was handed the same pre-postflight branch and asked to review,
+                autofix clear issues, verify, and clean up history through the
+                <code>gnhf-postflight</code> delegate route on OpenCode Go.
+              </p>
+              <div class="grid">
+                <div class="mini-card">
+                  <strong>Benchmark type</strong>
+                  <p>Live <code>gnhf-postflight</code> runs over real branches. The output is review quality, edits, verification, and wall-clock time.</p>
+                </div>
+                <div class="mini-card">
+                  <strong>Tasks</strong>
+                  <p>Artshelf <code>NGX-436/437</code> reconcile core, Momentum <code>NGX-431</code> built-binary smoke split, Skill Suitcase <code>NGX-386</code> strict Skillify-10 validation.</p>
+                </div>
+                <div class="mini-card">
+                  <strong>Incumbent</strong>
+                  <p><code>opencode-go/glm-5.1</code> &mdash; the current postflight gate model and the bar to beat.</p>
+                </div>
+                <div class="mini-card">
+                  <strong>Challengers</strong>
+                  <p><code>opencode-go/qwen3.7-plus</code> and <code>opencode-go/qwen3.7-max</code>, run on the same tasks through the same route.</p>
+                </div>
+                <div class="mini-card">
+                  <strong>GLM controls</strong>
+                  <p>Existing postflight baselines per task: 527.619s, 398.286s, and 160.367s. They were not rerun in this wave.</p>
+                </div>
+                <div class="mini-card">
+                  <strong>What counts as a win</strong>
+                  <p>Faster than GLM, or a clear quality edge worth the extra time. Neither challenger cleared that bar.</p>
+                </div>
+              </div>
+            </section>
+
+            <section id="results">
+              <h2>Result matrix</h2>
+              <div class="table-scroll">
+                <table class="matrix">
+                  <thead>
+                    <tr>
+                      <th>Task</th>
+                      <th>Model</th>
+                      <th>Duration</th>
+                      <th>GLM baseline</th>
+                      <th>Speed vs GLM</th>
+                      <th>Quality &amp; caveats</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td>Artshelf <code>NGX-436/437</code><span class="sub">reconcile core</span></td>
+                      <td class="model">qwen3.7-plus</td>
+                      <td><span class="num">1333.006s</span><span class="sub">≈ 22m 13s</span></td>
+                      <td><span class="num">527.619s</span><span class="sub">≈ 8m 48s</span></td>
+                      <td><span class="num">2.53&times;</span> <span class="sub">slower</span><div class="bar"><span style="width: 25.3%"></span></div></td>
+                      <td>Clean review, no fixes or rewrite, build and tests green. Importer marked <code>blocked</code> &mdash; a heuristic mismatch from a <code>Blockers:</code> (registry-remap) section while <code>Result: complete</code>.</td>
+                    </tr>
+                    <tr>
+                      <td>Artshelf <code>NGX-436/437</code><span class="sub">reconcile core</span></td>
+                      <td class="model">qwen3.7-max</td>
+                      <td><span class="tag warn">cut short</span><span class="sub">≈ 20m 44s, before verification</span></td>
+                      <td><span class="num">527.619s</span><span class="sub">≈ 8m 48s</span></td>
+                      <td>&mdash;<span class="sub">not completed</span></td>
+                      <td>Stopped while OpenCode was still running; tests pending, no evidence record imported. Not a comparable result.</td>
+                    </tr>
+                    <tr>
+                      <td>Momentum <code>NGX-431</code><span class="sub">built-binary smoke split</span></td>
+                      <td class="model">qwen3.7-plus</td>
+                      <td><span class="num">1025.886s</span><span class="sub">≈ 17m 06s</span></td>
+                      <td><span class="num">398.286s</span><span class="sub">≈ 6m 38s</span></td>
+                      <td><span class="num">2.58&times;</span> <span class="sub">slower</span><div class="bar"><span style="width: 25.8%"></span></div></td>
+                      <td>Clean, no fixes or rewrite. Strongest verification of the wave: typecheck, build, fast tests, integration smoke, and M7 contract checks; all 54 smoke tests preserved.</td>
+                    </tr>
+                    <tr>
+                      <td>Momentum <code>NGX-431</code><span class="sub">built-binary smoke split</span></td>
+                      <td class="model">qwen3.7-max</td>
+                      <td><span class="num">1315.489s</span><span class="sub">≈ 21m 55s</span></td>
+                      <td><span class="num">398.286s</span><span class="sub">≈ 6m 38s</span></td>
+                      <td><span class="num">3.30&times;</span> <span class="sub">slower</span><div class="bar"><span style="width: 33%"></span></div></td>
+                      <td>Clean, no fixes or rewrite. Lighter verification than Plus &mdash; it did not run the full targeted split-smoke suite.</td>
+                    </tr>
+                    <tr>
+                      <td>Skill Suitcase <code>NGX-386</code><span class="sub">strict Skillify-10 validation</span></td>
+                      <td class="model">qwen3.7-plus</td>
+                      <td><span class="num">897.742s</span><span class="sub">≈ 14m 58s</span></td>
+                      <td><span class="num">160.367s</span><span class="sub">≈ 2m 40s</span></td>
+                      <td><span class="num">5.60&times;</span> <span class="sub">slower</span><div class="bar severe"><span style="width: 56%"></span></div></td>
+                      <td>Clean, all gates green. Only edit was a commit-subject rewrite, with backup ref <code>refs/backup/gnhf-postflight/20260614000101</code>.</td>
+                    </tr>
+                    <tr>
+                      <td>Skill Suitcase <code>NGX-386</code><span class="sub">strict Skillify-10 validation</span></td>
+                      <td class="model">qwen3.7-max</td>
+                      <td><span class="num">1543.656s</span><span class="sub">≈ 25m 44s</span></td>
+                      <td><span class="num">160.367s</span><span class="sub">≈ 2m 40s</span></td>
+                      <td><span class="num">9.63&times;</span> <span class="sub">slower</span><div class="bar severe"><span style="width: 96.3%"></span></div></td>
+                      <td>Clean, no fixes or rewrite. Imported summary is sparse because the delegate's last message was only &ldquo;Branch is clean and ready for <code>git push no-mistakes</code>&rdquo;; the richer final message ran typecheck, architecture, diff-check, and <code>pnpm test</code> 213/213.</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+              <p>
+                Every completed Qwen run finished clean, and every completed Qwen run was slower
+                than GLM &mdash; from 2.53&times; on the heaviest task to 9.63&times; on the lightest.
+                The cheaper the task, the worse the ratio looked, which is the opposite of what you
+                want from a gate that runs constantly on small branches.
+              </p>
+            </section>
+
+            <section>
+              <h2>Plus vs Max</h2>
+              <p>
+                Between the two challengers, Plus is the only one worth keeping around. It finished
+                every task, verified more thoroughly, and stayed faster than Max. Max was slower on
+                both tasks it completed, lighter on verification, and the one task it could not finish
+                in time was the hardest of the set.
+              </p>
+              <div class="table-scroll">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Dimension</th>
+                      <th>qwen3.7-plus</th>
+                      <th>qwen3.7-max</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td>Completed tasks</td>
+                      <td>3 of 3</td>
+                      <td>2 of 3 <span class="sub">Artshelf cut short</span></td>
+                    </tr>
+                    <tr>
+                      <td>Speed vs GLM</td>
+                      <td>2.53&times;, 2.58&times;, 5.60&times; slower</td>
+                      <td>3.30&times;, 9.63&times; slower</td>
+                    </tr>
+                    <tr>
+                      <td>Review quality</td>
+                      <td>Clean on all three</td>
+                      <td>Clean where it finished</td>
+                    </tr>
+                    <tr>
+                      <td>Verification depth</td>
+                      <td>Thorough &mdash; full Momentum split-smoke suite and contract checks</td>
+                      <td>Lighter &mdash; skipped the full Momentum suite; one sparse Skill Suitcase import</td>
+                    </tr>
+                    <tr>
+                      <td>Edits made</td>
+                      <td>One commit-subject rewrite, with backup ref</td>
+                      <td>None</td>
+                    </tr>
+                    <tr>
+                      <td>Shadow verdict</td>
+                      <td>Viable occasional second opinion</td>
+                      <td>Not worth it for this lane</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </section>
+
+            <section>
+              <h2>Caveats</h2>
+              <ul>
+                <li>The GLM numbers are existing postflight baselines, not fresh runs from this wave. The comparison is Qwen-this-wave against GLM-as-it-already-runs.</li>
+                <li>Artshelf with Qwen Max was cut short at about 20m 44s, before verification. It is excluded from the speed range and is not a completed result.</li>
+                <li>This is postflight-review evidence on three tasks, not a universal coding-model ranking. A different lane could rank these models differently.</li>
+                <li>The importer's <code>blocked</code> label on Artshelf Plus is a heuristic mismatch, not a real failure.</li>
+              </ul>
+              <div class="note">
+                <strong>On that Artshelf Plus label:</strong> the run reported <code>Result: complete</code>
+                with a green build and tests. The importer flagged <code>outcome=blocked</code> only
+                because the report carried a <code>Blockers:</code> section noting a
+                <code>registry-remap</code> product decision. Read it as complete-with-a-note, not blocked.
+              </div>
+            </section>
+
+            <section>
+              <h2>Recommendation</h2>
+              <div class="grid">
+                <div class="card">
+                  <h3>Keep the gate on GLM</h3>
+                  <p>
+                    Leave <code>opencode-go/glm-5.1</code> as the postflight model. Do not promote
+                    Qwen 3.7 into the no-mistakes, GNHF, or postflight gates. GLM was clean and
+                    several times faster, and these gates run on every branch.
+                  </p>
+                </div>
+                <div class="card">
+                  <h3>Shadow use only</h3>
+                  <p>
+                    Keep <code>opencode-go/qwen3.7-plus</code> available as an occasional shadow or
+                    second-opinion model when latency is not a concern. Drop
+                    <code>opencode-go/qwen3.7-max</code> from this lane.
+                  </p>
+                </div>
+                <div class="card">
+                  <h3>Next wave, smaller</h3>
+                  <p>
+                    Run the Wave 2 challengers (<code>kimi-k2.7-code</code>, <code>mimo-v2.5-pro</code>,
+                    <code>deepseek-v4-pro</code>) against one Artshelf smoke task first, not all three,
+                    before spending a full matrix.
+                  </p>
+                </div>
+              </div>
+            </section>
+
+            <section>
+              <h2>Evidence records</h2>
+              <p>
+                Five completed runs imported model-evidence records into their project repos. Each
+                lives under that project's <code>.model-evidence/</code> directory.
+              </p>
+              <details open>
+                <summary>Artshelf NGX-436/437 · qwen3.7-plus</summary>
+                <div class="case-body">
+                  <p>1333.006s · 2.53&times; slower than GLM (527.619s). Clean review, no fixes or rewrite, build and tests green.</p>
+                  <p class="sub">Record: <code>20260615T094704Z-wave1-artshelf-ngx436-437-reconcile-core-qwen3.7-plus-0fc420265baa.json</code>. Importer <code>outcome=blocked</code> is a heuristic mismatch.</p>
+                </div>
+              </details>
+              <details>
+                <summary>Momentum NGX-431 · qwen3.7-plus</summary>
+                <div class="case-body">
+                  <p>1025.886s · 2.58&times; slower than GLM (398.286s). Clean, no fixes or rewrite, strongest verification of the wave.</p>
+                  <p class="sub">Record: <code>20260615T084135Z-wave1-momentum-ngx431-smoke-split-qwen3.7-plus-1c176c41b9e9.json</code>.</p>
+                </div>
+              </details>
+              <details>
+                <summary>Momentum NGX-431 · qwen3.7-max</summary>
+                <div class="case-body">
+                  <p>1315.489s · 3.30&times; slower than GLM (398.286s). Clean, no fixes or rewrite, lighter verification than Plus.</p>
+                  <p class="sub">Record: <code>20260615T090332Z-wave1-momentum-ngx431-smoke-split-qwen3.7-max-9741974176e8.json</code>.</p>
+                </div>
+              </details>
+              <details>
+                <summary>Skill Suitcase NGX-386 · qwen3.7-plus</summary>
+                <div class="case-body">
+                  <p>897.742s · 5.60&times; slower than GLM (160.367s). Clean, all gates green. Commit-subject rewrite only, with backup ref <code>refs/backup/gnhf-postflight/20260614000101</code>.</p>
+                  <p class="sub">Record: <code>20260615T094704Z-wave1-skill-suitcase-ngx386-strict-validation-qwen3.7-plus-d973e2822955.json</code>.</p>
+                </div>
+              </details>
+              <details>
+                <summary>Skill Suitcase NGX-386 · qwen3.7-max</summary>
+                <div class="case-body">
+                  <p>1543.656s · 9.63&times; slower than GLM (160.367s). Clean, no fixes or rewrite.</p>
+                  <p class="sub">Record: <code>20260615T094415Z-wave1-skill-suitcase-ngx386-strict-validation-qwen3.7-max-db7d3d09e7e4.json</code>. Imported summary is sparse because the last delegate message was only &ldquo;Branch is clean and ready for <code>git push no-mistakes</code>&rdquo;.</p>
+                </div>
+              </details>
+            </section>
+          </article>
+        </main>
+
+        <footer class="site-footer">
+          <div class="wrap">
+            Reasoning Benchmark ·
+            <a href="../../index.html">project overview</a> ·
+            <a href="../gpt-opus-2026-05/">GPT/Opus run</a> ·
+            <a href="../../questions.html">question browser</a> ·
+            <a href="https://github.com/calvinnwq/reasoning-benchmark">GitHub</a>
+          </div>
+        </footer>
+      </div>
+    </div>
+  </body>
+</html>
